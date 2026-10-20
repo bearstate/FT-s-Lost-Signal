@@ -77,6 +77,19 @@ public final class TestCommands {
                         .executes(c -> say(c, 0))
                         .then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 359)).executes(c ->
                                 say(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "value"))))))
+                .then(Commands.literal("mission").executes(c -> {
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var level = p.serverLevel();
+                    var foot = com.jeladastudios.lostsignal.mission.Lookouts.near(level, p.blockPosition(), 1);
+                    com.jeladastudios.lostsignal.LostSignal.LOGGER.info("LS_TEST lookout near: {}", foot);
+                    var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
+                    if (tower == null) tower = p.blockPosition();
+                    var m = com.jeladastudios.lostsignal.mission.Missions.begin(level, tower);
+                    var t = tower;
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST mission " + (m == null ? "none" : "at " + t.toShortString())), false);
+                    return m == null ? 0 : 1;
+                }))
                 .then(Commands.literal("watcher").executes(c -> watcher(c, false))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
     }
@@ -169,8 +182,11 @@ public final class TestCommands {
         if (p == null) return 0;
         var level = p.serverLevel();
         int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        // At a lookout, its foot: the heightmap there is its roof.
+        var foot = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
+        if (foot != null && Math.abs(foot.getX() - x) < 4 && Math.abs(foot.getZ() - z) < 4) y = foot.getY();
         var list = hikers(p);
-        for (var h : list) h.goTo(new net.minecraft.core.BlockPos(x, y, z));
+        for (var h : list) h.follow(com.jeladastudios.lostsignal.entity.Hiker.Guide.TOWER, new net.minecraft.core.BlockPos(x, y, z));
         c.getSource().sendSuccess(() -> Component.literal("LS_TEST hiker goto " + list.size()), false);
         return list.size();
     }

@@ -59,5 +59,13 @@
   "radio.fts_lostsignal.line.H_FLARE": "Lighting a flare now. Can you see it? Over.",
   "radio.fts_lostsignal.line.H_FLARE_NONE": "I'm out of flares. That was my last one.",
   "radio.fts_lostsignal.line.H_FIRE": "I made a little fire. Can you see the smoke?",
-  "radio.fts_lostsignal.line.H_LAMP": "My lamp's on. I'm waving it."
+  "radio.fts_lostsignal.line.H_LAMP": "My lamp's on. I'm waving it.",
+  "radio.fts_lostsignal.line.H_CALL_01": "Hello? Is anyone on this channel? Over.",
+  "radio.fts_lostsignal.line.H_CALL_02": "Hi, um... I think I'm lost. I saw this frequency on a sign on a tree. Is anyone there?",
+  "radio.fts_lostsignal.line.H_CALL_03": "Hello?! Anyone? Please, I need help. Over.",
+  "radio.fts_lostsignal.line.H_CALL_04": "This is... I'm a hiker, I left the trail and now I can't find it. It's getting dark.",
+  "radio.fts_lostsignal.line.H_AT_TOWER": "I'm at the bottom of your tower. Can I come up?",
+  "radio.fts_lostsignal.line.H_SEE_YOU": "I can see you! Over here! Over here!",
+  "radio.fts_lostsignal.line.D_FOUND": "Good work up there, Lookout. Real good work. District out.",
+  "radio.fts_lostsignal.line.D_LOST_CONTACT": "Lookout, District. We lost contact with your hiker. If you hear anything, anything at all, call it in."
 }

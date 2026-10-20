@@ -59,5 +59,13 @@
   "radio.fts_lostsignal.line.H_FLARE": "Şimdi bir fişek atıyorum. Görebiliyor musun? Tamam.",
   "radio.fts_lostsignal.line.H_FLARE_NONE": "Fişeğim kalmadı. O sonuncusuydu.",
   "radio.fts_lostsignal.line.H_FIRE": "Küçük bir ateş yaktım. Dumanı görebiliyor musun?",
-  "radio.fts_lostsignal.line.H_LAMP": "Fenerim açık. Sallıyorum."
+  "radio.fts_lostsignal.line.H_LAMP": "Fenerim açık. Sallıyorum.",
+  "radio.fts_lostsignal.line.H_CALL_01": "Alo? Bu kanalda kimse var mı? Tamam.",
+  "radio.fts_lostsignal.line.H_CALL_02": "Merhaba, şey... Sanırım kayboldum. Bu frekansı bir ağaçtaki tabelada gördüm. Kimse var mı?",
+  "radio.fts_lostsignal.line.H_CALL_03": "Alo?! Kimse yok mu? Lütfen, yardıma ihtiyacım var. Tamam.",
+  "radio.fts_lostsignal.line.H_CALL_04": "Ben... yürüyüşçüyüm, patikadan çıktım, şimdi bulamıyorum. Hava kararıyor.",
+  "radio.fts_lostsignal.line.H_AT_TOWER": "Kulenin dibindeyim. Yukarı çıkabilir miyim?",
+  "radio.fts_lostsignal.line.H_SEE_YOU": "Seni görüyorum! Buradayım! Buradayım!",
+  "radio.fts_lostsignal.line.D_FOUND": "Harika iş çıkardın, Gözcü. Gerçekten harika. Merkez kapatıyor.",
+  "radio.fts_lostsignal.line.D_LOST_CONTACT": "Gözcü, burası Merkez. Yürüyüşçünle bağlantıyı kaybettik. Bir şey duyarsan, ne olursa, haber ver."
 }

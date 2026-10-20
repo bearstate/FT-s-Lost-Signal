@@ -54,6 +54,7 @@ public final class Rescue {
             LostSignal.LOGGER.info("RESCUE {} {} -> {} ({})", order, value, line, h.state());
         }
         PENDING.add(new Pending(level, h, line, level.getGameTime() + 30 + level.random.nextInt(30)));
+        com.jeladastudios.lostsignal.mission.Missions.heard(level, h);
     }
 
     /** What the hiker does with an order, and the line they answer with. */
@@ -86,13 +87,13 @@ public final class Rescue {
                 BlockPos tower = h.tower();
                 if (Sight.sign(level, at, 12) == null || tower == null) yield "H_NO_SIGN";
                 // The board says which way and how far the lookout is: they go that way.
-                h.follow(Hiker.Guide.NONE, toward(level, at, tower, LEG * 2));
+                h.follow(Hiker.Guide.TOWER, toward(level, at, tower, LEG));
                 yield "H_FOLLOW_SIGN";
             }
             case TOWARD_LIGHT -> {
                 BlockPos tower = h.tower();
                 if (tower == null || level.isDay() || !Sight.seesTower(level, h, tower)) yield "H_NO_LIGHT";
-                h.follow(Hiker.Guide.NONE, toward(level, at, tower, LEG * 2));
+                h.follow(Hiker.Guide.TOWER, toward(level, at, tower, LEG));
                 yield "H_OK_01";
             }
             case STAY -> {
@@ -129,6 +130,12 @@ public final class Rescue {
             Vec3 down = Sight.downhill(level, at);
             return down == null ? null : ground(level, at.getX() + down.x * LEG, at.getZ() + down.z * LEG);
         }
+        if (guide == Hiker.Guide.TOWER) {
+            // On towards the lookout, a leg at a time, as long as it is not reached.
+            BlockPos tower = h.tower();
+            if (tower == null || at.distSqr(tower) < 14 * 14) return null;
+            return toward(level, at, tower, LEG);
+        }
         if (guide == Hiker.Guide.TRAIL) {
             BlockPos tower = h.tower();
             BlockPos best = null;
@@ -156,6 +163,7 @@ public final class Rescue {
     /** A spot on the ground some way from a place towards another. */
     static BlockPos toward(ServerLevel level, BlockPos from, BlockPos to, int far) {
         double dx = to.getX() - from.getX(), dz = to.getZ() - from.getZ(), d = Math.sqrt(dx * dx + dz * dz);
+        // Near enough: the lookout's foot itself, on the ground, not its roof.
         if (d <= far) return to;
         return ground(level, from.getX() + dx / d * far, from.getZ() + dz / d * far);
     }
