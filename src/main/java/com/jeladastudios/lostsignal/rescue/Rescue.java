@@ -1,0 +1,201 @@
+package com.jeladastudios.lostsignal.rescue;
+
+import com.jeladastudios.lostsignal.LostSignal;
+import com.jeladastudios.lostsignal.entity.Hiker;
+import com.jeladastudios.lostsignal.entity.ModEntities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+/**
+ * The keeper's words to a lost hiker, and the hiker's answers: what each order means to someone on the ground who can
+ * see only what is round them, and whether they can do it. The answer comes a moment later, as it would over a radio.
+ */
+@Mod.EventBusSubscriber(modid = LostSignal.MODID)
+public final class Rescue {
+
+    private Rescue() {}
+
+    /** How near a radio station the keeper must stand to be on the air, in blocks. */
+    static final int AT_STATION = 6;
+    /** How far a hiker's handheld is heard: the subtitle's reach. */
+    static final double IN_CONTACT = Lines.HEARD;
+    /** A hiker's handheld, as a share of a station's power. */
+    static final float HANDHELD = 0.15f;
+    /** How far a leg of following goes, in blocks. */
+    static final int LEG = 40;
+
+    private record Pending(ServerLevel level, Hiker hiker, String line, long at) {}
+
+    private static final List<Pending> PENDING = new CopyOnWriteArrayList<>();
+
+    /** The keeper said something from the panel. */
+    public static void said(ServerPlayer keeper, Order order, int value) {
+        ServerLevel level = keeper.serverLevel();
+        if (!atStation(level, keeper.blockPosition())) {
+            keeper.displayClientMessage(net.minecraft.network.chat.Component.translatable("rescue.fts_lostsignal.no_station"), true);
+            return;
+        }
+        Hiker h = inContact(level, keeper.position());
+        if (h == null) {
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("RESCUE {} unanswered", order);
+            return;
+        }
+        String line = answer(level, h, order, value);
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+            LostSignal.LOGGER.info("RESCUE {} {} -> {} ({})", order, value, line, h.state());
+        }
+        PENDING.add(new Pending(level, h, line, level.getGameTime() + 30 + level.random.nextInt(30)));
+    }
+
+    /** What the hiker does with an order, and the line they answer with. */
+    static String answer(ServerLevel level, Hiker h, Order order, int value) {
+        BlockPos at = h.blockPosition();
+        return switch (order) {
+            case WHERE -> Sight.describe(level, h);
+            case HOW -> h.fatigue() > 0.7f ? "H_TIRED" : !level.isDay() ? "H_DARK" : "H_HOW_OK";
+            case COMPASS -> h.hasCompass() ? "H_COMPASS_YES" : "H_COMPASS_NO";
+            case BEARING -> {
+                if (!h.hasCompass()) yield "H_WHICH_WAY";
+                // A bearing as a compass reads it: 0 north, 90 east.
+                double a = Math.toRadians(value);
+                h.follow(Hiker.Guide.NONE, ground(level, at.getX() + Math.sin(a) * LEG * 1.5, at.getZ() - Math.cos(a) * LEG * 1.5));
+                yield "H_OK_01";
+            }
+            case FOLLOW_WATER -> {
+                BlockPos next = nextLeg(level, h, Hiker.Guide.WATER);
+                if (next == null) yield "H_NO_WATER";
+                h.follow(Hiker.Guide.WATER, next);
+                yield "H_FOLLOW_CREEK";
+            }
+            case FOLLOW_TRAIL -> {
+                BlockPos next = nextLeg(level, h, Hiker.Guide.TRAIL);
+                if (next == null) yield "H_NO_TRAIL";
+                h.follow(Hiker.Guide.TRAIL, next);
+                yield "H_FOLLOW_TRAIL";
+            }
+            case FOLLOW_SIGN -> {
+                BlockPos tower = h.tower();
+                if (Sight.sign(level, at, 12) == null || tower == null) yield "H_NO_SIGN";
+                // The board says which way and how far the lookout is: they go that way.
+                h.follow(Hiker.Guide.NONE, toward(level, at, tower, LEG * 2));
+                yield "H_FOLLOW_SIGN";
+            }
+            case TOWARD_LIGHT -> {
+                BlockPos tower = h.tower();
+                if (tower == null || level.isDay() || !Sight.seesTower(level, h, tower)) yield "H_NO_LIGHT";
+                h.follow(Hiker.Guide.NONE, toward(level, at, tower, LEG * 2));
+                yield "H_OK_01";
+            }
+            case STAY -> {
+                h.stay();
+                yield "H_STAY";
+            }
+            case FLARE -> h.fireFlare() ? "H_FLARE" : "H_FLARE_NONE";
+            case SMOKE -> {
+                h.smoke();
+                yield "H_FIRE";
+            }
+            case LAMP -> {
+                h.waveLamp();
+                yield "H_LAMP";
+            }
+        };
+    }
+
+    /**
+     * The next leg of what a hiker follows: down the water -- the way FT's Geology's river runs where there is one,
+     * else downhill to where water gathers -- or up the trail, the trail's next stretch nearer the lookout. Null where
+     * there is nothing to follow from here.
+     */
+    public static BlockPos nextLeg(ServerLevel level, Hiker h, Hiker.Guide guide) {
+        BlockPos at = h.blockPosition();
+        if (guide == Hiker.Guide.WATER) {
+            var river = Sight.river(at, 20);
+            if (river.isPresent() && !river.get().lake() && (river.get().flowX() != 0 || river.get().flowZ() != 0)) {
+                var r = river.get();
+                // Along the bank, downstream, a little to the side of the water.
+                return ground(level, at.getX() + r.flowX() * LEG, at.getZ() + r.flowZ() * LEG);
+            }
+            if (!Sight.water(level, at, 12)) return null;
+            Vec3 down = Sight.downhill(level, at);
+            return down == null ? null : ground(level, at.getX() + down.x * LEG, at.getZ() + down.z * LEG);
+        }
+        if (guide == Hiker.Guide.TRAIL) {
+            BlockPos tower = h.tower();
+            BlockPos best = null;
+            double bestScore = Double.MAX_VALUE;
+            // Of the trail's worn ground in reach, the stretch nearest the lookout (or, with none known, the highest).
+            for (int r = 6; r <= 24; r += 6) {
+                for (int i = 0; i < 16; i++) {
+                    double a = Math.PI * 2 * i / 16;
+                    BlockPos p = Sight.trail(level, new BlockPos(at.getX() + (int) (Math.cos(a) * r), at.getY(), at.getZ() + (int) (Math.sin(a) * r)), 2);
+                    if (p == null) continue;
+                    double score = tower != null ? p.distSqr(tower) : -p.getY();
+                    if (score < bestScore) {
+                        bestScore = score;
+                        best = p;
+                    }
+                }
+            }
+            if (best == null) return null;
+            if (tower != null && best.distSqr(tower) >= at.distSqr(tower)) return null;
+            return best;
+        }
+        return null;
+    }
+
+    /** A spot on the ground some way from a place towards another. */
+    static BlockPos toward(ServerLevel level, BlockPos from, BlockPos to, int far) {
+        double dx = to.getX() - from.getX(), dz = to.getZ() - from.getZ(), d = Math.sqrt(dx * dx + dz * dz);
+        if (d <= far) return to;
+        return ground(level, from.getX() + dx / d * far, from.getZ() + dz / d * far);
+    }
+
+    static BlockPos ground(ServerLevel level, double x, double z) {
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+        return new BlockPos(bx, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz), bz);
+    }
+
+    /** Whether a radio station of the ham fork stands within reach of a place. */
+    public static boolean atStation(ServerLevel level, BlockPos at) {
+        for (BlockPos p : BlockPos.betweenClosed(at.offset(-AT_STATION, -3, -AT_STATION), at.offset(AT_STATION, 3, AT_STATION))) {
+            var id = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(level.getBlockState(p).getBlock());
+            if (id != null && id.getNamespace().equals("simpleradio") && id.getPath().equals("station")) return true;
+        }
+        return false;
+    }
+
+    /** The lost hiker on the air nearest a place, if any is within a handheld's reach. */
+    static Hiker inContact(ServerLevel level, Vec3 from) {
+        Hiker best = null;
+        double nearest = IN_CONTACT * IN_CONTACT;
+        for (Hiker h : level.getEntities(ModEntities.HIKER.get(), h -> h.state() != Hiker.State.RESCUED)) {
+            double d = h.position().distanceToSqr(from);
+            if (d < nearest) {
+                nearest = d;
+                best = h;
+            }
+        }
+        return best;
+    }
+
+    @SubscribeEvent
+    public static void tick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        for (Pending p : PENDING) {
+            if (p.level().getGameTime() < p.at()) continue;
+            PENDING.remove(p);
+            if (!p.hiker().isAlive()) continue;
+            Lines.say(p.level(), p.hiker().getEyePosition(), Lines.Speaker.HIKER, p.line(), HANDHELD);
+        }
+    }
+}

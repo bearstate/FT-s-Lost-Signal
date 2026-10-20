@@ -53,6 +53,18 @@ public class Hiker extends PathfinderMob {
     private BlockPos goal;
     private BlockPos fire;
 
+    /** What they were told to follow, leg after leg, until they reach something or give it up. */
+    public enum Guide { NONE, WATER, TRAIL }
+
+    private Guide guide = Guide.NONE;
+    private int legs;
+    /** Whether they carry a compass: half of them do. Set once, the first time they are asked. */
+    private Boolean compass;
+    private BlockPos tower;
+    private boolean towerSought;
+    /** Told to stay where they are: they wait, rested or not, until told otherwise. */
+    private boolean staying;
+
     public Hiker(EntityType<? extends Hiker> type, Level level) {
         super(type, level);
         setPersistenceRequired();
@@ -105,6 +117,7 @@ public class Hiker extends PathfinderMob {
 
     /** Sent somewhere: walks there, as near as the ground lets, and stops. */
     public void goTo(BlockPos where) {
+        staying = false;
         goal = where;
         getNavigation().stop();
         state(State.GOING);
@@ -112,6 +125,8 @@ public class Hiker extends PathfinderMob {
 
     /** Asked to stay where they are: they rest. */
     public void stay() {
+        staying = true;
+        guide = Guide.NONE;
         goal = null;
         getNavigation().stop();
         state(State.RESTING);
@@ -119,6 +134,32 @@ public class Hiker extends PathfinderMob {
 
     public float fatigue() {
         return fatigue;
+    }
+
+    /** Sent on, leg after leg, along what they follow: water downhill, or a trail up to the lookout. */
+    public void follow(Guide what, BlockPos first) {
+        guide = what;
+        legs = 0;
+        goTo(first);
+    }
+
+    public boolean hasCompass() {
+        if (compass == null) compass = getRandom().nextBoolean();
+        return compass;
+    }
+
+    /** The lookout nearest where they are lost: the one whose keeper they talk to. Sought once, then kept. */
+    public BlockPos tower() {
+        if (!towerSought && level() instanceof net.minecraft.server.level.ServerLevel server) {
+            towerSought = true;
+            try {
+                var found = com.jeladastudios.feelthenature.world.LookoutTowerFeature.locate(server, blockPosition(), 3);
+                if (found != null) tower = found.foot();
+            } catch (LinkageError e) {
+                tower = null;
+            }
+        }
+        return tower;
     }
 
     public BlockPos goal() {
@@ -154,10 +195,12 @@ public class Hiker extends PathfinderMob {
             fatigue = Mth.clamp(fatigue + (moving ? TIRES : -RESTS), 0f, 1.2f);
             switch (state()) {
                 case CAMPING -> {
-                    if (!night) state(State.LOST);
+                    if (!night) state(staying ? State.RESTING : State.LOST);
                 }
                 case RESTING -> {
-                    if (night && fire == null) makeCamp();
+                    if (staying) {
+                        if (night && fire == null) makeCamp();
+                    } else if (night && fire == null) makeCamp();
                     else if (fatigue <= 0.05f && goal == null && !night) state(State.LOST);
                     else if (fatigue <= 0.05f && goal != null) state(State.GOING);
                 }
@@ -168,9 +211,16 @@ public class Hiker extends PathfinderMob {
                         getNavigation().stop();
                         state(State.RESTING);
                     } else if (distanceToSqr(Vec3.atBottomCenterOf(goal)) < 9) {
-                        goal = null;
-                        getNavigation().stop();
-                        state(State.RESTING);
+                        BlockPos next = guide == Guide.NONE || ++legs > 12 ? null
+                                : com.jeladastudios.lostsignal.rescue.Rescue.nextLeg((net.minecraft.server.level.ServerLevel) level, Hiker.this, guide);
+                        if (next != null) {
+                            goal = next;
+                        } else {
+                            goal = null;
+                            guide = Guide.NONE;
+                            getNavigation().stop();
+                            state(State.RESTING);
+                        }
                     } else if (!moving && --pause <= 0) {
                         if (!walkToward(goal)) pause = 40;
                     }
@@ -316,6 +366,12 @@ public class Hiker extends PathfinderMob {
         tag.putString("State", state().name());
         tag.putFloat("Fatigue", fatigue);
         tag.putInt("Flares", flares);
+        tag.putString("Guide", guide.name());
+        tag.putInt("Legs", legs);
+        if (compass != null) tag.putBoolean("Compass", compass);
+        if (tower != null) tag.put("Tower", NbtUtils.writeBlockPos(tower));
+        tag.putBoolean("TowerSought", towerSought);
+        tag.putBoolean("Staying", staying);
         if (!Double.isNaN(heading)) tag.putDouble("Heading", heading);
         if (goal != null) tag.put("Goal", NbtUtils.writeBlockPos(goal));
         if (fire != null) tag.put("Fire", NbtUtils.writeBlockPos(fire));
@@ -332,6 +388,16 @@ public class Hiker extends PathfinderMob {
         }
         fatigue = tag.getFloat("Fatigue");
         flares = tag.contains("Flares") ? tag.getInt("Flares") : 2;
+        try {
+            guide = Guide.valueOf(tag.getString("Guide"));
+        } catch (IllegalArgumentException e) {
+            guide = Guide.NONE;
+        }
+        legs = tag.getInt("Legs");
+        compass = tag.contains("Compass") ? tag.getBoolean("Compass") : null;
+        tower = tag.contains("Tower") ? NbtUtils.readBlockPos(tag.getCompound("Tower")) : null;
+        towerSought = tag.getBoolean("TowerSought");
+        staying = tag.getBoolean("Staying");
         heading = tag.contains("Heading") ? tag.getDouble("Heading") : Double.NaN;
         goal = tag.contains("Goal") ? NbtUtils.readBlockPos(tag.getCompound("Goal")) : null;
         fire = tag.contains("Fire") ? NbtUtils.readBlockPos(tag.getCompound("Fire")) : null;

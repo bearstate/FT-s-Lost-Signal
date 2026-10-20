@@ -73,6 +73,10 @@ public final class TestCommands {
                             c.getSource().sendSuccess(() -> Component.literal("LS_TEST flare at " + x + " " + y + " " + z), false);
                             return 1;
                         })))
+                .then(Commands.literal("say").then(Commands.argument("order", com.mojang.brigadier.arguments.StringArgumentType.word())
+                        .executes(c -> say(c, 0))
+                        .then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 359)).executes(c ->
+                                say(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "value"))))))
                 .then(Commands.literal("watcher").executes(c -> watcher(c, false))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
     }
@@ -198,5 +202,15 @@ public final class TestCommands {
         }
         c.getSource().sendSuccess(() -> Component.literal("LS_TEST hiker signal " + which + " " + list.size()), false);
         return list.size();
+    }
+
+    /** {@code /ls_test say <order> [value]}: as if pressed on the rescue panel. */
+    private static int say(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, int value) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        var order = com.jeladastudios.lostsignal.rescue.Order.valueOf(
+                com.mojang.brigadier.arguments.StringArgumentType.getString(c, "order").toUpperCase(java.util.Locale.ROOT));
+        com.jeladastudios.lostsignal.rescue.Rescue.said(p, order, value);
+        return 1;
     }
 }

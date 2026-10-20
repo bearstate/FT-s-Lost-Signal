@@ -22,5 +22,6 @@ public final class LostSignal {
         var bus = net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus();
         com.jeladastudios.lostsignal.entity.ModEntities.ENTITIES.register(bus);
         com.jeladastudios.lostsignal.signal.ModParticles.PARTICLES.register(bus);
+        com.jeladastudios.lostsignal.net.Net.register();
     }
 }
