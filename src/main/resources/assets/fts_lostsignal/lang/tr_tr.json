@@ -7,6 +7,9 @@
 
   "rescue.fts_lostsignal.title": "Kurtarma frekansı 145.500",
   "rescue.fts_lostsignal.no_station": "Bir telsiz istasyonunun yanında olmalısın.",
+  "rescue.fts_lostsignal.no_power": "Telsiz istasyonunun elektriği yok.",
+  "sleep.fts_lostsignal.woken.radio": "Telsiz seni uyandırdı.",
+  "sleep.fts_lostsignal.woken.knock": "Bir şey seni uyandırdı.",
   "rescue.fts_lostsignal.ask": "Sor",
   "rescue.fts_lostsignal.tell": "Söyle",
   "rescue.fts_lostsignal.signal": "İşaret",

@@ -7,6 +7,9 @@
 
   "rescue.fts_lostsignal.title": "Rescue frequency 145.500",
   "rescue.fts_lostsignal.no_station": "You need to be at a radio station.",
+  "rescue.fts_lostsignal.no_power": "The radio station has no power.",
+  "sleep.fts_lostsignal.woken.radio": "The radio woke you.",
+  "sleep.fts_lostsignal.woken.knock": "Something woke you.",
   "rescue.fts_lostsignal.ask": "Ask",
   "rescue.fts_lostsignal.tell": "Tell",
   "rescue.fts_lostsignal.signal": "Signal",

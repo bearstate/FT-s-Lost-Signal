@@ -90,6 +90,25 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST mission " + (m == null ? "none" : "at " + t.toShortString())), false);
                     return m == null ? 0 : 1;
                 }))
+                .then(Commands.literal("sleep").executes(c -> {
+                    // A bed set beside the player and the player put in it, to try the night going by.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var level = p.serverLevel();
+                    var foot = p.blockPosition().east(2);
+                    var bed = net.minecraft.world.level.block.Blocks.RED_BED.defaultBlockState();
+                    level.setBlock(foot, bed.setValue(net.minecraft.world.level.block.BedBlock.FACING, net.minecraft.core.Direction.EAST), 3);
+                    level.setBlock(foot.east(), bed.setValue(net.minecraft.world.level.block.BedBlock.FACING, net.minecraft.core.Direction.EAST)
+                            .setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.HEAD), 3);
+                    var r = p.startSleepInBed(foot.east());
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST sleep " + r.left().map(Object::toString).orElse("asleep") + " time " + level.getDayTime()), false);
+                    return 1;
+                }))
+                .then(Commands.literal("time").executes(c -> {
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST time " + c.getSource().getLevel().getDayTime() + " sleeping "
+                            + (c.getSource().getPlayer() != null && c.getSource().getPlayer().isSleeping())), false);
+                    return 1;
+                }))
                 .then(Commands.literal("watcher").executes(c -> watcher(c, false))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
     }

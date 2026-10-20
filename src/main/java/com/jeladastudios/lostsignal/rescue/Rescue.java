@@ -40,8 +40,13 @@ public final class Rescue {
     /** The keeper said something from the panel. */
     public static void said(ServerPlayer keeper, Order order, int value) {
         ServerLevel level = keeper.serverLevel();
-        if (!atStation(level, keeper.blockPosition())) {
+        BlockPos station = Stations.near(level, keeper.blockPosition(), AT_STATION);
+        if (station == null) {
             keeper.displayClientMessage(net.minecraft.network.chat.Component.translatable("rescue.fts_lostsignal.no_station"), true);
+            return;
+        }
+        if (!Stations.powered(level, station)) {
+            keeper.displayClientMessage(net.minecraft.network.chat.Component.translatable("rescue.fts_lostsignal.no_power"), true);
             return;
         }
         Hiker h = inContact(level, keeper.position());

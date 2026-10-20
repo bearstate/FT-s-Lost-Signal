@@ -20,6 +20,8 @@ public final class Lines {
 
     /** How far off a subtitle is shown: about as far as a hiker's handheld reaches a lookout's station. */
     static final double HEARD = 1000;
+    /** How near a station a player hears it, in blocks: a room's width. */
+    static final int AT = 8;
 
     public enum Speaker { HIKER, DISTRICT }
 
@@ -31,8 +33,12 @@ public final class Lines {
                         .withStyle(ChatFormatting.GRAY))
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(Component.translatable("radio.fts_lostsignal.line." + line).withStyle(ChatFormatting.WHITE));
+        // Heard by whoever is at a powered station in reach: a dead set hears nothing. A sleeper there is woken.
         for (ServerPlayer p : level.players()) {
-            if (speaker == Speaker.DISTRICT || p.position().distanceTo(from) < HEARD) p.sendSystemMessage(text);
+            if (speaker != Speaker.DISTRICT && p.position().distanceTo(from) > HEARD) continue;
+            if (Stations.poweredNear(level, p.blockPosition(), AT) == null) continue;
+            if (p.isSleeping()) com.jeladastudios.lostsignal.sleep.FlowingSleep.wake(level, p.position(), 1, "radio");
+            p.sendSystemMessage(text);
         }
     }
 
