@@ -16,5 +16,6 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.WATCHER.get(), WatcherRenderer::new);
+        event.registerEntityRenderer(ModEntities.HIKER.get(), HikerRenderer::new);
     }
 }

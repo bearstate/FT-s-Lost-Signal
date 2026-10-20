@@ -29,8 +29,17 @@ public final class ModEntities {
                     .updateInterval(2)
                     .build("watcher"));
 
+    /** A lost hiker: a person's size; sent to players twelve chunks out, so a bright jacket is seen from a lookout. */
+    public static final RegistryObject<EntityType<Hiker>> HIKER = ENTITIES.register("hiker",
+            () -> EntityType.Builder.of(Hiker::new, MobCategory.MISC)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(12)
+                    .updateInterval(3)
+                    .build("hiker"));
+
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent event) {
         event.put(WATCHER.get(), Watcher.attributes().build());
+        event.put(HIKER.get(), Hiker.attributes().build());
     }
 }

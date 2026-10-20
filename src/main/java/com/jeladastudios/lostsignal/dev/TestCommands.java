@@ -47,6 +47,14 @@ public final class TestCommands {
                                 .then(Commands.argument("distance", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 100000))
                                         .executes(c -> broadcast(c, com.mojang.brigadier.arguments.StringArgumentType.getString(c, "clip"),
                                                 com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "distance"))))))
+                .then(Commands.literal("hiker")
+                        .then(Commands.literal("spawn").then(Commands.argument("distance", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 300))
+                                .executes(c -> hikerSpawn(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "distance")))))
+                        .then(Commands.literal("goto").then(Commands.argument("x", com.mojang.brigadier.arguments.IntegerArgumentType.integer())
+                                .then(Commands.argument("z", com.mojang.brigadier.arguments.IntegerArgumentType.integer())
+                                        .executes(c -> hikerGoTo(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "x"),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "z"))))))
+                        .then(Commands.literal("state").executes(TestCommands::hikerState)))
                 .then(Commands.literal("watcher").executes(c -> watcher(c, false))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
     }
@@ -108,5 +116,52 @@ public final class TestCommands {
             t.source().sendSuccess(() -> Component.literal("LS_TEST broadcast heard frames=" + t.frames().get() + " ends="
                     + t.ends().get() + " signalDb=" + t.signal()[0]), false);
         }
+    }
+
+    /** {@code /ls_test hiker spawn <distance>}: a lost hiker that many blocks ahead of the player, on the ground. */
+    private static int hikerSpawn(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, int distance) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        var level = p.serverLevel();
+        var look = p.getLookAngle();
+        int x = (int) Math.floor(p.getX() + look.x * distance), z = (int) Math.floor(p.getZ() + look.z * distance);
+        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        var hiker = com.jeladastudios.lostsignal.entity.ModEntities.HIKER.get().create(level);
+        if (hiker == null) return 0;
+        hiker.kit(level.random.nextInt(com.jeladastudios.lostsignal.entity.Hiker.KITS));
+        hiker.moveTo(x + 0.5, y, z + 0.5, level.random.nextFloat() * 360f, 0f);
+        level.addFreshEntity(hiker);
+        c.getSource().sendSuccess(() -> Component.literal("LS_TEST hiker " + hiker.getId() + " at " + x + " " + y + " " + z), false);
+        return 1;
+    }
+
+    private static java.util.List<com.jeladastudios.lostsignal.entity.Hiker> hikers(ServerPlayer p) {
+        return new java.util.ArrayList<>(p.serverLevel().getEntities(com.jeladastudios.lostsignal.entity.ModEntities.HIKER.get(),
+                h -> h.distanceToSqr(p) < 512 * 512));
+    }
+
+    /** {@code /ls_test hiker goto <x> <z>}: every hiker within 512 blocks sent there. */
+    private static int hikerGoTo(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, int x, int z) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        var level = p.serverLevel();
+        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        var list = hikers(p);
+        for (var h : list) h.goTo(new net.minecraft.core.BlockPos(x, y, z));
+        c.getSource().sendSuccess(() -> Component.literal("LS_TEST hiker goto " + list.size()), false);
+        return list.size();
+    }
+
+    /** {@code /ls_test hiker state}: where each hiker within 512 blocks is and what they are doing. */
+    private static int hikerState(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        StringBuilder b = new StringBuilder("LS_TEST hikers");
+        for (var h : hikers(p)) {
+            b.append(String.format(java.util.Locale.ROOT, " [%d %s %d %d %d fatigue %.2f goal %s]", h.getId(), h.state(),
+                    h.getBlockX(), h.getBlockY(), h.getBlockZ(), h.fatigue(), h.goal() == null ? "-" : h.goal().toShortString()));
+        }
+        c.getSource().sendSuccess(() -> Component.literal(b.toString()), false);
+        return 1;
     }
 }
