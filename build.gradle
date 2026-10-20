@@ -18,6 +18,8 @@ minecraft {
             // FT's Geology carries mixins; in the development world its refmap has to be read in official names.
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            // The test commands and the log lines the development game is tried with.
+            property 'fts_lostsignal.test', 'true'
             mods { fts_lostsignal { source sourceSets.main } }
         }
     }

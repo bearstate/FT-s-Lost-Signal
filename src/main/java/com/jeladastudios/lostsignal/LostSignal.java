@@ -19,5 +19,6 @@ public final class LostSignal {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public LostSignal() {
+        com.jeladastudios.lostsignal.entity.ModEntities.ENTITIES.register(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
     }
 }
