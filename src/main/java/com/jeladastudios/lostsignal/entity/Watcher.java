@@ -33,6 +33,8 @@ public class Watcher extends PathfinderMob {
     private UUID watching;
     private int looked;
     private int lifetime = 20 * 120;
+    private double keepsOff = KEEPS_OFF;
+    private int bearsLook = BEARS_LOOK;
 
     public Watcher(EntityType<? extends Watcher> type, Level level) {
         super(type, level);
@@ -50,6 +52,14 @@ public class Watcher extends PathfinderMob {
     public void watch(ServerPlayer player, int ticks) {
         watching = player.getUUID();
         lifetime = ticks;
+    }
+
+    /**
+     * Close, as at a window or a broken door: it keeps its place however near they are, and bears only a short look.
+     */
+    public void close(int bears) {
+        keepsOff = 0;
+        bearsLook = bears;
     }
 
     public UUID watching() {
@@ -77,12 +87,12 @@ public class Watcher extends PathfinderMob {
         setYBodyRot(yaw);
         setYHeadRot(yaw);
         double distance = Math.sqrt(distanceToSqr(player));
-        if (distance < KEEPS_OFF) {
+        if (distance < keepsOff) {
             vanish("approached");
             return;
         }
         if (lookedAt(player)) {
-            if (++looked > BEARS_LOOK) vanish("seen");
+            if (++looked > bearsLook) vanish("seen");
         } else if (looked > 0) {
             looked--;
         }

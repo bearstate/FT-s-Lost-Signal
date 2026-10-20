@@ -104,6 +104,28 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST sleep " + r.left().map(Object::toString).orElse("asleep") + " time " + level.getDayTime()), false);
                     return 1;
                 }))
+                .then(Commands.literal("visit").executes(c -> {
+                    // Something up the stair of the lookout the player is at, now.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    var v = tower == null ? null : com.jeladastudios.lostsignal.visit.Visit.begin(p.serverLevel(), tower);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST visit " + (v == null ? "none" : "at " + v.foot.toShortString() + " door " + v.door.toShortString())), false);
+                    return v == null ? 0 : 1;
+                }))
+                .then(Commands.literal("hide").executes(c -> {
+                    // Under the nearest bed, as a crouched click on it does.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    for (var q : net.minecraft.core.BlockPos.betweenClosed(p.blockPosition().offset(-5, -1, -5), p.blockPosition().offset(5, 1, 5))) {
+                        var s = p.level().getBlockState(q);
+                        if (s.getBlock() instanceof net.minecraft.world.level.block.BedBlock) {
+                            com.jeladastudios.lostsignal.visit.Hiding.hide(p, q.immutable(), s);
+                            return 1;
+                        }
+                    }
+                    return 0;
+                }))
                 .then(Commands.literal("time").executes(c -> {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST time " + c.getSource().getLevel().getDayTime() + " sleeping "
                             + (c.getSource().getPlayer() != null && c.getSource().getPlayer().isSleeping())), false);

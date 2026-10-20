@@ -23,6 +23,28 @@ public final class Net {
 
     public static void register() {
         CHANNEL.registerMessage(0, Say.class, Say::write, Say::read, Say::handle);
+        CHANNEL.registerMessage(1, Lie.class, Lie::write, Lie::read, Lie::handle);
+    }
+
+    /**
+     * The player told to lie flat, or to get up: the client keeps its own player's pose, so it is told as the server is.
+     */
+    public record Lie(boolean down) {
+
+        static void write(Lie m, FriendlyByteBuf buf) {
+            buf.writeBoolean(m.down);
+        }
+
+        static Lie read(FriendlyByteBuf buf) {
+            return new Lie(buf.readBoolean());
+        }
+
+        static void handle(Lie m, Supplier<NetworkEvent.Context> ctx) {
+            var c = ctx.get();
+            c.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                    () -> () -> com.jeladastudios.lostsignal.client.ClientHiding.lie(m.down)));
+            c.setPacketHandled(true);
+        }
     }
 
     /** The keeper says something from the panel: an order, and its number where it takes one (a bearing). */
