@@ -1,0 +1,47 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "GPL-3.0-or-later"
+
+[[mods]]
+modId = "fts_lostsignal"
+version = "${file.jarVersion}"
+displayName = "FT's Geology: Lost Signal"
+authors = "Jelada Studios"
+description = '''
+Nights at a fire lookout: the rescue frequency, the lost on the mountain, and something in the trees that listens too.
+'''
+
+[[dependencies.fts_lostsignal]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[47.2,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.fts_lostsignal]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.21)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.fts_lostsignal]]
+    modId = "fts_geology"
+    mandatory = true
+    versionRange = "[0.11.4,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+[[dependencies.fts_lostsignal]]
+    modId = "fts_feelthenature"
+    mandatory = true
+    versionRange = "[1.2.0,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+[[dependencies.fts_lostsignal]]
+    modId = "simpleradio"
+    mandatory = true
+    versionRange = "*"
+    ordering = "AFTER"
+    side = "BOTH"

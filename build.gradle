@@ -1,0 +1,65 @@
+plugins {
+    id 'eclipse'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+}
+
+version = '0.1.0'
+group = 'com.jeladastudios.lostsignal'
+archivesBaseName = 'fts-lost-signal'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            // FT's Geology carries mixins; in the development world its refmap has to be read in official names.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods { fts_lostsignal { source sourceSets.main } }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    // The mods it stands on, as their own builds make them, copied into libs/. Compiled against and run beside, never
+    // shipped. Named ls-* here: ForgeGradle keeps remapped copies in a cache every project shares, by name.
+    flatDir { dirs 'libs' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:1.20.1-${project.findProperty('forge') ?: '47.4.23'}"
+    // FT's Geology, Feel the Nature and the Simple Radio ham fork: all three required.
+    implementation fg.deobf('blank:ls-core:0.11.4')
+    implementation fg.deobf('blank:ls-ftn:1.2.0')
+    implementation fg.deobf('blank:ls-simpleradio:4.5.7.9')
+    implementation fg.deobf('blank:ls-voicechat:2.6.22')
+    runtimeOnly fg.deobf('blank:ls-lexiconfig:1.4.21')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes([
+                'Specification-Title'   : 'fts_lostsignal',
+                'Specification-Vendor'  : 'Jelada Studios',
+                'Specification-Version' : '1',
+                'Implementation-Title'  : project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor' : 'Jelada Studios'
+        ])
+    }
+    finalizedBy 'reobfJar'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

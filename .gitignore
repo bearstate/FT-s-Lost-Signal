@@ -1,0 +1,24 @@
+# Build output and tooling
+.gradle/
+build/
+run/
+out/
+*.iml
+.idea/
+.vscode/
+eclipse/
+.classpath
+.project
+.settings/
+bin/
+
+# The mods it stands on, compiled against but never shipped
+libs/
+
+# Notes, the voice script and raw recordings kept out of the repository
+PLAN.md
+SENARYO.md
+kayitlar/
+
+# Local test tools
+tools/
