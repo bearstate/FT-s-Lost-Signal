@@ -14,6 +14,12 @@ public final class ClientSetup {
     private ClientSetup() {}
 
     @SubscribeEvent
+    public static void particles(net.minecraftforge.client.event.RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.FLARE.get(), SignalParticle.Flare::new);
+        event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.LAMP.get(), SignalParticle.Lamp::new);
+    }
+
+    @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.WATCHER.get(), WatcherRenderer::new);
         event.registerEntityRenderer(ModEntities.HIKER.get(), HikerRenderer::new);

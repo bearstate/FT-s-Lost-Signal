@@ -242,6 +242,41 @@ public class Hiker extends PathfinderMob {
         return getNavigation().moveTo(step.getX() + 0.5, step.getY(), step.getZ() + 0.5, PACE);
     }
 
+    // === Signals ================================================================
+
+    private int flares = 2;
+
+    /** A flare fired up from where they stand, if they have one left. */
+    public boolean fireFlare() {
+        if (flares <= 0 || !(level() instanceof net.minecraft.server.level.ServerLevel server)) return false;
+        flares--;
+        com.jeladastudios.lostsignal.signal.Signals.flare(server, position());
+        playSound(net.minecraft.sounds.SoundEvents.FIREWORK_ROCKET_LAUNCH, 1.5f, 0.8f);
+        return true;
+    }
+
+    /** Their fire made to smoke -- green wood on it -- for a few minutes; a fire made first where there is none. */
+    public void smoke() {
+        if (!(level() instanceof net.minecraft.server.level.ServerLevel server)) return;
+        if (fire == null) {
+            makeCamp();
+            if (state() == State.CAMPING && level().isDay()) state(State.RESTING);
+        }
+        if (fire == null) return;
+        BlockState s = level().getBlockState(fire);
+        if (s.is(Blocks.CAMPFIRE)) level().setBlock(fire, s.setValue(CampfireBlock.SIGNAL_FIRE, true), 3);
+        com.jeladastudios.lostsignal.signal.Signals.smoke(server, Vec3.atCenterOf(fire), 180);
+    }
+
+    /** Their lamp held up and waved, for half a minute. */
+    public void waveLamp() {
+        if (level() instanceof net.minecraft.server.level.ServerLevel server) com.jeladastudios.lostsignal.signal.Signals.lamp(server, this, 30);
+    }
+
+    public int flares() {
+        return flares;
+    }
+
     // === Camp ===================================================================
 
     /** A fire on a free spot beside them, for the night; put out and gone when they move on. */
@@ -280,6 +315,7 @@ public class Hiker extends PathfinderMob {
         tag.putInt("Kit", kit());
         tag.putString("State", state().name());
         tag.putFloat("Fatigue", fatigue);
+        tag.putInt("Flares", flares);
         if (!Double.isNaN(heading)) tag.putDouble("Heading", heading);
         if (goal != null) tag.put("Goal", NbtUtils.writeBlockPos(goal));
         if (fire != null) tag.put("Fire", NbtUtils.writeBlockPos(fire));
@@ -295,6 +331,7 @@ public class Hiker extends PathfinderMob {
             entityData.set(STATE, State.LOST.ordinal());
         }
         fatigue = tag.getFloat("Fatigue");
+        flares = tag.contains("Flares") ? tag.getInt("Flares") : 2;
         heading = tag.contains("Heading") ? tag.getDouble("Heading") : Double.NaN;
         goal = tag.contains("Goal") ? NbtUtils.readBlockPos(tag.getCompound("Goal")) : null;
         fire = tag.contains("Fire") ? NbtUtils.readBlockPos(tag.getCompound("Fire")) : null;

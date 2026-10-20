@@ -54,7 +54,25 @@ public final class TestCommands {
                                 .then(Commands.argument("z", com.mojang.brigadier.arguments.IntegerArgumentType.integer())
                                         .executes(c -> hikerGoTo(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "x"),
                                                 com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "z"))))))
+                        .then(Commands.literal("flare").executes(c -> hikerSignal(c, 0)))
+                        .then(Commands.literal("smoke").executes(c -> hikerSignal(c, 1)))
+                        .then(Commands.literal("lamp").executes(c -> hikerSignal(c, 2)))
                         .then(Commands.literal("state").executes(TestCommands::hikerState)))
+                .then(Commands.literal("flare").then(Commands.argument("distance", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 500))
+                        .executes(c -> {
+                            ServerPlayer p = c.getSource().getPlayer();
+                            if (p == null) return 0;
+                            var level = p.serverLevel();
+                            int far = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "distance");
+                            var look = p.getLookAngle();
+                            int x = (int) Math.floor(p.getX() + look.x * far), z = (int) Math.floor(p.getZ() + look.z * far);
+                            level.getChunk(x >> 4, z >> 4);
+                            int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                            com.jeladastudios.lostsignal.signal.Signals.flare(level, new net.minecraft.world.phys.Vec3(x + 0.5, y, z + 0.5));
+                            com.jeladastudios.lostsignal.signal.Signals.smoke(level, new net.minecraft.world.phys.Vec3(x + 0.5, y, z + 0.5), 60);
+                            c.getSource().sendSuccess(() -> Component.literal("LS_TEST flare at " + x + " " + y + " " + z), false);
+                            return 1;
+                        })))
                 .then(Commands.literal("watcher").executes(c -> watcher(c, false))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
     }
@@ -125,6 +143,7 @@ public final class TestCommands {
         var level = p.serverLevel();
         var look = p.getLookAngle();
         int x = (int) Math.floor(p.getX() + look.x * distance), z = (int) Math.floor(p.getZ() + look.z * distance);
+        level.getChunk(x >> 4, z >> 4);
         int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         var hiker = com.jeladastudios.lostsignal.entity.ModEntities.HIKER.get().create(level);
         if (hiker == null) return 0;
@@ -163,5 +182,21 @@ public final class TestCommands {
         }
         c.getSource().sendSuccess(() -> Component.literal(b.toString()), false);
         return 1;
+    }
+
+    /** {@code /ls_test hiker flare|smoke|lamp}: every hiker within 512 blocks shows that signal. */
+    private static int hikerSignal(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, int which) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        var list = hikers(p);
+        for (var h : list) {
+            switch (which) {
+                case 0 -> h.fireFlare();
+                case 1 -> h.smoke();
+                default -> h.waveLamp();
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("LS_TEST hiker signal " + which + " " + list.size()), false);
+        return list.size();
     }
 }

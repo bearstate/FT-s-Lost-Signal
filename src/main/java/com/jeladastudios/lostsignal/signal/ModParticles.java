@@ -1,0 +1,21 @@
+package com.jeladastudios.lostsignal.signal;
+
+import com.jeladastudios.lostsignal.LostSignal;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.core.registries.Registries;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
+
+/** The signals' particles: always drawn, however far and whatever the player's particle setting. */
+public final class ModParticles {
+
+    private ModParticles() {}
+
+    public static final DeferredRegister<ParticleType<?>> PARTICLES = DeferredRegister.create(Registries.PARTICLE_TYPE, LostSignal.MODID);
+
+    /** A burning flare's point of red light. */
+    public static final RegistryObject<SimpleParticleType> FLARE = PARTICLES.register("flare", () -> new SimpleParticleType(true));
+    /** A lamp's warm point, held up and waved. */
+    public static final RegistryObject<SimpleParticleType> LAMP = PARTICLES.register("lamp", () -> new SimpleParticleType(true));
+}
