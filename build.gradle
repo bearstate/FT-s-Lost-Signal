@@ -49,6 +49,8 @@ tasks.named('test') {
 }
 
 jar {
+    // The recordists the CC BY recordings ask to be named, in the jar beside the sounds.
+    from('CREDITS-sounds.md')
     manifest {
         attributes([
                 'Specification-Title'   : 'fts_lostsignal',
