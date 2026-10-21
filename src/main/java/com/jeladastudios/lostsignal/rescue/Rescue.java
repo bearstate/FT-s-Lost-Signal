@@ -97,7 +97,9 @@ public final class Rescue {
             }
             case TOWARD_LIGHT -> {
                 BlockPos tower = h.tower();
-                if (tower == null || level.isDay() || !Sight.seesTower(level, h, tower)) yield "H_NO_LIGHT";
+                // Only the lamp is seen at night, and only lit.
+                if (tower == null || level.isDay() || !com.jeladastudios.lostsignal.finder.Lamps.lit(level, tower)
+                        || !Sight.seesTower(level, h, tower)) yield "H_NO_LIGHT";
                 h.follow(Hiker.Guide.TOWER, toward(level, at, tower, LEG));
                 yield "H_OK_01";
             }

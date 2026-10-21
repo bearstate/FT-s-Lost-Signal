@@ -214,8 +214,10 @@ public final class Missions extends SavedData {
         boolean out = mission.stage == Mission.Stage.CALLING || mission.stage == Mission.Stage.IN_CONTACT;
         if (out && !mission.rolled && day >= 18000 && day < 22000) {
             mission.rolled = true;
-            float chance = TAKEN_BASE + (mission.answered ? 0 : TAKEN_UNANSWERED) + (h.state() == Hiker.State.GOING ? TAKEN_WALKING : 0);
-            if (level.random.nextFloat() < chance) mission.takeAt = now + 200 + level.random.nextInt(Math.max(1, (int) (22500 - day) - 400));
+            float chance = chance(mission, h);
+            mission.takeChance = chance;
+            // Not at once: a keeper who has not answered yet has a while to.
+            if (level.random.nextFloat() < chance) mission.takeAt = now + 1200 + level.random.nextInt(Math.max(1, (int) (22500 - day) - 1400));
             setDirty();
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken {} (chance {})", mission.tower.toShortString(), mission.takeAt >= 0 ? "at " + mission.takeAt : "not", chance);
         }
@@ -226,8 +228,16 @@ public final class Missions extends SavedData {
                 Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING", 0.15f);
             }
             if (now >= mission.takeAt) {
-                take(level, mission, h);
-                return;
+                // As things stand now: answered since, or stopped walking in the dark, the odds are better.
+                float current = chance(mission, h);
+                if (mission.takeChance > 0 && level.random.nextFloat() >= current / mission.takeChance) {
+                    mission.takeAt = -1;
+                    setDirty();
+                    if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: spared", mission.tower.toShortString());
+                } else {
+                    take(level, mission, h);
+                    return;
+                }
             }
         }
         // Dawn with the hiker still out there: lost contact.
@@ -236,6 +246,11 @@ public final class Missions extends SavedData {
             h.discard();
             end(level, mission, "lost");
         }
+    }
+
+    /** The chance something comes for a hiker out in the small hours, as things stand with them. */
+    static float chance(Mission mission, Hiker h) {
+        return TAKEN_BASE + (mission.answered ? 0 : TAKEN_UNANSWERED) + (h.state() == Hiker.State.GOING ? TAKEN_WALKING : 0);
     }
 
     /**

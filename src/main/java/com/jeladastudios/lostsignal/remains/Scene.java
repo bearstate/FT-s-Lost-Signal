@@ -1,6 +1,7 @@
 package com.jeladastudios.lostsignal.remains;
 
 import com.jeladastudios.lostsignal.LostSignal;
+import com.jeladastudios.lostsignal.block.ModBlocks;
 import com.jeladastudios.lostsignal.entity.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

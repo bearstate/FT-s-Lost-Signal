@@ -29,7 +29,10 @@ public final class Sight {
         if (sign(level, at, 10) != null) return "H_SEE_SIGN";
         if (trail(level, at, 4) != null) return "H_SEE_TRAIL";
         BlockPos tower = h.tower();
-        if (tower != null && seesTower(level, h, tower)) return level.isDay() ? "H_SEE_TOWER" : "H_SEE_LIGHT";
+        // By day the tower; by night only its lamp, if it is lit.
+        if (tower != null && (level.isDay() || com.jeladastudios.lostsignal.finder.Lamps.lit(level, tower)) && seesTower(level, h, tower)) {
+            return level.isDay() ? "H_SEE_TOWER" : "H_SEE_LIGHT";
+        }
         if (drop(level, at) >= 6) return "H_SEE_CLIFF";
         var river = river(at, 14);
         if (river.isPresent()) {

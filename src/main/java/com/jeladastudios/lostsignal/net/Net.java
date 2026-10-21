@@ -24,6 +24,28 @@ public final class Net {
     public static void register() {
         CHANNEL.registerMessage(0, Say.class, Say::write, Say::read, Say::handle);
         CHANNEL.registerMessage(1, Lie.class, Lie::write, Lie::read, Lie::handle);
+        CHANNEL.registerMessage(2, Reading.class, Reading::write, Reading::read, Reading::handle);
+    }
+
+    /** A reading off the fire finder: what was on the line, its bearing and its distance by eye, for the panel. */
+    public record Reading(String kind, int bearing, int distance) {
+
+        static void write(Reading m, FriendlyByteBuf buf) {
+            buf.writeUtf(m.kind, 16);
+            buf.writeVarInt(m.bearing);
+            buf.writeVarInt(m.distance);
+        }
+
+        static Reading read(FriendlyByteBuf buf) {
+            return new Reading(buf.readUtf(16), buf.readVarInt(), buf.readVarInt());
+        }
+
+        static void handle(Reading m, Supplier<NetworkEvent.Context> ctx) {
+            var c = ctx.get();
+            c.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                    () -> () -> com.jeladastudios.lostsignal.client.RescueScreen.reading(m)));
+            c.setPacketHandled(true);
+        }
     }
 
     /**

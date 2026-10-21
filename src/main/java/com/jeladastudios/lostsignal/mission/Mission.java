@@ -29,6 +29,8 @@ public final class Mission {
     /** Whether the small hours have been looked at for what comes for them; when it comes, if it does (-1: not). */
     public boolean rolled;
     public long takeAt = -1;
+    /** The chance it was looked at with: when the time comes, it is looked at again as things then stand. */
+    public float takeChance;
     /** Whether they were heard to be afraid, before. */
     public boolean warned;
     /** When they were taken, where the scene is, and whether the District has sent the keeper to look. */
@@ -52,6 +54,7 @@ public final class Mission {
         tag.putBoolean("Answered", answered);
         tag.putBoolean("Rolled", rolled);
         tag.putLong("TakeAt", takeAt);
+        tag.putFloat("TakeChance", takeChance);
         tag.putBoolean("Warned", warned);
         tag.putLong("TakenAt", takenAt);
         if (scene != null) tag.put("Scene", NbtUtils.writeBlockPos(scene));
@@ -74,6 +77,7 @@ public final class Mission {
         m.answered = tag.getBoolean("Answered");
         m.rolled = tag.getBoolean("Rolled");
         m.takeAt = tag.contains("TakeAt") ? tag.getLong("TakeAt") : -1;
+        m.takeChance = tag.getFloat("TakeChance");
         m.warned = tag.getBoolean("Warned");
         m.takenAt = tag.getLong("TakenAt");
         if (tag.contains("Scene")) m.scene = NbtUtils.readBlockPos(tag.getCompound("Scene"));

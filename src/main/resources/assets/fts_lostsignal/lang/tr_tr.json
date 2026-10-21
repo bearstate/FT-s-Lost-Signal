@@ -99,5 +99,15 @@
   "journal.fts_lostsignal.lost": "Dereden sonra bir yerde patikayı kaybettim. Bir sonraki tepenin ardında yine çıkar diye düşünüp durdum.\n\nÇıkmadı.\n\nHer yer birbirinin aynısı. Bir ağaca çakılmış bir tabela buldum, üstünde bir telsiz frekansı yazıyor. 145.500. Bunları kim asıyor?",
   "journal.fts_lostsignal.answered": "Biri cevap verdi! Bir gözcü, bir kulede bir yerlerde. Sesi iyi biri. Neye bakmam gerektiğini, hangi yöne gideceğimi söyledi.\n\nHava çok çabuk kararıyor. Dediği gibi gece için durdum. Ateş yanıyor.\n\nBir şey olmayacak.",
   "journal.fts_lostsignal.unanswered": "Telsizden tekrar tekrar çağırdım. Hiçbir şey. Sadece hışırtı.\n\nAteş yaktım. Ekmeğin son parçasını yedim.\n\nBir ara biri cevap verdi sandım, ama kim olduğunu sorunca söylediğimi aynen tekrarladı. Kendi sesim. Yankı falandır herhalde.",
-  "journal.fts_lostsignal.last": "ağaçların arasında\nbiri duruyor\n\nbakınca\nkıpırdamıyor\n\nson baktığımda\ndaha yakındı\n\nateşi söndürme\nateşi"
+  "journal.fts_lostsignal.last": "ağaçların arasında\nbiri duruyor\n\nbakınca\nkıpırdamıyor\n\nson baktığımda\ndaha yakındı\n\nateşi söndürme\nateşi",
+  "block.fts_lostsignal.signal_lamp": "İşaret Lambası",
+  "finder.fts_lostsignal.ring": "Gözlem masası: %s° %s. Nişangâhı bir işarette sabit tut; bırakmak için eğil.",
+  "finder.fts_lostsignal.nothing": "%s°: o hatta bir şey yok.",
+  "finder.fts_lostsignal.read": "Kerteriz alındı. Dönüş yönü kurtarma panelinde.",
+  "finder.fts_lostsignal.away": "Gözlem masasından ayrıldın.",
+  "finder.fts_lostsignal.reading": "Gözlem masası: %1$s %2$s° (%3$s), yaklaşık %4$s blok. Kuleye dönüş kerterizi: %5$s°.",
+  "finder.fts_lostsignal.kind.flare": "fişek",
+  "finder.fts_lostsignal.kind.smoke": "duman",
+  "finder.fts_lostsignal.kind.lamp": "fener",
+  "rescue.fts_lostsignal.last_reading": "Son kerteriz: %1$s %2$s°, yaklaşık %3$s blok. Dönüş yönü %4$s°."
 }

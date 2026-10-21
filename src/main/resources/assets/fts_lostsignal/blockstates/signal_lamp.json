@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "lit=false": {"model": "fts_lostsignal:block/signal_lamp"},
+    "lit=true": {"model": "fts_lostsignal:block/signal_lamp_on"}
+  }
+}

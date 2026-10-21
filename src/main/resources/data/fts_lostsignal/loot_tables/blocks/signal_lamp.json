@@ -1,0 +1,5 @@
+{
+  "type": "minecraft:block",
+  "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "fts_lostsignal:signal_lamp"}],
+    "conditions": [{"condition": "minecraft:survives_explosion"}]}]
+}

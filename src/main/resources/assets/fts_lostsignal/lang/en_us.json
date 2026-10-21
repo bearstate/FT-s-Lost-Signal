@@ -99,5 +99,15 @@
   "journal.fts_lostsignal.lost": "Lost the trail somewhere after the creek. Kept thinking it'd show up again over the next rise.\n\nIt didn't.\n\nEverything looks the same. Found a sign nailed to a tree with a radio frequency on it. 145.500. Who puts those up?",
   "journal.fts_lostsignal.answered": "Someone answered! A lookout, up in a tower somewhere. Kind voice. Told me what to look for and which way to go.\n\nGetting dark too fast. Stopped for the night like they said. Fire's going.\n\nI'm going to be fine.",
   "journal.fts_lostsignal.unanswered": "Called on the radio over and over. Nothing. Just hiss.\n\nMade a fire. Ate the last of the bread.\n\nOnce I thought someone answered, but when I asked who it was, it just repeated what I said. My own voice. Must be an echo or something.",
-  "journal.fts_lostsignal.last": "someone is standing\nin the trees\n\nit doesnt move when\ni look at it\n\nit was closer\nthe last time i looked\n\nkeep the fire up\nkeep the fire"
+  "journal.fts_lostsignal.last": "someone is standing\nin the trees\n\nit doesnt move when\ni look at it\n\nit was closer\nthe last time i looked\n\nkeep the fire up\nkeep the fire",
+  "block.fts_lostsignal.signal_lamp": "Signal Lamp",
+  "finder.fts_lostsignal.ring": "Fire finder: %s° %s. Hold the sight steady on a signal; crouch to step away.",
+  "finder.fts_lostsignal.nothing": "%s°: nothing on that line.",
+  "finder.fts_lostsignal.read": "Reading taken. The way back is in the rescue panel.",
+  "finder.fts_lostsignal.away": "You step away from the fire finder.",
+  "finder.fts_lostsignal.reading": "Fire finder: %1$s at %2$s° (%3$s), about %4$s blocks. Bearing back to the lookout: %5$s°.",
+  "finder.fts_lostsignal.kind.flare": "a flare",
+  "finder.fts_lostsignal.kind.smoke": "smoke",
+  "finder.fts_lostsignal.kind.lamp": "a lamp",
+  "rescue.fts_lostsignal.last_reading": "Last reading: %1$s at %2$s°, about %3$s blocks. Walk back on %4$s°."
 }

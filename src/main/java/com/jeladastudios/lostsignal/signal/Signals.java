@@ -39,6 +39,41 @@ public final class Signals {
 
         /** False when it is over. */
         abstract boolean tick();
+
+        /** Where it is to be seen now. */
+        abstract Vec3 at();
+
+        /** What it is: "flare", "smoke", "lamp". */
+        abstract String kind();
+    }
+
+    /** A signal on a line of sight: what it is and where. */
+    public record Seen(String kind, Vec3 at) {}
+
+    /**
+     * The signal nearest a line of sight from an eye, within some degrees of it and in plain view, as a fire finder's
+     * sight finds it; or null.
+     */
+    public static Seen onLine(ServerLevel level, Vec3 eye, Vec3 look, double degrees, net.minecraft.world.entity.Entity looker) {
+        Seen best = null;
+        double bestCos = Math.cos(Math.toRadians(degrees));
+        for (Signal s : ACTIVE) {
+            if (s.level != level) continue;
+            Vec3 at = s.at();
+            Vec3 to = at.subtract(eye);
+            double far = to.length();
+            if (far < 8 || far > REACH) continue;
+            double cos = to.normalize().dot(look.normalize());
+            if (cos < bestCos) continue;
+            // From a little way out: the looker's own walls and windows are not in the way.
+            Vec3 from = eye.add(to.normalize().scale(6));
+            var hit = level.clip(new net.minecraft.world.level.ClipContext(from, at, net.minecraft.world.level.ClipContext.Block.VISUAL,
+                    net.minecraft.world.level.ClipContext.Fluid.NONE, looker));
+            if (hit.getType() != net.minecraft.world.phys.HitResult.Type.MISS && hit.getLocation().distanceTo(at) > 3) continue;
+            bestCos = cos;
+            best = new Seen(s.kind(), at);
+        }
+        return best;
     }
 
     private static final List<Signal> ACTIVE = new CopyOnWriteArrayList<>();
@@ -65,6 +100,16 @@ public final class Signals {
                 }
                 return age < 40 + 500;
             }
+
+            @Override
+            Vec3 at() {
+                return at;
+            }
+
+            @Override
+            String kind() {
+                return "flare";
+            }
         });
     }
 
@@ -85,6 +130,17 @@ public final class Signals {
                 }
                 return age < seconds * 20;
             }
+
+            @Override
+            Vec3 at() {
+                // The column, a little way up it, where it stands clear of the trees.
+                return fire.add(0, 10, 0);
+            }
+
+            @Override
+            String kind() {
+                return "smoke";
+            }
         });
     }
 
@@ -101,6 +157,16 @@ public final class Signals {
                         Math.sin(yaw) * 0.4 - Math.cos(yaw) * swing);
                 send(level, ModParticles.LAMP.get(), at, 1, 0, 0);
                 return age < seconds * 20;
+            }
+
+            @Override
+            Vec3 at() {
+                return holder.position().add(0, 1.6, 0);
+            }
+
+            @Override
+            String kind() {
+                return "lamp";
             }
         });
     }

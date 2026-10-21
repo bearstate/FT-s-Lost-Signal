@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": ["III", "GLG", "III"],
+  "key": {"I": {"item": "minecraft:iron_nugget"}, "G": {"item": "minecraft:glass_pane"}, "L": {"item": "minecraft:redstone_lamp"}},
+  "result": {"item": "fts_lostsignal:signal_lamp"}
+}

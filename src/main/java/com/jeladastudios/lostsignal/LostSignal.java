@@ -20,9 +20,15 @@ public final class LostSignal {
 
     public LostSignal() {
         var bus = net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus();
-        com.jeladastudios.lostsignal.remains.ModBlocks.BLOCKS.register(bus);
+        com.jeladastudios.lostsignal.block.ModBlocks.BLOCKS.register(bus);
+        com.jeladastudios.lostsignal.block.ModBlocks.ITEMS.register(bus);
         com.jeladastudios.lostsignal.entity.ModEntities.ENTITIES.register(bus);
         com.jeladastudios.lostsignal.signal.ModParticles.PARTICLES.register(bus);
         com.jeladastudios.lostsignal.net.Net.register();
+        bus.addListener((net.minecraftforge.event.BuildCreativeModeTabContentsEvent e) -> {
+            if (e.getTabKey() == net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+                e.accept(com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get());
+            }
+        });
     }
 }
