@@ -113,7 +113,10 @@ public final class Missions extends SavedData {
             // The evening, any time in it: the quiet after a night (on the day's clock) keeps it to one a night, and a
             // keeper asleep lets the evening go by too fast for a narrow window.
             if (day < 13000 || day > 16000) continue;
-            if (level.getDayTime() - m.lastNight.getOrDefault(tower, -REST) < REST) continue;
+            // A night here lately: none again for a while. Stamped on the day's clock -- set back since (a /time set),
+            // or an old save's stamp on another clock, it counts as long past.
+            Long last = m.lastNight.get(tower);
+            if (last != null && last <= level.getDayTime() && level.getDayTime() - last < REST) continue;
             m.lastNight.put(tower, level.getDayTime());
             m.setDirty();
             if (level.random.nextFloat() < CHANCE * (com.jeladastudios.lostsignal.dev.TestCommands.ON ? 2.5f : 1f)) begin(level, tower);
@@ -122,9 +125,10 @@ public final class Missions extends SavedData {
     }
 
     /**
-     * A hiker lost within a few hundred blocks of a lookout, from tonight. The District says so now; where they are is
+     * A hiker lost within a few hundred blocks of a lookout, from tonight. Where they are is
      * worked out off the server's thread by the ground model -- the ground out there is mostly not loaded, and making
-     * it on the server's thread would hold everything up for seconds -- and the hiker is put there once it is loaded.
+     * it on the server's thread would hold everything up for seconds -- and the hiker is put there once it is loaded,
+     * and the District says someone is overdue.
      */
     public static Mission begin(ServerLevel level, BlockPos tower) {
         Missions m = of(level);
@@ -135,8 +139,6 @@ public final class Missions extends SavedData {
         m.missions.put(tower, mission);
         m.setDirty();
         com.jeladastudios.lostsignal.visit.Mimic.cancel(tower);
-        // The District first: someone overdue, keep listening tonight.
-        Lines.say(level, Vec3.atCenterOf(tower), Lines.Speaker.DISTRICT, level.random.nextBoolean() ? "D_OVERDUE_01" : "D_OVERDUE_02", 1f);
         long seed = level.random.nextLong();
         Lookouts.offThread(level, () -> lostAt(level, tower, new java.util.Random(seed)), at -> {
             if (at == null) {
@@ -170,11 +172,12 @@ public final class Missions extends SavedData {
      * ground nearby. Gives up after two minutes; true once they are out.
      */
     boolean putOut(ServerLevel level, Mission mission) {
-        if (mission.at == null) return false;
+        // Given up after two minutes -- also one whose ground was never worked out, the server stopped meanwhile.
         if (level.getGameTime() - mission.started > 2400) {
             end(level, mission, "nowhere");
             return false;
         }
+        if (mission.at == null) return false;
         keep(level, mission.at);
         if (!level.isLoaded(mission.at)) return false;
         BlockPos spot = null;
@@ -201,6 +204,8 @@ public final class Missions extends SavedData {
         mission.hiker = h.getUUID();
         mission.at = spot;
         mission.stage = Mission.Stage.CALLING;
+        // The District first, now they are out there: someone overdue, keep listening tonight.
+        Lines.say(level, Vec3.atCenterOf(mission.tower), Lines.Speaker.DISTRICT, level.random.nextBoolean() ? "D_OVERDUE_01" : "D_OVERDUE_02", 1f);
         mission.lastCall = level.getGameTime() - CALL_AGAIN + 200;
         setDirty();
         return true;
@@ -231,6 +236,11 @@ public final class Missions extends SavedData {
                 where(level, mission);
             }
             // Never found: after three days the night is closed; what is out there stays a while yet.
+            // The clock set back since: counted from now instead.
+            if (mission.takenAt > level.getDayTime()) {
+                mission.takenAt = level.getDayTime();
+                setDirty();
+            }
             if (level.getDayTime() - mission.takenAt > 3 * 24_000L) end(level, mission, "taken");
             return;
         }
@@ -319,6 +329,11 @@ public final class Missions extends SavedData {
             if (level.random.nextFloat() < chance) mission.takeAt = clock + 1200 + level.random.nextInt(Math.max(1, (int) (22500 - day) - 1400));
             setDirty();
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken {} (chance {})", mission.tower.toShortString(), mission.takeAt >= 0 ? "at " + mission.takeAt : "not", chance);
+        }
+        // The clock set back since it was decided (a /time set): it comes a while from now, not days on.
+        if (out && mission.takeAt > clock + 24_000) {
+            mission.takeAt = clock + 1200;
+            setDirty();
         }
         if (out && mission.takeAt >= 0) {
             // Half the time, before it comes to that, he comes to them as a man: friendly, offering to walk them

@@ -16,7 +16,8 @@ public final class Net {
 
     private Net() {}
 
-    private static final String VERSION = "1";
+    /** Raised whenever a message's shape changes, so a client of an older version is told so at the door. */
+    private static final String VERSION = "2";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(LostSignal.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);

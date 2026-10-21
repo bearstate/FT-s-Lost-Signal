@@ -93,8 +93,8 @@ public final class Towers extends SavedData {
     int number(BlockPos foot) {
         java.util.Set<Integer> taken = new java.util.HashSet<>();
         for (Tower t : towers.values()) taken.add(t.number);
-        int n = 1 + Math.floorMod(foot.getX() * 31 + foot.getZ() * 17, 90);
-        for (int i = 0; i < 99 && taken.contains(n); i++) n = n % 99 + 1;
+        int n = 1 + Math.floorMod(foot.getX() * 31 + foot.getZ() * 17, 900);
+        for (int i = 0; i < 999 && taken.contains(n); i++) n = n % 999 + 1;
         return n;
     }
 
@@ -458,6 +458,17 @@ public final class Towers extends SavedData {
         for (Tag e : tag.getList("Towers", Tag.TAG_COMPOUND)) {
             Tower tower = Tower.load((CompoundTag) e);
             t.towers.put(tower.key(), tower);
+        }
+        // Two with the same number (an older save numbered them from fewer): all but one of them renumbered.
+        java.util.Set<Integer> numbers = new java.util.HashSet<>();
+        List<Tower> byKey = new ArrayList<>(t.towers.values());
+        byKey.sort(java.util.Comparator.comparingLong(Tower::key));
+        for (Tower tower : byKey) {
+            if (!numbers.add(tower.number)) {
+                tower.number = 0;
+                tower.number = t.number(tower.foot());
+                numbers.add(tower.number);
+            }
         }
         t.lastDawn = tag.getLong("LastDawn");
         CompoundTag asked = tag.getCompound("Checking");

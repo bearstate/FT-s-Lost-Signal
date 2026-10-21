@@ -91,8 +91,10 @@ public final class FireFinder {
         event.setCanceled(true);
         // Once a press: a hand held on the stand, as the game repeats it, does not step up and away again.
         Long last = PRESSED.get(p.getUUID());
-        if (last != null && level.getGameTime() - last < 10 && last <= level.getGameTime()) return;
+        // Every press marks the time, those let through and those not, so a held button -- repeated every few ticks --
+        // never gets through again until it is let go.
         PRESSED.put(p.getUUID(), level.getGameTime());
+        if (last != null && level.getGameTime() - last < 10 && last <= level.getGameTime()) return;
         if (SIGHTING.containsKey(p.getUUID())) {
             SIGHTING.remove(p.getUUID());
             p.displayClientMessage(Component.translatable("finder.fts_lostsignal.away"), true);

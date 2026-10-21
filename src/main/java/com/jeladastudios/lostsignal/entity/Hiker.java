@@ -62,6 +62,8 @@ public class Hiker extends PathfinderMob {
     private Boolean compass;
     private BlockPos tower;
     private boolean towerSought;
+    /** Being looked up now, off the server's thread. */
+    private transient boolean seeking;
     /** Told to stay where they are: they wait, rested or not, until told otherwise. */
     private boolean staying;
 
@@ -172,6 +174,15 @@ public class Hiker extends PathfinderMob {
         return hurt;
     }
 
+    /**
+     * How far from a place across the ground, not counting height: a goal out on unloaded ground has its height from
+     * the ground model, which may lie a few blocks off the ground as it is.
+     */
+    double flatDistanceSqr(BlockPos to) {
+        double dx = getX() - (to.getX() + 0.5), dz = getZ() - (to.getZ() + 0.5);
+        return dx * dx + dz * dz;
+    }
+
     /** Their pace as they are: half, with a twisted ankle. */
     double pace() {
         return hurt == 1 ? PACE * 0.5 : PACE;
@@ -237,12 +248,16 @@ public class Hiker extends PathfinderMob {
 
     /** The lookout nearest where they are lost: the one whose keeper they talk to. Sought once, then kept. */
     public BlockPos tower() {
-        if (!towerSought && level() instanceof net.minecraft.server.level.ServerLevel server) {
-            towerSought = true;
+        if (!towerSought && !seeking && level() instanceof net.minecraft.server.level.ServerLevel server) {
+            seeking = true;
             // Looked up off the server's thread: the siting of new ground takes seconds. Not known until then.
             BlockPos at = blockPosition();
             com.jeladastudios.lostsignal.mission.Lookouts.offThread(server, () -> com.jeladastudios.lostsignal.mission.Lookouts.nearOffThread(server, at, 3),
-                    found -> tower = found);
+                    found -> {
+                        tower = found;
+                        towerSought = true;
+                        seeking = false;
+                    });
         }
         return tower;
     }
@@ -305,7 +320,7 @@ public class Hiker extends PathfinderMob {
                     } else if (fatigue >= 1f) {
                         getNavigation().stop();
                         state(State.RESTING);
-                    } else if (distanceToSqr(Vec3.atBottomCenterOf(goal)) < 9) {
+                    } else if (flatDistanceSqr(goal) < 9) {
                         BlockPos next = guide == Guide.NONE || ++legs > 12 ? null
                                 : com.jeladastudios.lostsignal.rescue.Rescue.nextLeg((net.minecraft.server.level.ServerLevel) level, Hiker.this, guide);
                         if (next != null) {
@@ -335,12 +350,12 @@ public class Hiker extends PathfinderMob {
                 }
                 case RESCUED -> {
                     // To the lookout's foot, and wait there; in the morning, away down the mountain.
-                    if (goal != null && distanceToSqr(Vec3.atBottomCenterOf(goal)) > 36 && !moving && --pause <= 0) {
+                    if (goal != null && flatDistanceSqr(goal) > 36 && !moving && --pause <= 0) {
                         if (!walkToward(goal)) pause = 40;
                     }
                     if (leaving >= 0 && level instanceof net.minecraft.server.level.ServerLevel server && tickCount % 40 == 0) {
                         // Gone down out of sight: there, or long enough on the way, with no one near to see them go.
-                        boolean there = goal == null || distanceToSqr(Vec3.atBottomCenterOf(goal)) < 64;
+                        boolean there = goal == null || flatDistanceSqr(goal) < 64;
                         boolean overdue = level.getGameTime() - leaving > 20 * 60 * 3;
                         if ((there || overdue) && server.getNearestPlayer(Hiker.this, 40) == null) discard();
                     }
