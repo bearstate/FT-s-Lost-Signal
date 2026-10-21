@@ -1,12 +1,14 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
 license = "GPL-3.0-or-later"
+issueTrackerURL = "https://github.com/bearstate/FT-s-Lost-Signal/issues"
 
 [[mods]]
 modId = "fts_lostsignal"
 version = "${file.jarVersion}"
 displayName = "FT's Geology: Lost Signal"
 logoFile = "lostsignal-logo.png"
+displayURL = "https://github.com/bearstate/FT-s-Lost-Signal"
 authors = "Jelada Studios"
 credits = "Sounds: from Freesound; the recordists are named in CREDITS-sounds.md, in the jar. The radio: CodinGlitch's Simple Radio, in its ham fork."
 description = '''
