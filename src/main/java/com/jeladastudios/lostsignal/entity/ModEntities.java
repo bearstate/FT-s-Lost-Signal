@@ -19,15 +19,15 @@ public final class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, LostSignal.MODID);
 
     /**
-     * The watcher: as tall as a tall man, a little taller. Sent to players ten chunks out, as far as it is ever put from
-     * them, so it is there to be seen at the edge of the trees.
+     * The stranger: a man's size. Sent to players ten chunks out, as far as he is ever put from them, so he is there to
+     * be seen at the edge of the trees.
      */
-    public static final RegistryObject<EntityType<Watcher>> WATCHER = ENTITIES.register("watcher",
-            () -> EntityType.Builder.of(Watcher::new, MobCategory.MISC)
-                    .sized(0.6f, 2.1f)
+    public static final RegistryObject<EntityType<Stranger>> STRANGER = ENTITIES.register("stranger",
+            () -> EntityType.Builder.of(Stranger::new, MobCategory.MISC)
+                    .sized(0.6f, 1.95f)
                     .clientTrackingRange(10)
                     .updateInterval(2)
-                    .build("watcher"));
+                    .build("stranger"));
 
     /** A lost hiker: a person's size; sent to players twelve chunks out, so a bright jacket is seen from a lookout. */
     public static final RegistryObject<EntityType<Hiker>> HIKER = ENTITIES.register("hiker",
@@ -47,7 +47,7 @@ public final class ModEntities {
 
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent event) {
-        event.put(WATCHER.get(), Watcher.attributes().build());
+        event.put(STRANGER.get(), Stranger.attributes().build());
         event.put(HIKER.get(), Hiker.attributes().build());
     }
 }

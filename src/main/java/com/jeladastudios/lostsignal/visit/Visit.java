@@ -2,7 +2,7 @@ package com.jeladastudios.lostsignal.visit;
 
 import com.jeladastudios.lostsignal.LostSignal;
 import com.jeladastudios.lostsignal.entity.ModEntities;
-import com.jeladastudios.lostsignal.entity.Watcher;
+import com.jeladastudios.lostsignal.entity.Stranger;
 import com.jeladastudios.lostsignal.sleep.FlowingSleep;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Something comes up to the lookout in the night. Steps on the stair, slow, all the way up; three knocks at the door;
- * a face at a window; the door tried, again and again. Whoever is in the cab has the length of that to get under the
- * bed. If they are all hidden when it is done trying, it goes back down the stair and away. If not, the door gives,
- * and it is in.
+ * The stranger comes up to the lookout in the night, masked. Steps on the stair, slow, all the way up; three knocks;
+ * the mask at a window; then at the door, his voice through it, patient, and the door tried, again and again. Whoever
+ * is in the cab has the length of that to get under the bed. If they are all hidden when he is done trying, he goes
+ * back down the stair and away. If not, the door gives, and he is in.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)
 public final class Visit {
@@ -102,7 +102,7 @@ public final class Visit {
         t++;
         Vec3 middle = Vec3.atBottomCenterOf(foot);
         if (t < KNOCK && t % 14 == 0) {
-            // The stair, a step at a time, up through the frame: slow, and heavier than a person.
+            // The stair, a step at a time, up through the frame: slow, unhurried.
             double up = (double) t / KNOCK * 20;
             double sway = (t / 14) % 2 == 0 ? 1.5 : -1.5;
             sound(middle.add(sway, up, 0), SoundEvents.WOOD_STEP, 0.9f, 0.6f);
@@ -112,6 +112,10 @@ public final class Visit {
             FlowingSleep.wake(level, Vec3.atCenterOf(door), 10, "knock");
         }
         if (t == WINDOW) peek();
+        if (t == RATTLE - 10) atDoor();
+        // His voice through the door: asking, then waiting.
+        if (t == RATTLE + 10) say(pick("S_DOOR_01", "S_DOOR_02", "S_DOOR_03"));
+        if (t == RATTLE + 130) say("S_DOOR_04");
         if (t >= RATTLE && t <= RATTLE_END && t % 30 == 0) rattle();
         if (t == shutAt) slam();
         if (t == DECIDE) {
@@ -119,11 +123,14 @@ public final class Visit {
             boolean allHidden = !in.isEmpty() && in.stream().allMatch(Hiding::hidden);
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) for (ServerPlayer p : in) LostSignal.LOGGER.info("VISIT finds {} hidden {} at {}", p.getScoreboardName(), Hiding.hidden(p), p.position());
             if (in.isEmpty() || allHidden) {
+                say("S_DOOR_LEAVE");
                 if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT went away ({})", in.isEmpty() ? "no one in" : "hidden");
             } else {
                 breakIn(in);
             }
         }
+        if (t == DECIDE + 40 && !broke && at != null) at.discard();
+        if (t >= GONE && at != null) at.discard();
         if (t > DECIDE && t < GONE && !broke && t % 16 == 0) {
             // Back down the stair and away.
             double up = 20 - (double) (t - DECIDE) / (GONE - DECIDE) * 20;
@@ -132,7 +139,7 @@ public final class Visit {
         return t < GONE;
     }
 
-    /** A face at a window: the watcher on the walkway outside the cab, looking in at whoever is there. */
+    /** The mask at a window: he is on the walkway outside the cab, looking in at whoever is there. */
     void peek() {
         List<ServerPlayer> in = inCab();
         if (in.isEmpty()) return;
@@ -141,12 +148,38 @@ public final class Visit {
         Direction side = Direction.fromYRot(p.getYRot());
         if (side == out) side = side.getClockWise();
         BlockPos spot = foot.above(door.getY() - foot.getY()).relative(side, 4);
-        Watcher w = ModEntities.WATCHER.get().create(level);
-        if (w == null) return;
-        w.moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, side.getOpposite().toYRot(), 0f);
-        w.watch(p, 160);
-        w.close(12);
-        level.addFreshEntity(w);
+        Stranger s = masked(p, spot, side.getOpposite(), 160);
+        if (s != null) s.close(12);
+    }
+
+    /** Him, masked, set down somewhere about the cab, facing a way, watching a player for a while. */
+    Stranger masked(ServerPlayer p, BlockPos spot, Direction facing, int ticks) {
+        Stranger s = ModEntities.STRANGER.get().create(level);
+        if (s == null) return null;
+        s.moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, facing.toYRot(), 0f);
+        s.masked(true);
+        s.watch(p, ticks);
+        level.addFreshEntity(s);
+        return s;
+    }
+
+    /** Outside the door, on the walkway: the one who talks through it, and comes through it if it gives. */
+    Stranger at;
+
+    void atDoor() {
+        List<ServerPlayer> in = inCab();
+        if (in.isEmpty()) return;
+        at = masked(in.get(0), door.relative(out), out.getOpposite(), GONE);
+        // Through the door's window he may be seen: it does not send him off.
+        if (at != null) at.close(Integer.MAX_VALUE);
+    }
+
+    void say(String line) {
+        if (at != null && at.isAlive()) at.say(line);
+    }
+
+    String pick(String... lines) {
+        return lines[level.random.nextInt(lines.length)];
     }
 
     /** The door tried: open a crack and slammed, or shaken in its frame. */
@@ -179,13 +212,10 @@ public final class Visit {
         sound(Vec3.atCenterOf(door), SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, 1.5f, 0.7f);
         level.destroyBlock(door, false);
         if (level.getBlockState(door.above()).getBlock() instanceof DoorBlock) level.destroyBlock(door.above(), false);
-        Watcher w = ModEntities.WATCHER.get().create(level);
-        if (w != null) {
-            w.moveTo(door.getX() + 0.5, door.getY(), door.getZ() + 0.5, out.getOpposite().toYRot(), 0f);
-            w.watch(in.get(0), 40);
-            w.close(40);
-            level.addFreshEntity(w);
-        }
+        // In the doorway.
+        if (at == null || !at.isAlive()) at = masked(in.get(0), door, out.getOpposite(), GONE);
+        else at.moveTo(door.getX() + 0.5, door.getY(), door.getZ() + 0.5, out.getOpposite().toYRot(), 0f);
+        say("S_DOOR_IN");
         for (ServerPlayer p : in) {
             if (Hiding.hidden(p)) continue;
             p.hurt(level.damageSources().magic(), 10f);

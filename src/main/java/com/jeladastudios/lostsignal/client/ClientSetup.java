@@ -20,8 +20,13 @@ public final class ClientSetup {
     }
 
     @SubscribeEvent
+    public static void layers(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createLayer);
+    }
+
+    @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ModEntities.WATCHER.get(), WatcherRenderer::new);
+        event.registerEntityRenderer(ModEntities.STRANGER.get(), StrangerRenderer::new);
         event.registerEntityRenderer(ModEntities.HIKER.get(), HikerRenderer::new);
         event.registerEntityRenderer(ModEntities.REMAINS.get(), RemainsRenderer::new);
     }

@@ -43,7 +43,7 @@ public final class Lines {
     }
 
     /** One of a line's recorded takes, or the line itself where it was recorded once, or null where not yet. */
-    static String take(String line, ServerLevel level) {
+    public static String take(String line, ServerLevel level) {
         java.util.List<String> takes = new java.util.ArrayList<>();
         for (char c = 'a'; c <= 'e'; c++) if (Clips.exists(line + "_" + c)) takes.add(line + "_" + c);
         if (!takes.isEmpty()) return takes.get(level.random.nextInt(takes.size()));

@@ -12,7 +12,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Commands for trying the mod in the development game: {@code /ls_test watcher} puts the watcher for the player now,
+ * Commands for trying the mod in the development game: {@code /ls_test stranger [anywhere|talk]} puts the stranger for the player now,
  * if a spot is found. Registered only with {@code -Dfts_lostsignal.test=true}, which also logs what the mod does and
  * makes the director twenty times as eager.
  */
@@ -142,7 +142,13 @@ public final class TestCommands {
                             + (c.getSource().getPlayer() != null && c.getSource().getPlayer().isSleeping())), false);
                     return 1;
                 }))
-                .then(Commands.literal("watcher").executes(c -> watcher(c, false))
+                .then(Commands.literal("stranger").executes(c -> watcher(c, false))
+                        .then(Commands.literal("talk").executes(c -> {
+                            ServerPlayer p = c.getSource().getPlayer();
+                            var s = p == null ? null : Director.comeUp(p.serverLevel(), p);
+                            c.getSource().sendSuccess(() -> Component.literal("LS_TEST stranger talk " + (s == null ? "none" : s.blockPosition().toShortString())), false);
+                            return s == null ? 0 : 1;
+                        }))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
     }
 
@@ -165,7 +171,7 @@ public final class TestCommands {
         if (p == null) return 0;
         Director.MISSES.clear();
         var w = Director.put(p.serverLevel(), p, anywhere);
-        c.getSource().sendSuccess(() -> Component.literal("LS_TEST watcher "
+        c.getSource().sendSuccess(() -> Component.literal("LS_TEST stranger "
                 + (w == null ? "none" : w.getBlockX() + " " + w.getBlockY() + " " + w.getBlockZ()) + " misses=" + Director.MISSES), false);
         return w == null ? 0 : 1;
     }
