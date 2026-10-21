@@ -79,7 +79,7 @@ public final class Mimic {
             c.next = now + 1800;
             Lines.say(level, c.from, Lines.Speaker.HIKER, "R_CALL", 0.15f);
         }
-        if (time < 14000 || time > 22000) return;
+        if (time < 14000 || time > 22000 || !com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.FAKE_CALLS)) return;
         for (ServerPlayer p : level.players()) {
             BlockPos tower = Missions.towerAt(level, p);
             if (tower == null || p.getY() < tower.getY() + 18 || CALLS.containsKey(tower)) continue;
@@ -88,7 +88,7 @@ public final class Mimic {
             LOOKED.put(tower, night);
             float chance = CHANCE * (com.jeladastudios.lostsignal.dev.TestCommands.ON ? 3 : 1);
             if (level.random.nextFloat() >= chance) continue;
-            begin(level, p, tower, level.random.nextBoolean());
+            begin(level, p, tower, com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.ECHO) && level.random.nextBoolean());
         }
     }
 

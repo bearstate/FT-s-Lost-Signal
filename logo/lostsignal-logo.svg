@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="FT's Geology: Lost Signal">
+  <title>FT's Geology: Lost Signal</title>
+  <!-- FT's Geology's mark, F and T across a fault, as on Feel the Nature's, over the same country at night: a lookout
+       on the far summit, its window lit, its signal going out and breaking up; and in the trees, two eyes. -->
+  <defs>
+    <linearGradient id="sky" gradientUnits="userSpaceOnUse" x1="0" y1="-40" x2="0" y2="230"><stop offset="0" stop-color="#03060D"/><stop offset="1" stop-color="#16263A"/></linearGradient>
+    <linearGradient id="water" gradientUnits="userSpaceOnUse" x1="0" y1="364" x2="0" y2="560"><stop offset="0" stop-color="#0D2236"/><stop offset="1" stop-color="#060F1B"/></linearGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#FFC861" stop-opacity="0.55"/><stop offset="1" stop-color="#FFC861" stop-opacity="0"/></radialGradient>
+    <radialGradient id="eyeglow"><stop offset="0" stop-color="#FF2B2B" stop-opacity="0.6"/><stop offset="1" stop-color="#FF2B2B" stop-opacity="0"/></radialGradient>
+    <clipPath id="west"><path d="M-10.0 -10.0 L250.2 -10.0 L246.9 23.0 L223.8 254.0 L185.3 485.0 L179.1 522.0 L-10.0 522.0 Z"/></clipPath>
+    <clipPath id="east"><path d="M522.0 -10.0 L250.2 -10.0 L246.9 23.0 L223.8 254.0 L185.3 485.0 L179.1 522.0 L522.0 522.0 Z"/></clipPath>
+    <!-- The stars do not fault. -->
+    <g id="stars" fill="#E9E3D8">
+      <circle cx="22" cy="18" r="1.6" opacity="0.8"/><circle cx="118" cy="30" r="1.2" opacity="0.6"/>
+      <circle cx="170" cy="12" r="1.8" opacity="0.9"/><circle cx="214" cy="52" r="1.1" opacity="0.5"/>
+      <circle cx="268" cy="22" r="1.5" opacity="0.8"/><circle cx="318" cy="60" r="1.2" opacity="0.6"/>
+      <circle cx="352" cy="14" r="1.9" opacity="0.9"/><circle cx="398" cy="40" r="1.1" opacity="0.5"/>
+      <circle cx="430" cy="10" r="1.4" opacity="0.7"/><circle cx="24" cy="74" r="1.1" opacity="0.5"/>
+      <circle cx="292" cy="98" r="1.3" opacity="0.6"/><circle cx="228" cy="104" r="1.0" opacity="0.4"/>
+      <circle cx="150" cy="58" r="1.0" opacity="0.4"/><circle cx="500" cy="28" r="1.2" opacity="0.6"/>
+    </g>
+    <!-- The country, on both sides of the fault; the east side dropped by the throw. -->
+    <g id="land">
+      <path fill="#14202E" d="M0 214 L0 176 L46 150 L88 172 L140 128 L196 166 L250 140 L300 170 L352 120 L404 158 L446 132 L492 92 L512 104 L512 214 Z"/>
+      <!-- The lookout on the summit: splayed legs braced in X, the glazed cab, the hipped roof, the mast. -->
+      <g stroke="#0A121C" stroke-width="2.4" fill="none">
+        <path d="M481 98 L486 72 M503 98 L498 72 M482 94 L501 78 M502 94 L483 78"/>
+        <path d="M492 50 L492 34"/>
+      </g>
+      <circle cx="492" cy="64" r="22" fill="url(#glow)"/>
+      <path fill="#0A121C" d="M482 72 L502 72 L502 58 L482 58 Z M479 59 L492 49 L505 59 Z"/>
+      <path fill="#FFC861" d="M485 61 L490 61 L490 69 L485 69 Z M494 61 L499 61 L499 69 L494 69 Z"/>
+      <circle cx="492" cy="33" r="2.2" fill="#FF6A4A"/>
+      <path fill="#0B1A13" d="M0 300 L0 222 L8 196 L16 222 L24 206 L32 222 L40 201 L48 222 L56 196 L64 222 L72 206 L80 222 L88 201 L96 222 L104 196 L112 222 L120 206 L128 222 L136 201 L144 222 L152 196 L160 222 L168 206 L176 222 L184 201 L192 222 L200 196 L208 222 L216 206 L224 222 L232 201 L240 222 L248 196 L256 222 L264 206 L272 222 L280 201 L288 222 L296 196 L304 222 L312 206 L320 222 L328 201 L336 222 L344 196 L352 222 L360 206 L368 222 L376 201 L384 222 L392 196 L400 222 L408 206 L416 222 L424 201 L432 222 L440 196 L448 222 L456 206 L464 222 L472 201 L480 222 L488 196 L496 222 L504 206 L512 222 L520 201 L520 300 Z"/>
+      <path fill="#0F2419" d="M0 270 L512 270 L512 304 L0 304 Z"/>
+      <path fill="#132C1E" d="M0 304 L512 304 L512 336 L0 336 Z"/>
+      <path fill="#173424" d="M0 336 L512 336 L512 364 L0 364 Z"/>
+      <path fill="url(#water)" d="M0 364 L512 364 L512 976 L0 976 Z"/>
+      <g fill="#1B3A57">
+        <path d="M0 384 L120 384 L120 388 L0 388 Z"/><path d="M260 396 L350 396 L350 400 L260 400 Z"/>
+        <path d="M97 410 L277 410 L277 414 L97 414 Z"/><path d="M357 422 L447 422 L447 426 L357 426 Z"/>
+        <path d="M194 436 L314 436 L314 440 L194 440 Z"/><path d="M454 448 L544 448 L544 452 L454 452 Z"/>
+        <path d="M291 462 L471 462 L471 466 L291 466 Z"/><path d="M88 488 L208 488 L208 492 L88 492 Z"/>
+        <path d="M348 500 L438 500 L438 504 L348 504 Z"/><path d="M185 514 L365 514 L365 518 L185 518 Z"/>
+      </g>
+      <!-- The lit window in the water. -->
+      <path fill="#FFC861" opacity="0.3" d="M483 390 L501 390 L501 393 L483 393 Z M486 397 L498 397 L498 399 L486 399 Z M489 404 L495 404 L495 406 L489 406 Z"/>
+    </g>
+  </defs>
+  <g clip-path="url(#west)">
+    <rect x="0" y="0" width="512" height="512" fill="url(#sky)"/>
+    <use xlink:href="#stars" href="#stars"/>
+    <!-- A thin moon. -->
+    <path fill="#E9E3D8" d="M58 22 A22 22 0 1 0 58 66 A16 18 0 1 1 58 22 Z" opacity="0.85"/>
+    <use xlink:href="#land" href="#land"/>
+  </g>
+  <g clip-path="url(#east)">
+    <rect x="0" y="0" width="512" height="512" fill="url(#sky)"/>
+    <use xlink:href="#stars" href="#stars"/>
+    <use xlink:href="#land" href="#land" transform="translate(0 53.9)"/>
+    <!-- The signal off the mast, breaking up as it goes. -->
+    <g fill="none" stroke="#FFC861" stroke-linecap="round" transform="translate(492 86.9)">
+      <path d="M-13 0 A13 13 0 0 1 0 -13" stroke-width="4" opacity="0.95"/>
+      <path d="M-26 0 A26 26 0 0 1 0 -26" stroke-width="4" opacity="0.7"/>
+      <path d="M-40 0 A40 40 0 0 1 0 -40" stroke-width="4" opacity="0.45" stroke-dasharray="10 7"/>
+      <path d="M-55 0 A55 55 0 0 1 0 -55" stroke-width="3.5" opacity="0.25" stroke-dasharray="5 11"/>
+    </g>
+    <!-- Two eyes in the trees, between the letters. -->
+    <circle cx="244" cy="300" r="13" fill="url(#eyeglow)"/>
+    <circle cx="238.5" cy="300" r="2.6" fill="#FF2B2B"/>
+    <circle cx="249.5" cy="300" r="2.6" fill="#FF2B2B"/>
+  </g>
+  <g transform="translate(-0.5 23) scale(3.85)">
+    <path fill="#FF003C" d="M62.5 0 L66 0 L60 60 L50 120 L46.5 120 L56.5 60 Z"/>
+    <path fill="#E9E3D8" d="M10 14 H56 V32 H28 V48 H48 V66 H28 V98 H10 Z"/>
+    <path fill="#E9E3D8" d="M70 28 H122 V46 H105 V112 H87 V46 H70 Z"/>
+  </g>
+</svg>

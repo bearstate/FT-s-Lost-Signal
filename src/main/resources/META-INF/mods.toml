@@ -6,9 +6,13 @@ license = "GPL-3.0-or-later"
 modId = "fts_lostsignal"
 version = "${file.jarVersion}"
 displayName = "FT's Geology: Lost Signal"
+logoFile = "lostsignal-logo.png"
 authors = "Jelada Studios"
+credits = "Sounds: from Freesound; the recordists are named in CREDITS-sounds.md, in the jar. The radio: CodinGlitch's Simple Radio, in its ham fork."
 description = '''
-Nights at a fire lookout: the rescue frequency, the lost on the mountain, and something in the trees that listens too.
+Nights at a fire lookout: the rescue frequency, the lost on the mountain, the keepers of the lookouts round you, and a
+stranger in the trees who listens too. Needs FT's Geology, Feel the Nature, Simple Voice Chat and the Simple Radio ham
+fork. Everything that frightens can be turned down or off in the world's serverconfig.
 '''
 
 [[dependencies.fts_lostsignal]]
@@ -40,8 +44,16 @@ Nights at a fire lookout: the rescue frequency, the lost on the mountain, and so
     side = "BOTH"
 
 [[dependencies.fts_lostsignal]]
+    modId = "voicechat"
+    mandatory = true
+    versionRange = "[1.20.1-2.6.0,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+# The ham fork, not Simple Radio as published: its stations, power and wired blocks are what the lookouts are built of.
+[[dependencies.fts_lostsignal]]
     modId = "simpleradio"
     mandatory = true
-    versionRange = "*"
+    versionRange = "[1.20.1-4.5.7.9-ham,)"
     ordering = "AFTER"
     side = "BOTH"

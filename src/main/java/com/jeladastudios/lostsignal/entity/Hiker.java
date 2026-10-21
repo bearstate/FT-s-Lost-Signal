@@ -190,7 +190,7 @@ public class Hiker extends PathfinderMob {
 
     /** Walking over steep ground, now and then a fall: said on the radio to whoever is listening. */
     void mayFall(net.minecraft.server.level.ServerLevel level) {
-        if (hurt >= 2 || !mission || tickCount % 1200 != 0 || !getNavigation().isInProgress()) return;
+        if (hurt >= 2 || !mission || tickCount % 1200 != 0 || !getNavigation().isInProgress() || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FALLS)) return;
         if (com.jeladastudios.lostsignal.rescue.Sight.drop(level, blockPosition()) < 3) return;
         if (getRandom().nextFloat() >= FALLS) return;
         hurt = Math.min(2, hurt + (getRandom().nextFloat() < BADLY ? 2 : 1));

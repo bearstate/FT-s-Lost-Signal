@@ -119,7 +119,8 @@ public final class Missions extends SavedData {
             if (last != null && last <= level.getDayTime() && level.getDayTime() - last < REST) continue;
             m.lastNight.put(tower, level.getDayTime());
             m.setDirty();
-            if (level.random.nextFloat() < CHANCE * (com.jeladastudios.lostsignal.dev.TestCommands.ON ? 2.5f : 1f)) begin(level, tower);
+            float nights = com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.HIKERS) ? com.jeladastudios.lostsignal.Config.scale(com.jeladastudios.lostsignal.Config.HIKER_NIGHTS) : 0f;
+            if (level.random.nextFloat() < CHANCE * nights * (com.jeladastudios.lostsignal.dev.TestCommands.ON ? 2.5f : 1f)) begin(level, tower);
         }
         for (Mission mission : new java.util.ArrayList<>(m.missions.values())) m.run(level, mission, day);
     }
@@ -414,7 +415,8 @@ public final class Missions extends SavedData {
 
     /** The chance something comes for a hiker out in the small hours, as things stand with them. */
     static float chance(Mission mission, Hiker h) {
-        return TAKEN_BASE + (mission.answered ? 0 : TAKEN_UNANSWERED) + (h.state() == Hiker.State.GOING ? TAKEN_WALKING : 0);
+        float chance = TAKEN_BASE + (mission.answered ? 0 : TAKEN_UNANSWERED) + (h.state() == Hiker.State.GOING ? TAKEN_WALKING : 0);
+        return Math.min(1f, chance * com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.TAKES_HIKERS));
     }
 
     /**
@@ -431,7 +433,7 @@ public final class Missions extends SavedData {
                 "X_SCREAM_FAR", 300, 1f);
         BlockPos fire = h.leaveCamp();
         var made = com.jeladastudios.lostsignal.remains.Scene.make(level, h.blockPosition(), fire, h.kit(), name, mission.tower, journal,
-                level.random.nextFloat() < WITH_BODY, level.random);
+                com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.BODIES) && level.random.nextFloat() < WITH_BODY, level.random);
         h.discard();
         mission.stage = Mission.Stage.TAKEN;
         mission.takenAt = level.getDayTime();

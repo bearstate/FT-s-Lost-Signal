@@ -56,15 +56,16 @@ public final class Director {
         if (level.dimension() != Level.OVERWORLD) return;
         long now = level.getGameTime();
         if (!level.canSeeSky(player.blockPosition()) || strangerOf(level, player) != null) return;
+        if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.STRANGER)) return;
         float boost = com.jeladastudios.lostsignal.dev.TestCommands.ON ? 20 : 1;
         boolean dark = dark(level);
-        if (!dark && now >= NEXT_TALK.getOrDefault(player.getUUID(), 0L) && level.random.nextFloat() < CHANCE_TALK * boost
+        if (!dark && com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.TALKS) && now >= NEXT_TALK.getOrDefault(player.getUUID(), 0L) && level.random.nextFloat() < CHANCE_TALK * boost
                 && com.jeladastudios.lostsignal.mission.Missions.towerAt(level, player) == null) {
             if (comeUp(level, player) != null) NEXT_TALK.put(player.getUUID(), now + REST_TALK);
             return;
         }
         if (now < NEXT.getOrDefault(player.getUUID(), 0L)) return;
-        if (level.random.nextFloat() >= (dark ? CHANCE : CHANCE_DAY) * boost) return;
+        if (level.random.nextFloat() >= (dark ? CHANCE : CHANCE_DAY) * boost * com.jeladastudios.lostsignal.Config.scale(com.jeladastudios.lostsignal.Config.SIGHTINGS)) return;
         if (put(level, player) != null) NEXT.put(player.getUUID(), now + REST);
     }
 

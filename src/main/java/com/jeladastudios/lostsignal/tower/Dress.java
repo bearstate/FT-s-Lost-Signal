@@ -116,6 +116,7 @@ final class Dress {
     }
 
     static void stain(ServerLevel level, BlockPos p, int kind) {
+        if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.STAINS)) return;
         BlockState s = ModBlocks.STAIN.get().defaultBlockState().setValue(StainBlock.KIND, kind)
                 .setValue(StainBlock.FACING, Direction.Plane.HORIZONTAL.getRandomDirection(level.random));
         if (level.getBlockState(p).canBeReplaced() && s.canSurvive(level, p)) level.setBlock(p, s, 3);
@@ -128,7 +129,8 @@ final class Dress {
         BlockPos at = BlockPos.containing(foot.getX() + Math.cos(a) * d, foot.getY(), foot.getZ() + Math.sin(a) * d);
         level.getChunk(at.getX() >> 4, at.getZ() >> 4);
         com.jeladastudios.lostsignal.remains.Scene.make(level, at, null, random.nextInt(com.jeladastudios.lostsignal.entity.Hiker.KITS),
-                t.keeper.isEmpty() ? "-" : t.keeper, null, com.jeladastudios.lostsignal.remains.Journal.KEEPER, random.nextBoolean(), random);
+                t.keeper.isEmpty() ? "-" : t.keeper, null, com.jeladastudios.lostsignal.remains.Journal.KEEPER,
+                com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.BODIES) && random.nextBoolean(), random);
     }
 
     /**

@@ -60,6 +60,11 @@ public final class Tape {
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
         if (level.getGameTime() % 100 != 31) return;
+        // Nothing anyone says kept, if the world says so: the listeners taken down, and what they kept let go.
+        if (!com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.ECHO)) {
+            if (!EARS.isEmpty() || !SAID.isEmpty()) forget();
+            return;
+        }
         for (ServerPlayer p : level.players()) {
             BlockPos tower = Missions.towerAt(level, p);
             if (tower == null || EARS.containsKey(tower)) continue;
@@ -80,7 +85,7 @@ public final class Tape {
      */
     static void heard(BlockPos ear, Ear.Heard h) {
         UUID who = h.speaker();
-        if (who == null || !ONLINE.contains(who)) return;
+        if (who == null || !ONLINE.contains(who) || !com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.ECHO)) return;
         long now = System.currentTimeMillis();
         Listening was = SPEAKING.get(who);
         // Another listener has them: theirs is kept, unless it has heard nothing for a couple of seconds.
@@ -152,11 +157,16 @@ public final class Tape {
 
     @SubscribeEvent
     public static void stopping(ServerStoppingEvent event) {
+        forget();
+        ONLINE.clear();
+    }
+
+    /** The listeners taken down, and everything they kept let go. */
+    static void forget() {
         for (Ear ear : EARS.values()) ear.close();
         EARS.clear();
         SAYING.clear();
         SAID.clear();
         SPEAKING.clear();
-        ONLINE.clear();
     }
 }

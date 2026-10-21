@@ -194,6 +194,7 @@
   "call.fts_lostsignal.heading": "Çağrı",
   "call.fts_lostsignal.district": "Merkez",
   "call.fts_lostsignal.button": "Gözcü %s · %s %s",
+  "call.fts_lostsignal.button_short": "No. %s · %s %s",
   "call.fts_lostsignal.calling": "Gözcü %s çağrılıyor...",
   "call.fts_lostsignal.calling_district": "Merkez çağrılıyor...",
   "call.fts_lostsignal.no_answer": "Gözcü %s cevap vermiyor. Sadece parazit.",

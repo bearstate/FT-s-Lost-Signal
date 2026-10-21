@@ -50,19 +50,31 @@ public class RescueScreen extends Screen {
 
     /** The calls: the District, and the lookouts round, each with its bearing and distance. */
     private void calls(int left, int y, int width, int h, int gap) {
-        int n = 2 + round.size(), w = (width - (n - 1) * gap) / n, x = left;
-        addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.district"),
-                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.DISTRICT, 0))).bounds(x, y, w, h).build());
+        Component district = Component.translatable("call.fts_lostsignal.district"),
+                smoke = Component.translatable("call.fts_lostsignal.report_smoke");
+        // The District and the smoke as wide as their words; with no lookouts round, the row between them.
+        int wd = font.width(district) + 16, ws = font.width(smoke) + 16;
+        if (round.isEmpty()) wd = ws = (width - gap) / 2;
+        int x = left;
+        addRenderableWidget(Button.builder(district,
+                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.DISTRICT, 0))).bounds(x, y, wd, h).build());
         // A fire called in, by the last bearing taken on it.
-        x += w + gap;
-        addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.report_smoke"),
-                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.FIRE, 0))).bounds(x, y, w, h).build());
+        x += wd + gap;
+        addRenderableWidget(Button.builder(smoke,
+                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.FIRE, 0))).bounds(x, y, ws, h).build());
+        x += ws + gap;
+        if (round.isEmpty()) return;
+        // The lookouts round share the rest: named in full where it fits, else shortly, in full on hovering.
+        int n = round.size(), w = (left + width - x - (n - 1) * gap) / n;
         for (Net.Neighbour nb : round) {
-            x += w + gap;
             String point = com.jeladastudios.lostsignal.finder.FireFinder.point(nb.bearing());
-            addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.button", nb.number(),
-                            Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()),
-                    b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.LOOKOUT, nb.key()))).bounds(x, y, w, h).build());
+            Component full = Component.translatable("call.fts_lostsignal.button", nb.number(),
+                    Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance());
+            Component label = font.width(full) <= w - 8 ? full : Component.translatable("call.fts_lostsignal.button_short",
+                    nb.number(), Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance());
+            addRenderableWidget(Button.builder(label, b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.LOOKOUT, nb.key())))
+                    .tooltip(net.minecraft.client.gui.components.Tooltip.create(full)).bounds(x, y, w, h).build());
+            x += w + gap;
         }
     }
 

@@ -22,6 +22,17 @@ minecraft {
             property 'fts_lostsignal.test', 'true'
             mods { fts_lostsignal { source sourceSets.main } }
         }
+        // A dedicated server, to be joined from the development game: what runs on a server, without a client's
+        // classes, and between two machines.
+        server {
+            workingDirectory project.file('run/server')
+            property 'forge.logging.console.level', 'info'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            property 'fts_lostsignal.test', 'true'
+            args '--nogui'
+            mods { fts_lostsignal { source sourceSets.main } }
+        }
     }
 }
 

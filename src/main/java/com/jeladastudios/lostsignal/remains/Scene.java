@@ -266,6 +266,8 @@ public final class Scene {
 
     /** A mark on the ground there; over one already there only if told to (the smear goes over splashes). */
     static void stain(ServerLevel level, BlockPos p, int kind, Direction facing, boolean over) {
+        // The stains and the smear may be turned off; the footprints are only footprints.
+        if (kind != StainBlock.PRINT && !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.STAINS)) return;
         BlockState s = ModBlocks.STAIN.get().defaultBlockState().setValue(StainBlock.KIND, kind).setValue(StainBlock.FACING, facing);
         BlockState there = level.getBlockState(p);
         if (!there.canBeReplaced() || there.is(ModBlocks.STAIN.get()) && !over) return;

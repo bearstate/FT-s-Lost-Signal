@@ -39,7 +39,8 @@ public final class FlowingSleep {
 
     @SubscribeEvent
     public static void player(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer p) || !p.isSleeping()) return;
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer p) || !p.isSleeping()
+                || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FLOWING_SLEEP)) return;
         try {
             int counter = SLEEP_COUNTER.getInt(p);
             if (counter > 99) SLEEP_COUNTER.setInt(p, 99);
@@ -51,6 +52,10 @@ public final class FlowingSleep {
     @SubscribeEvent
     public static void level(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
+        if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FLOWING_SLEEP)) {
+            pace = 1f;
+            return;
+        }
         boolean flowing = enoughAsleep(level);
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON && level.getGameTime() % 40 == 0 && (flowing || pace > 1.01f || level.players().stream().anyMatch(Player::isSleeping))) {
             LostSignal.LOGGER.info("SLEEP time {} pace {} flowing {} asleep {}", level.getDayTime(), String.format(java.util.Locale.ROOT, "%.1f", pace), flowing,

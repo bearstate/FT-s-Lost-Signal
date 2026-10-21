@@ -45,7 +45,7 @@ public final class District {
     @SubscribeEvent
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
-        if (level.getGameTime() % 20 != 0 || level.players().isEmpty()) return;
+        if (level.getGameTime() % 20 != 0 || level.players().isEmpty() || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.DISTRICT)) return;
         long day = level.getDayTime() / 24000, time = level.getDayTime() % 24000;
         for (Slot s : DAY) {
             // Within a while of its time, once that day: a sleeper's night goes by too fast for a narrow window.

@@ -194,6 +194,7 @@
   "call.fts_lostsignal.heading": "Call",
   "call.fts_lostsignal.district": "District",
   "call.fts_lostsignal.button": "Lookout %s · %s %s",
+  "call.fts_lostsignal.button_short": "No. %s · %s %s",
   "call.fts_lostsignal.calling": "Calling Lookout %s...",
   "call.fts_lostsignal.calling_district": "Calling the District...",
   "call.fts_lostsignal.no_answer": "No answer from Lookout %s. Only static.",

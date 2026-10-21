@@ -83,7 +83,8 @@ public final class Towers extends SavedData {
         float roll = random.nextFloat();
         if (roll < FOUND_KEPT) keep(tower, random);
         else if (roll < FOUND_KEPT + FOUND_ABANDONED) tower.state = Tower.State.ABANDONED;
-        else if (roll < FOUND_KEPT + FOUND_ABANDONED + FOUND_STRANGER) tower.state = Tower.State.STRANGER;
+        else if (roll < FOUND_KEPT + FOUND_ABANDONED + FOUND_STRANGER
+                && com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.KEEPS_LOOKOUTS)) tower.state = Tower.State.STRANGER;
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER {} found at {}: {} {}", tower.number,
                 foot.toShortString(), tower.state, tower.keeper);
         return tower;
@@ -361,7 +362,8 @@ public final class Towers extends SavedData {
                     setDirty();
                 }
                 // A lookout someone keeps: now and then, every few days, the District sends supplies up.
-                if (!tower.supplyPending && level.getGameTime() - tower.lastSupply > 2 * 24_000 && random.nextFloat() < SUPPLIES) {
+                if (!tower.supplyPending && level.getGameTime() - tower.lastSupply > 2 * 24_000 && random.nextFloat() < SUPPLIES
+                        && com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.SUPPLIES)) {
                     tower.supplyPending = true;
                     setDirty();
                 }
@@ -371,7 +373,7 @@ public final class Towers extends SavedData {
             float r = random.nextFloat();
             switch (tower.state) {
                 case KEPT -> {
-                    if (r < KEPT_TAKEN) {
+                    if (r < KEPT_TAKEN && com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.TAKES_KEEPERS)) {
                         // Not heard from again.
                         tower.state = Tower.State.ABANDONED;
                         tower.remainsPending = true;
@@ -400,14 +402,14 @@ public final class Towers extends SavedData {
                     if (r < EMPTY_KEPT) {
                         keep(tower, random);
                         notice(level, "new_keeper", tower);
-                    } else if (r < EMPTY_KEPT + EMPTY_STRANGER) {
+                    } else if (r < EMPTY_KEPT + EMPTY_STRANGER && com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.KEEPS_LOOKOUTS)) {
                         tower.state = Tower.State.STRANGER;
                         tower.dressed = false;
                     }
                 }
                 case STRANGER -> {
-                    // He moves on; what he left there stays.
-                    if (r < STRANGER_GONE) tower.state = Tower.State.EMPTY;
+                    // He moves on; what he left there stays. No longer let keep one, he is gone by the next dawn.
+                    if (r < STRANGER_GONE || !com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.KEEPS_LOOKOUTS)) tower.state = Tower.State.EMPTY;
                 }
                 case ABANDONED -> {
                     if (r < ABANDONED_CLEARED) tower.state = Tower.State.EMPTY;

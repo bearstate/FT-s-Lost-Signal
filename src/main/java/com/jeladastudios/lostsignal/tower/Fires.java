@@ -58,10 +58,11 @@ public final class Fires {
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
         for (Fire f : FIRES) if (!f.smoke.burning()) FIRES.remove(f);
-        if (level.getGameTime() % 600 != 77 || starting) return;
+        if (level.getGameTime() % 600 != 77 || starting || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FIRES)) return;
         long time = level.getDayTime() % 24000;
         float chance = level.isThundering() ? STORM : !level.isRaining() && time > 6000 && time < 11000 ? DRY : 0;
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2;
+        chance *= com.jeladastudios.lostsignal.Config.scale(com.jeladastudios.lostsignal.Config.FIRE_CHANCE);
         if (chance == 0) return;
         for (ServerPlayer p : level.players()) {
             BlockPos tower = Missions.towerAt(level, p);
@@ -174,7 +175,7 @@ public final class Fires {
         Speech.after(level, at, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, done, 1f));
         // The crew on it: out in a few minutes. And the District remembers good eyes: supplies come up, once it is said.
         Speech.after(level, CREW * 20, called.smoke::out);
-        if (home != null) {
+        if (home != null && com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.SUPPLIES)) {
             Tower h = home;
             Speech.after(level, at + Speech.length(done) + 60, () -> {
                 h.supplyPending = true;
