@@ -21,11 +21,11 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 
 /**
- * What is left of a hiker the thing in the trees took: the body, face down at the end of the drag marks -- or, where
+ * What is left of a hiker the thing in the trees took: the body, face down at the end of the drag marks, or, where
  * there is no body to find, nothing to see at all, only the keeper of the scene: the camp's fire smoking a while
  * after, and the scene cleared away in the end.
  *
- * <p>Found -- the body turned over, its journal taken -- the night's story is told to the District, and in a day, once
+ * <p>Found (the body turned over, its journal taken), the night's story is told to the District, and in a day, once
  * no one is looking, the body is gone (taken down off the mountain).</p>
  */
 public class Remains extends Entity {

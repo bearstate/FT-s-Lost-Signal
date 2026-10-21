@@ -264,7 +264,7 @@ public final class Visit {
             if (com.jeladastudios.lostsignal.tower.Towers.company(level, tower)) chance *= 0.5f;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2.5f;
             chance *= com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.VISITS);
-            // By how much of the small hours has gone by since the last look -- a second, or many, a keeper asleep.
+            // By how much of the small hours has gone by since the last look: a second, or many, a keeper asleep.
             float odds = chance * Math.min(2000, Math.max(0, clock - since)) / 4000f;
             if (level.random.nextFloat() >= odds) continue;
             LOOKED.put(tower, night);

@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 /**
  * Someone listening on a frequency at a place who is not a player: a lost hiker's handheld, the district's set. A
  * receiver of the radio's own kind, so it hears only what the radio would let it hear from there, but plays nothing:
- * it is told of each frame that arrives -- who sent it, how strong, whether it was the end of a transmission -- and
+ * it is told of each frame that arrives (who sent it, how strong, whether it was the end of a transmission) and
  * may keep the sound itself.
  */
 public final class Ear {

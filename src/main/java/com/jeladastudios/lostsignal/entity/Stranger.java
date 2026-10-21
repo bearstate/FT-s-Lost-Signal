@@ -29,7 +29,7 @@ import java.util.UUID;
  *
  * <p>He is put in the world for one player, whom he watches or talks to, and he is never saved with it: each meeting
  * is its own. He does nothing a man could not: looked at too long or come at, he turns and walks off into the trees,
- * and is gone once no one can see him. He is not hurt by being struck -- he walks away from it.</p>
+ * and is gone once no one can see him. He is not hurt by being struck: he walks away from it.</p>
  */
 public class Stranger extends PathfinderMob {
 

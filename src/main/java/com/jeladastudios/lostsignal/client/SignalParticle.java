@@ -9,8 +9,8 @@ import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 
 /**
- * A point of light far off: a flare's red burn or a lamp's warm one. Lit by itself, not by where it is -- which may be
- * in country the client has not loaded -- and larger the further off it is, so it stays a point of light and does not
+ * A point of light far off: a flare's red burn or a lamp's warm one. Lit by itself, not by where it is (which may be
+ * in country the client has not loaded) and larger the further off it is, so it stays a point of light and does not
  * shrink to nothing.
  */
 public class SignalParticle extends TextureSheetParticle {
@@ -47,7 +47,7 @@ public class SignalParticle extends TextureSheetParticle {
     }
 
     /**
-     * Drawn as light is: added to what is behind it, and through the fog -- which at the edge of the view distance hides
+     * Drawn as light is: added to what is behind it, and through the fog, which at the edge of the view distance hides
      * everything, and a flare over a far ridge is exactly what should not be hidden.
      */
     static final ParticleRenderType GLOW = new ParticleRenderType() {

@@ -18,7 +18,7 @@ import java.util.List;
 
 /**
  * Calling out on the radio from a lookout's station: to the District, or to one of the lookouts round. Who answers is
- * how the world is -- a keeper with their news, or the District with what it has heard; or no one, only the hiss; or,
+ * how the world is: a keeper with their news, or the District with what it has heard; or no one, only the hiss; or,
  * from a lookout no one is posted at, a voice that says everything is fine.
  */
 public final class Calls {
@@ -37,7 +37,7 @@ public final class Calls {
     }
 
     /**
-     * The panel opened: the lookouts round sent to it -- now, if they are known, else once they have been worked out.
+     * The panel opened: the lookouts round sent to it, now, if they are known, else once they have been worked out.
      */
     public static void panel(ServerPlayer p) {
         ServerLevel level = p.serverLevel();

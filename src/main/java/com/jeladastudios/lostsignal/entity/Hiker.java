@@ -28,8 +28,8 @@ import java.util.EnumSet;
 
 /**
  * A hiker lost on the mountain: a walker of the ordinary kind who left the trail and cannot find it. Walks as a lost
- * person does -- on in roughly the way they were going, downhill more often than up, round what is too steep or too
- * deep -- tires and rests, and when night comes stops and makes camp with a fire. Told where to go (by the lookout's
+ * person does (on in roughly the way they were going, downhill more often than up, round what is too steep or too
+ * deep) tires and rests, and when night comes stops and makes camp with a fire. Told where to go (by the lookout's
  * keeper, over the radio), walks there instead, as far as the ground lets them.
  *
  * <p>Saved with the world: a hiker is someone, and does not vanish when the player looks away.</p>
@@ -219,7 +219,7 @@ public class Hiker extends PathfinderMob {
         super.tick();
         if (level() instanceof net.minecraft.server.level.ServerLevel s) {
             mayFall(s);
-            // Out on a night that is over -- loaded back after it ended -- they are not out there any more.
+            // Out on a night that is over (loaded back after it ended) they are not out there any more.
             if (mission && tickCount > 400 && tickCount % 200 == 0 && !com.jeladastudios.lostsignal.mission.Missions.onNight(s, getUUID())) {
                 discard();
                 return;
@@ -366,7 +366,7 @@ public class Hiker extends PathfinderMob {
 
     /**
      * On in roughly the way they were going: of a handful of spots ten to twenty blocks out within sixty degrees of
-     * that way, the lowest that a path reaches -- the lost go down, towards water and valleys.
+     * that way, the lowest that a path reaches: the lost go down, towards water and valleys.
      */
     void wander() {
         if (Double.isNaN(heading)) heading = getRandom().nextDouble() * Math.PI * 2;
@@ -408,8 +408,8 @@ public class Hiker extends PathfinderMob {
             var path = getNavigation().createPath(to, 1);
             if (path != null && getNavigation().moveTo(path, pace())) return true;
         }
-        // A leg of the way: straight on where the ground lets them, else round -- further to the side, and shorter,
-        // each time the way ahead is a drop or a wall -- as long as it brings them nearer.
+        // A leg of the way: straight on where the ground lets them, else round (further to the side, and shorter,
+        // each time the way ahead is a drop or a wall) as long as it brings them nearer.
         double far = Math.sqrt(distanceToSqr(Vec3.atBottomCenterOf(to)));
         for (int side : new int[]{0, 25, -25, 50, -50, 80, -80}) {
             for (int reach : new int[]{24, 14, 8}) {
@@ -440,7 +440,7 @@ public class Hiker extends PathfinderMob {
         return true;
     }
 
-    /** Their fire made to smoke -- green wood on it -- for a few minutes; a fire made first where there is none. */
+    /** Their fire made to smoke (green wood on it) for a few minutes; a fire made first where there is none. */
     public void smoke() {
         if (!(level() instanceof net.minecraft.server.level.ServerLevel server)) return;
         if (fire == null) {

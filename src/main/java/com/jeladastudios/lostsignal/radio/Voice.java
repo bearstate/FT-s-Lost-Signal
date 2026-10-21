@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * Something said aloud, not over the radio: the line's recording played from the speaker where they stand, through
- * Simple Voice Chat, so it is heard as a voice nearby is -- from that way, fainter further off -- and its words as a
+ * Simple Voice Chat, so it is heard as a voice nearby is (from that way, fainter further off) and its words as a
  * subtitle to the players within earshot.
  */
 public final class Voice {

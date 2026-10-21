@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * What the stranger does with the radio, some nights, to a lookout whose keeper sits up by it. Either their own voice,
  * something they said on the air days ago, played back to them off his tape from somewhere out in the dark; or a call
- * from someone lost, when no one is -- him, in his own voice, playing a part. Answer that call and he answers back, and
+ * from someone lost, when no one is: him, in his own voice, playing a part. Answer that call and he answers back, and
  * comes a little nearer each time; answer it to the end and he is on the stair.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)

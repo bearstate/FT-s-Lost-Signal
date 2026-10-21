@@ -19,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * What a lost hiker shows to be found by, seen from a lookout far further off than the hiker is: a red flare going up
  * and coming down slowly under its little parachute, a column of smoke from a fire built to smoke, a lamp waved in the
  * dark. Each is drawn on the players' screens from the server, as points of light and smoke sent up to 512 blocks out,
- * so it is seen whether or not the hiker -- or the ground under them -- is loaded where the player is.
+ * so it is seen whether or not the hiker (or the ground under them) is loaded where the player is.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)
 public final class Signals {

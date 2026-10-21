@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * The District's day on the rescue frequency, heard at every lookout with a working set: the morning radio check, a
- * call for the weather some days, the end of day check, the reminder of the rules as it gets dark -- and some nights,
+ * call for the weather some days, the end of day check, the reminder of the rules as it gets dark, and some nights,
  * late, a check no one asked for. Called back after one of them, the District answers that call.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)

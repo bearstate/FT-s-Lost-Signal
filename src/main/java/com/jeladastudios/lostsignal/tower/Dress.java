@@ -134,8 +134,8 @@ final class Dress {
     }
 
     /**
-     * The District's supply crate, set down where the trail starts up to the lookout -- some way down the slope below
-     * it -- and said on the radio, with where it is. False where its ground is not loaded yet.
+     * The District's supply crate, set down where the trail starts up to the lookout (some way down the slope below
+     * it) and said on the radio, with where it is. False where its ground is not loaded yet.
      */
     static boolean supply(ServerLevel level, Tower t, BlockPos foot) {
         Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, foot);

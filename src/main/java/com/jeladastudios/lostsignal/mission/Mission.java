@@ -8,7 +8,7 @@ import java.util.UUID;
 
 /**
  * A night's rescue at one lookout: a hiker lost somewhere within a few hundred blocks of it, calling on the rescue
- * frequency until the keeper answers, and the end of it -- found, come in, or lost to the night.
+ * frequency until the keeper answers, and the end of it: found, come in, or lost to the night.
  */
 public final class Mission {
 

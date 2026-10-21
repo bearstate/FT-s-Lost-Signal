@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * The nights at the lookouts. Each lookout with a keeper in it -- a player within its reach -- may have, of an evening,
+ * The nights at the lookouts. Each lookout with a keeper in it (a player within its reach) may have, of an evening,
  * a hiker lost somewhere within a few hundred blocks, calling on the rescue frequency until someone answers. One night
  * at a lookout at a time, and none for a day or two after; what happens belongs to the lookout, not to each player in
  * it, so a lookout kept by three players has one lost hiker, not three.
@@ -85,7 +85,7 @@ public final class Missions extends SavedData {
 
     /**
      * The lookout standing at a foot the siting gives, its foot set at the height the world built it: its cab floor
-     * looked for up the middle -- the ground model may lie a few blocks off the ground -- twenty blocks over its foot.
+     * looked for up the middle (the ground model may lie a few blocks off the ground) twenty blocks over its foot.
      * Null where no lookout stands there.
      */
     public static BlockPos standing(ServerLevel level, BlockPos foot) {
@@ -113,7 +113,7 @@ public final class Missions extends SavedData {
             // The evening, any time in it: the quiet after a night (on the day's clock) keeps it to one a night, and a
             // keeper asleep lets the evening go by too fast for a narrow window.
             if (day < 13000 || day > 16000) continue;
-            // A night here lately: none again for a while. Stamped on the day's clock -- set back since (a /time set),
+            // A night here lately: none again for a while. Stamped on the day's clock: set back since (a /time set),
             // or an old save's stamp on another clock, it counts as long past.
             Long last = m.lastNight.get(tower);
             if (last != null && last <= level.getDayTime() && level.getDayTime() - last < REST) continue;
@@ -127,8 +127,8 @@ public final class Missions extends SavedData {
 
     /**
      * A hiker lost within a few hundred blocks of a lookout, from tonight. Where they are is
-     * worked out off the server's thread by the ground model -- the ground out there is mostly not loaded, and making
-     * it on the server's thread would hold everything up for seconds -- and the hiker is put there once it is loaded,
+     * worked out off the server's thread by the ground model (the ground out there is mostly not loaded, and making
+     * it on the server's thread would hold everything up for seconds) and the hiker is put there once it is loaded,
      * and the District says someone is overdue.
      */
     public static Mission begin(ServerLevel level, BlockPos tower) {
@@ -173,7 +173,7 @@ public final class Missions extends SavedData {
      * ground nearby. Gives up after two minutes; true once they are out.
      */
     boolean putOut(ServerLevel level, Mission mission) {
-        // Given up after two minutes -- also one whose ground was never worked out, the server stopped meanwhile.
+        // Given up after two minutes, also one whose ground was never worked out, the server stopped meanwhile.
         if (level.getGameTime() - mission.started > 2400) {
             end(level, mission, "nowhere");
             return false;
@@ -253,7 +253,7 @@ public final class Missions extends SavedData {
             return;
         }
         if (h == null) {
-            // Not loaded yet, or gone: a night without its hiker ends at dawn -- but not in the first half minute of a
+            // Not loaded yet, or gone: a night without its hiker ends at dawn, but not in the first half minute of a
             // run, while their ground is still being loaded back.
             if ((day > 23500 || day < 12000) && now - firstRun > 600) end(level, mission, "lost");
             return;
@@ -356,7 +356,7 @@ public final class Missions extends SavedData {
                 Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING", 0.15f);
             }
             if (clock >= mission.takeAt) {
-                // As things stand now: answered since, or stopped walking in the dark, the odds are better -- unless
+                // As things stand now: answered since, or stopped walking in the dark, the odds are better, unless
                 // the keeper told them to go with him.
                 float current = chance(mission, h);
                 if (mission.offerAnswer != 2 && mission.takeChance > 0 && level.random.nextFloat() >= current / mission.takeChance) {
@@ -382,7 +382,7 @@ public final class Missions extends SavedData {
 
     /**
      * The keeper's word to a hiker he has offered to walk down: stay where they are, and he goes away; go anywhere, and
-     * they go -- with him. True where the word was taken as an answer to that.
+     * they go: with him. True where the word was taken as an answer to that.
      */
     public static boolean offerAnswered(ServerLevel level, Hiker h, com.jeladastudios.lostsignal.rescue.Order order) {
         Missions m = of(level);

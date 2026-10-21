@@ -25,7 +25,7 @@ import java.util.UUID;
  * What happens to whom, and when: when the stranger is seen, and when he comes to talk. Once a second, for each player
  * out under the sky in the overworld:
  * <ul>
- *   <li>at dusk and by night, a small chance -- none for a while after the last sighting -- that he is put at the edge
+ *   <li>at dusk and by night, a small chance (none for a while after the last sighting) that he is put at the edge
  *   of the trees somewhere ahead of them, masked, where they could see him if they looked;</li>
  *   <li>by day, a smaller one that he stands watching from a wood's edge, as an ordinary man would not;</li>
  *   <li>by day, away from the lookouts, a smaller one still that he comes up out of the trees behind them to talk.</li>
@@ -156,7 +156,7 @@ public final class Director {
     }
 
     /**
-     * Whether any of him can be seen from the player's eyes: his head, his shoulders either side, or his middle -- half
+     * Whether any of him can be seen from the player's eyes: his head, his shoulders either side, or his middle: half
      * hidden behind a trunk is how he should first be seen.
      */
     static boolean seen(ServerLevel level, ServerPlayer player, Vec3 eye, double x, double y, double z) {

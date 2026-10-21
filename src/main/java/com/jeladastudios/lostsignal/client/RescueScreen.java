@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 /**
  * The rescue panel at a lookout's radio: what the keeper can ask a lost hiker and tell them, as buttons. Pressing one
  * says it on the air; the answer comes back on the radio, its words in the chat. The keeper may speak it too, with the
- * radio's own push-to-talk -- the panel is what the hiker understands.
+ * radio's own push-to-talk: the panel is what the hiker understands.
  */
 public class RescueScreen extends Screen {
 

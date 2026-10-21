@@ -13,7 +13,7 @@ import net.minecraft.world.item.Items;
 
 /**
  * What a keeper says, face to face or over the radio: their news, what they have seen, what they need, whether one may
- * stay the night. Each answer comes of how things are -- the lookouts round them, the stranger, the weather -- and of
+ * stay the night. Each answer comes of how things are (the lookouts round them, the stranger, the weather) and of
  * who they are: a talker, a keeper of few words, or someone who has not slept.
  */
 public final class Talk {

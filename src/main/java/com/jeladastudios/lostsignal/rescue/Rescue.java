@@ -51,7 +51,7 @@ public final class Rescue {
         }
         Hiker h = inContact(level, keeper.position());
         if (h == null) {
-            // No one lost out there to hear it -- but someone may be listening who is not lost.
+            // No one lost out there to hear it, but someone may be listening who is not lost.
             if (com.jeladastudios.lostsignal.visit.Mimic.answered(level, keeper)) return;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("RESCUE {} unanswered", order);
             return;
@@ -133,8 +133,8 @@ public final class Rescue {
     }
 
     /**
-     * The next leg of what a hiker follows: down the water -- the way FT's Geology's river runs where there is one,
-     * else downhill to where water gathers -- or up the trail, the trail's next stretch nearer the lookout. Null where
+     * The next leg of what a hiker follows: down the water (the way FT's Geology's river runs where there is one,
+     * else downhill to where water gathers) or up the trail, the trail's next stretch nearer the lookout. Null where
      * there is nothing to follow from here.
      */
     public static BlockPos nextLeg(ServerLevel level, Hiker h, Hiker.Guide guide) {
@@ -190,7 +190,7 @@ public final class Rescue {
 
     public static BlockPos ground(ServerLevel level, double x, double z) {
         int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-        // The ground there as it is, if loaded; else as the ground model has it -- not loaded, and not made, for this.
+        // The ground there as it is, if loaded; else as the ground model has it, not loaded, and not made, for this.
         if (level.isLoaded(new BlockPos(bx, 0, bz))) return new BlockPos(bx, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz), bz);
         Integer y = com.jeladastudios.lostsignal.tower.Fires.ground(level, bx, bz);
         return new BlockPos(bx, y == null ? level.getSeaLevel() : y, bz);

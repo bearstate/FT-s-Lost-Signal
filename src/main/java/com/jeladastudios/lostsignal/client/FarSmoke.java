@@ -10,7 +10,7 @@ import net.minecraft.core.particles.SimpleParticleType;
 
 /**
  * A puff of a smoke column seen from a long way off: the big smoke's own sprites, drawn as large as the distance needs
- * for a column to read as one across a valley, grey, rising and spreading slowly as it fades -- and through the fog,
+ * for a column to read as one across a valley, grey, rising and spreading slowly as it fades, and through the fog,
  * which at the edge of the view would hide the very thing a lookout is there to see.
  */
 public class FarSmoke extends TextureSheetParticle {
@@ -40,7 +40,7 @@ public class FarSmoke extends TextureSheetParticle {
         float f = (float) age / lifetime;
         alpha = 0.55f * (f < 0.15f ? f / 0.15f : 1f - (f - 0.15f) / 0.85f);
         quadSize *= 1.006f;
-        // As light as the sky is: grey by day, dark at night. Lit by itself, not by the ground under it -- which far
+        // As light as the sky is: grey by day, dark at night. Lit by itself, not by the ground under it, which far
         // off is not loaded, and would draw it black.
         // The sky's brightness, from a fifth at night to whole by day.
         float day = level.getSkyDarken(1f);

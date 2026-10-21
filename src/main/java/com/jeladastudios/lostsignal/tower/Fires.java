@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Fires in the forest: what the lookouts are for. A lightning strike in a storm -- now and then on a dry afternoon
- * too -- and a column of smoke stands up somewhere a few hundred blocks off. The keeper who sees it takes its bearing
+ * Fires in the forest: what the lookouts are for. A lightning strike in a storm (now and then on a dry afternoon
+ * too) and a column of smoke stands up somewhere a few hundred blocks off. The keeper who sees it takes its bearing
  * with the fire finder and calls it in; another lookout's keeper crosses it with their own, the District has a fix,
  * and a crew goes out. Called in, it is out within a few minutes; not, it burns itself out in a while.
  */
@@ -34,8 +34,8 @@ public final class Fires {
     /** The chance, every half minute in a thunderstorm, of a strike setting a fire within sight of a kept lookout; and on a dry afternoon. */
     static final float STORM = 0.12f, DRY = 0.004f;
     /**
-     * How far off a fire starts, in blocks -- within the furthest the game sends a particle, with room for the column
-     * -- how long it burns uncalled, and once a crew is on it, in seconds.
+     * How far off a fire starts, in blocks (within the furthest the game sends a particle, with room for the column);
+     * how long it burns uncalled, and once a crew is on it, in seconds.
      */
     static final int NEAR = 200, FAR = 450, BURNS = 15 * 60, CREW = 3 * 60;
 
@@ -97,7 +97,7 @@ public final class Fires {
     }
 
     /**
-     * Where a fire may start: a few hundred blocks from the lookout, on ground well over the sea and any lake -- spots
+     * Where a fire may start: a few hundred blocks from the lookout, on ground well over the sea and any lake: spots
      * in forest or meadow, not in water. Empty where none is found.
      */
     static List<Vec3> spots(ServerLevel level, BlockPos tower, java.util.Random random) {

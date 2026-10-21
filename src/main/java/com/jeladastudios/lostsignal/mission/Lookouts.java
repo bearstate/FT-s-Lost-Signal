@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Feel the Nature's lookouts, found by its own siting -- from the ground model, as the world was made with -- and
+ * Feel the Nature's lookouts, found by its own siting (from the ground model, as the world was made with) and
  * read with the true ground. FT's Geology answers on the server's own thread from a blunter ground unless a search
  * for the true one is under way, and a lookout sited on the blunt ground is not where the world built it.
  */
@@ -18,7 +18,7 @@ public final class Lookouts {
      * Nature puts at most one in each of its cells.
      *
      * <p>For a worker thread, not the server's: the siting reads only the generator's ground model and FT's Geology's,
-     * as world generation does from its own threads -- where the ground is exact without asking -- and working out a
+     * as world generation does from its own threads (where the ground is exact without asking) and working out a
      * ring of cells the first time takes seconds.</p>
      */
     public static java.util.List<BlockPos> aroundOffThread(ServerLevel level, BlockPos at, int ring) {
@@ -52,8 +52,8 @@ public final class Lookouts {
     });
 
     /**
-     * Something of the siting worked out on its own thread -- where it reads the ground exactly, as world generation
-     * does, and where the first time over new cells, seconds long, holds up no one -- and its answer handed back on the
+     * Something of the siting worked out on its own thread (where it reads the ground exactly, as world generation
+     * does, and where the first time over new cells, seconds long, holds up no one) and its answer handed back on the
      * server's thread.
      */
     public static <T> void offThread(ServerLevel level, java.util.function.Supplier<T> work, java.util.function.Consumer<T> then) {
@@ -73,7 +73,7 @@ public final class Lookouts {
     }
 
     /**
-     * Something worked out off the server's thread handed back to it -- but not to a server that has stopped since, nor
+     * Something worked out off the server's thread handed back to it, but not to a server that has stopped since, nor
      * into the next world: a stopped server runs what it is handed there and then, on the worker's thread.
      */
     public static void back(net.minecraft.server.MinecraftServer server, int gen, Runnable then) {

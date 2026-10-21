@@ -25,7 +25,7 @@ import java.util.UUID;
  * The fire finder on its stand in the middle of the cab: a sight turning over a ring marked in degrees from true
  * north. The keeper steps up to it (a right click on the stand; crouched, it is a cartography table as ever) and looks
  * along the sight: the ring reads the bearing they look on. Held steady on a flare, a column of smoke, a lamp waved in
- * the dark, it gives that signal's bearing and, by the keeper's eye, how far off it is -- and the way back from there
+ * the dark, it gives that signal's bearing and, by the keeper's eye, how far off it is, and the way back from there
  * to the lookout, the bearing a hiker with a compass is told to walk, goes into the rescue panel ready to send.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)
@@ -91,7 +91,7 @@ public final class FireFinder {
         event.setCanceled(true);
         // Once a press: a hand held on the stand, as the game repeats it, does not step up and away again.
         Long last = PRESSED.get(p.getUUID());
-        // Every press marks the time, those let through and those not, so a held button -- repeated every few ticks --
+        // Every press marks the time, those let through and those not, so a held button (repeated every few ticks)
         // never gets through again until it is let go.
         PRESSED.put(p.getUUID(), level.getGameTime());
         if (last != null && level.getGameTime() - last < 10 && last <= level.getGameTime()) return;

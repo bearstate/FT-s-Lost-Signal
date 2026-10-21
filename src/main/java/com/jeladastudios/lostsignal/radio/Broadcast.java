@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * A voice on the air that is not a player's: the district's ranger, a lost hiker, or what speaks in their voices. A
  * transmitter of the radio's own kind, at a place in the world, on a frequency, through which recorded clips go out in
- * real time -- so they reach every set in range as a player's voice would, with the radio's own propagation, noise and
+ * real time, so they reach every set in range as a player's voice would, with the radio's own propagation, noise and
  * S-meter on them. Each broadcast keys up, sends its clips one after another, and unkeys.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)
@@ -103,7 +103,7 @@ public final class Broadcast {
         return b;
     }
 
-    /** Frames sent as they are -- a recording played back -- rather than clips by name. */
+    /** Frames sent as they are (a recording played back) rather than clips by name. */
     public static Broadcast sendFrames(ServerLevel level, Vec3 at, String frequency, float power, List<short[]> frames) {
         if (CommonRadioPlugin.serverApi == null || frames.isEmpty()) return null;
         Broadcast b = new Broadcast(level, at, frequency, power);

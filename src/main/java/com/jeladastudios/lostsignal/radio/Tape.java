@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * What the players say on the rescue frequency, kept -- the way a man with a tape recorder by a radio keeps it. A
+ * What the players say on the rescue frequency, kept: the way a man with a tape recorder by a radio keeps it. A
  * listener at each lookout a player keeps hears their transmissions, and the last few of each player's are held, a few
  * seconds each, to be played back to them some night from somewhere they are not: their own voice, a little slow,
  * with the hiss of the tape under it.
@@ -121,7 +121,7 @@ public final class Tape {
     }
 
     /**
-     * Frames as a tape plays them back: a touch slow and wavering, duller, the hiss under them -- and a gap of hiss
+     * Frames as a tape plays them back: a touch slow and wavering, duller, the hiss under them, and a gap of hiss
      * before and after, as a recorder is started and stopped by hand.
      */
     public static List<short[]> played(List<short[]> frames, long seed) {

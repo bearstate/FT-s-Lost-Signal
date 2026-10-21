@@ -22,11 +22,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
- * A lookout's keeper: someone posted there for the season, who lives in the cab -- at the fire finder, at the stove,
- * at the windows -- and answers the radio. Talked to face to face, they say what they say on the radio, and more.
+ * A lookout's keeper: someone posted there for the season, who lives in the cab (at the fire finder, at the stove,
+ * at the windows) and answers the radio. Talked to face to face, they say what they say on the radio, and more.
  *
- * <p>Put in the cab when a player comes near a kept lookout, and gone when they are all far off; what they are --
- * name, voice, temper, what they need, how far they trust the player -- is the lookout's, in {@link Towers}.</p>
+ * <p>Put in the cab when a player comes near a kept lookout, and gone when they are all far off; what they are
+ * (name, voice, temper, what they need, how far they trust the player) is the lookout's, in {@link Towers}.</p>
  */
 public class Keeper extends PathfinderMob {
 
@@ -86,7 +86,7 @@ public class Keeper extends PathfinderMob {
         super.tick();
         if (!(level() instanceof ServerLevel server) || floor == null) return;
         Tower t = record();
-        // No longer kept -- gone down, or worse -- or no one near to see them: they are not here.
+        // No longer kept (gone down, or worse) or no one near to see them: they are not here.
         if (t == null || t.state != Tower.State.KEPT || tickCount % 100 == 0 && server.getNearestPlayer(this, 128) == null) {
             discard();
             return;

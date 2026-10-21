@@ -20,7 +20,7 @@ import java.util.UUID;
 
 /**
  * Hiding under the bed: crouched at a bed, a right click on it and the player is down on the floor beside it, flat,
- * still, out of sight of the door -- the camera at the floorboards. Crouching again, they come out. What comes to the
+ * still, out of sight of the door: the camera at the floorboards. Crouching again, they come out. What comes to the
  * door in the night does not find someone hidden so.
  */
 @Mod.EventBusSubscriber(modid = LostSignal.MODID)
@@ -42,7 +42,7 @@ public final class Hiding {
         if (!(event.getEntity() instanceof ServerPlayer p)) return;
         BlockState s = p.level().getBlockState(event.getPos());
         if (!(s.getBlock() instanceof BedBlock)) return;
-        // Lying under it, a hand on the bed does nothing -- above all, it does not get them into it.
+        // Lying under it, a hand on the bed does nothing: above all, it does not get them into it.
         if (hidden(p)) {
             event.setCanceled(true);
             return;
@@ -62,7 +62,7 @@ public final class Hiding {
         for (BlockPos half : new BlockPos[]{bed, other}) {
             for (Direction side : new Direction[]{along.getClockWise(), along.getCounterClockWise()}) {
                 BlockPos q = half.relative(side);
-                // Room to lie: nothing there, or only something low on the floor -- a rug, a pressure plate.
+                // Room to lie: nothing there, or only something low on the floor: a rug, a pressure plate.
                 var shape = p.level().getBlockState(q).getCollisionShape(p.level(), q);
                 if ((shape.isEmpty() || shape.max(Direction.Axis.Y) <= 0.1875)
                         && p.level().getBlockState(q.above()).getCollisionShape(p.level(), q.above()).isEmpty()) {

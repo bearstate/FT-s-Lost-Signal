@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
  * What the morning finds where a hiker was taken in the night. Their fire out and cold, still smoking a little; their
  * tent down, the cloth of it on the ground and one pole left standing; their things thrown about, the lamp left
  * burning in the grass; dark splashes on the ground, and a smear leading off from the tent into the trees, footprints
- * beside it -- and where the smear ends, twenty to sixty blocks off, the hiker, face down. Or, one time in three, no
+ * beside it, and where the smear ends, twenty to sixty blocks off, the hiker, face down. Or, one time in three, no
  * one: the smear goes to the edge of a drop, or into the thick of the trees, and stops.
  */
 public final class Scene {
@@ -215,8 +215,8 @@ public final class Scene {
     }
 
     /**
-     * A spot near a place where a body lies along a way on level ground -- the ground the same height a block either
-     * side of it, nothing standing there -- so it does not lie into a step of the hill; the place itself where none is.
+     * A spot near a place where a body lies along a way on level ground (the ground the same height a block either
+     * side of it, nothing standing there) so it does not lie into a step of the hill; the place itself where none is.
      */
     static BlockPos level(ServerLevel level, BlockPos near, Direction along) {
         for (int r = 0; r <= 3; r++) {

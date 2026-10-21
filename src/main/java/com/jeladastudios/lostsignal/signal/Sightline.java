@@ -5,8 +5,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Whether one place can be seen from another across the country -- a flare from a lookout, a lookout's lamp from a
- * lost hiker -- without loading the ground between. Where the ground is loaded, by its blocks; where it is not, by FT's
+ * Whether one place can be seen from another across the country (a flare from a lookout, a lookout's lamp from a
+ * lost hiker) without loading the ground between. Where the ground is loaded, by its blocks; where it is not, by FT's
  * Geology's model of it: a ridge in the way hides what is behind it, whether or not anyone has been there.
  * Minecraft's own ray would load, or make, every chunk along a line hundreds of blocks long.
  */

@@ -21,7 +21,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * The lookout's signal lamp, on the walkway: a bright lamp behind glass, switched on and off by hand. Lit at night it
- * is seen from the whole country round -- the light on the hill a lost hiker is told to walk towards -- and switched on
+ * is seen from the whole country round (the light on the hill a lost hiker is told to walk towards) and switched on
  * and off it says something to anyone watching. Drawn far off by the server as a point of light, as the hikers' own
  * signals are.
  */

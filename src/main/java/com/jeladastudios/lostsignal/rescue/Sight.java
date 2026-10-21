@@ -16,7 +16,7 @@ import java.util.Optional;
 
 /**
  * What a hiker can see from where they stand, as they would tell it over the radio: a rescue board on a tree, the
- * trail, the lookout or its light, a drop, water, snow, a ridge, the trees, rock, a meadow -- the first of these there
+ * trail, the lookout or its light, a drop, water, snow, a ridge, the trees, rock, a meadow: the first of these there
  * is, as a line of the voice script. And where the things they are told to follow lie.
  */
 public final class Sight {

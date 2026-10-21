@@ -16,8 +16,8 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import java.lang.reflect.Field;
 
 /**
- * Sleep that lets the night go by instead of cutting it out: in bed, time runs faster and faster -- the moon crossing
- * the sky, the stars wheeling, the weather going on as it was -- until morning, when the sleeper wakes as anyone does
+ * Sleep that lets the night go by instead of cutting it out: in bed, time runs faster and faster (the moon crossing
+ * the sky, the stars wheeling, the weather going on as it was) until morning, when the sleeper wakes as anyone does
  * at daybreak. The vanilla jump to morning never comes. Whatever happens in the night may wake them: the radio, a knock
  * at the door; time then goes at its own pace again.
  *

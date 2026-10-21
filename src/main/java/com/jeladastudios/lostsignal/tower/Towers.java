@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The lookouts as the world goes on, each as it is found: empty, kept by someone, left in a hurry, or -- no one posted
- * there, and its lamp lit at night. Found as players come near them, and the lookouts round those too, for the radio.
+ * The lookouts as the world goes on, each as it is found: empty, kept by someone, left in a hurry, or, with no one posted
+ * there, its lamp lit at night. Found as players come near them, and the lookouts round those too, for the radio.
  * Each dawn, a few change: a keeper comes to an empty one, or one is not heard from again; he moves into one no one
  * keeps, or moves on.
  */
@@ -158,7 +158,7 @@ public final class Towers extends SavedData {
         towers.setDirty();
     }
 
-    /** The lookouts round one -- in the cells about it -- found now if they were not, for the radio. */
+    /** The lookouts round one (in the cells about it) found now if they were not, for the radio. */
     public static List<Tower> around(ServerLevel level, Tower tower) {
         List<Tower> found = new ArrayList<>();
         if (tower.near == null) {
@@ -176,7 +176,7 @@ public final class Towers extends SavedData {
 
     /**
      * The lookouts round one already known, and only those: what the dawn goes by, so that lookouts no one has come
-     * near are not found -- and theirs round them, and so on -- of themselves, day after day.
+     * near are not found (and theirs round them, and so on) of themselves, day after day.
      */
     List<Tower> knownAround(Tower tower) {
         List<Tower> found = new ArrayList<>();
@@ -197,7 +197,7 @@ public final class Towers extends SavedData {
     private static final Map<Long, List<Runnable>> FINDING = new HashMap<>();
 
     /**
-     * The lookouts round one worked out on the finder's thread -- the siting takes seconds the first time -- and kept
+     * The lookouts round one worked out on the finder's thread (the siting takes seconds the first time) and kept
      * with the lookout, so it is done once a world; then, back on the server's thread, whatever was waiting on it.
      */
     public static void find(ServerLevel level, Tower tower, Runnable then) {
