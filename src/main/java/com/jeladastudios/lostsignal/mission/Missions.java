@@ -166,6 +166,11 @@ public final class Missions extends SavedData {
         }
         Hiker h = mission.hiker == null ? null : level.getEntity(mission.hiker) instanceof Hiker found ? found : null;
         if (h == null && mission.at != null) keep(level, mission.at);
+        if (h == null && mission.stage == Mission.Stage.FOUND && mission.leaving) {
+            // Gone home.
+            end(level, mission, mission.ending);
+            return;
+        }
         if (h == null) {
             // Not loaded yet, or gone: a night without its hiker ends at dawn.
             if (day > 23500 || day < 12000) end(level, mission, "lost");
@@ -200,10 +205,21 @@ public final class Missions extends SavedData {
                 }
             }
             case FOUND -> {
-                // The morning after, they go home.
-                if (day > 0 && day < 1000) {
-                    h.discard();
-                    end(level, mission, mission.ending);
+                // The morning after, they thank the keeper and go home: down off the mountain, away from the lookout.
+                if (day > 0 && day < 6000 && !mission.leaving) {
+                    mission.leaving = true;
+                    setDirty();
+                    Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_THANKS_01" : "H_ON_TRAIL", 0.15f);
+                    // From the lookout if they came in to it; from where they were found if met out on the mountain.
+                    BlockPos from = "came_in".equals(mission.ending) ? mission.tower : h.blockPosition();
+                    Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, from);
+                    if (down == null) {
+                        double a = level.random.nextDouble() * Math.PI * 2;
+                        down = new Vec3(Math.cos(a), 0, Math.sin(a));
+                    }
+                    BlockPos away = com.jeladastudios.lostsignal.rescue.Rescue.ground(level,
+                            from.getX() + down.x * 110, from.getZ() + down.z * 110);
+                    h.leave(away);
                 }
             }
             case OVER -> {

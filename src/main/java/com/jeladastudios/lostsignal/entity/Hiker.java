@@ -160,6 +160,16 @@ public class Hiker extends PathfinderMob {
         state(State.RESCUED);
     }
 
+    /** When they set off home, in game ticks; -1 while they have not. */
+    private long leaving = -1;
+
+    /** Morning: they thank the keeper and go, down off the mountain, the way they are sent. */
+    public void leave(BlockPos away) {
+        goal = away;
+        leaving = level().getGameTime();
+        state(State.RESCUED);
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -278,9 +288,15 @@ public class Hiker extends PathfinderMob {
                     }
                 }
                 case RESCUED -> {
-                    // To the lookout's foot, and wait there.
+                    // To the lookout's foot, and wait there; in the morning, away down the mountain.
                     if (goal != null && distanceToSqr(Vec3.atBottomCenterOf(goal)) > 36 && !moving && --pause <= 0) {
                         if (!walkToward(goal)) pause = 40;
+                    }
+                    if (leaving >= 0 && level instanceof net.minecraft.server.level.ServerLevel server && tickCount % 40 == 0) {
+                        // Gone down out of sight: there, or long enough on the way, with no one near to see them go.
+                        boolean there = goal == null || distanceToSqr(Vec3.atBottomCenterOf(goal)) < 64;
+                        boolean overdue = level.getGameTime() - leaving > 20 * 60 * 3;
+                        if ((there || overdue) && server.getNearestPlayer(Hiker.this, 40) == null) discard();
                     }
                 }
             }
@@ -439,6 +455,7 @@ public class Hiker extends PathfinderMob {
         tag.putBoolean("TowerSought", towerSought);
         tag.putBoolean("Staying", staying);
         tag.putBoolean("Mission", mission);
+        tag.putLong("Leaving", leaving);
         if (!Double.isNaN(heading)) tag.putDouble("Heading", heading);
         if (goal != null) tag.put("Goal", NbtUtils.writeBlockPos(goal));
         if (fire != null) tag.put("Fire", NbtUtils.writeBlockPos(fire));
@@ -466,6 +483,7 @@ public class Hiker extends PathfinderMob {
         towerSought = tag.getBoolean("TowerSought");
         staying = tag.getBoolean("Staying");
         mission = tag.getBoolean("Mission");
+        leaving = tag.contains("Leaving") ? tag.getLong("Leaving") : -1;
         heading = tag.contains("Heading") ? tag.getDouble("Heading") : Double.NaN;
         goal = tag.contains("Goal") ? NbtUtils.readBlockPos(tag.getCompound("Goal")) : null;
         fire = tag.contains("Fire") ? NbtUtils.readBlockPos(tag.getCompound("Fire")) : null;

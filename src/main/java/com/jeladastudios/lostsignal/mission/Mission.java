@@ -37,6 +37,8 @@ public final class Mission {
     public long takenAt;
     public BlockPos scene;
     public boolean told;
+    /** Found, and gone home in the morning. */
+    public boolean leaving;
 
     public Mission(BlockPos tower) {
         this.tower = tower;
@@ -59,6 +61,7 @@ public final class Mission {
         tag.putLong("TakenAt", takenAt);
         if (scene != null) tag.put("Scene", NbtUtils.writeBlockPos(scene));
         tag.putBoolean("Told", told);
+        tag.putBoolean("Leaving", leaving);
         return tag;
     }
 
@@ -82,6 +85,7 @@ public final class Mission {
         m.takenAt = tag.getLong("TakenAt");
         if (tag.contains("Scene")) m.scene = NbtUtils.readBlockPos(tag.getCompound("Scene"));
         m.told = tag.getBoolean("Told");
+        m.leaving = tag.getBoolean("Leaving");
         return m;
     }
 }

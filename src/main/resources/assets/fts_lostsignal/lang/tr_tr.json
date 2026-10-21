@@ -109,5 +109,7 @@
   "finder.fts_lostsignal.kind.flare": "fişek",
   "finder.fts_lostsignal.kind.smoke": "duman",
   "finder.fts_lostsignal.kind.lamp": "fener",
-  "rescue.fts_lostsignal.last_reading": "Son kerteriz: %1$s %2$s°, yaklaşık %3$s blok. Dönüş yönü %4$s°."
+  "rescue.fts_lostsignal.last_reading": "Son kerteriz: %1$s %2$s°, yaklaşık %3$s blok. Dönüş yönü %4$s°.",
+  "radio.fts_lostsignal.line.H_THANKS_01": "Teşekkür ederim. Çok teşekkür ederim. Gerçekten sandım ki... teşekkürler.",
+  "radio.fts_lostsignal.line.H_ON_TRAIL": "Artık patikadayım. Buradan aşağı inebilirim sanırım. Teşekkürler, Gözcü."
 }

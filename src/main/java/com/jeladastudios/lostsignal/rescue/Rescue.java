@@ -175,7 +175,7 @@ public final class Rescue {
         return ground(level, from.getX() + dx / d * far, from.getZ() + dz / d * far);
     }
 
-    static BlockPos ground(ServerLevel level, double x, double z) {
+    public static BlockPos ground(ServerLevel level, double x, double z) {
         int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
         return new BlockPos(bx, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz), bz);
     }

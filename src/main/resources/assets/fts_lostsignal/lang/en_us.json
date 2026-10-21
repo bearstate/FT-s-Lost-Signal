@@ -109,5 +109,7 @@
   "finder.fts_lostsignal.kind.flare": "a flare",
   "finder.fts_lostsignal.kind.smoke": "smoke",
   "finder.fts_lostsignal.kind.lamp": "a lamp",
-  "rescue.fts_lostsignal.last_reading": "Last reading: %1$s at %2$s°, about %3$s blocks. Walk back on %4$s°."
+  "rescue.fts_lostsignal.last_reading": "Last reading: %1$s at %2$s°, about %3$s blocks. Walk back on %4$s°.",
+  "radio.fts_lostsignal.line.H_THANKS_01": "Thank you. Thank you so much. I really thought... thank you.",
+  "radio.fts_lostsignal.line.H_ON_TRAIL": "I'm on the trail now. I think I can make it down from here. Thank you, Lookout."
 }
