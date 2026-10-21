@@ -227,5 +227,16 @@
   "radio.fts_lostsignal.line.R_DOOR": "Aç kapıyı.",
   "radio.fts_lostsignal.line.R_HELP": "Yardım. Yardım. Yardım.",
   "radio.fts_lostsignal.line.R_THANKS": "Çok teşekkür ederim.",
-  "radio.fts_lostsignal.line.R_OVER": "Tamam."
+  "radio.fts_lostsignal.line.R_OVER": "Tamam.",
+  "radio.fts_lostsignal.line.X_SCREAM_FAR": "[uzaklardan bir çığlık]",
+  "radio.fts_lostsignal.line.D_MORNING_01": "Gözcü, burası Merkez. Sabah telsiz kontrolü, tamam.",
+  "radio.fts_lostsignal.line.D_WEATHER_01": "Gözcü, Merkez. Hazır olunca hava durumunu gönder. Tamam.",
+  "radio.fts_lostsignal.line.D_WEATHER_02": "Hava durumunu aldım. Sağ ol Gözcü. Merkez kapattı.",
+  "radio.fts_lostsignal.line.D_EVENING_01": "Gözcü, Merkez. Gün sonu kontrolü. Orada her şey sakin mi? Tamam.",
+  "radio.fts_lostsignal.line.D_EVENING_02": "Anlaşıldı. Biraz dinlen. Merkez kapattı.",
+  "radio.fts_lostsignal.line.D_NIGHT_RULES": "Gözcü, Merkez. Her zamanki hatırlatma: hava karardıktan sonra kabinden çıkma. Kapı kapalı, lamba yanık. Göremediğin hiçbir şey için dışarı çıkma. Merkez kapattı.",
+  "radio.fts_lostsignal.line.D_OVERDUE_01": "Gözcü, Merkez. Bölgende dönmesi geciken bir yürüyüşçü var. Bu gece bir kulağın yüz kırk beş nokta beşte olsun. Tamam.",
+  "radio.fts_lostsignal.line.D_OVERDUE_02": "Gözcü, Merkez. Bir aile aradı, çocukları dağdan inmemiş. Dinlemeye devam et, tamam.",
+  "radio.fts_lostsignal.line.D_CHECK_NIGHT": "Gözcü, Merkez. Sadece bir yokluyorum. Orada mısın? ...Gözcü?",
+  "radio.fts_lostsignal.line.D_STATIC": "Merkez, ... tekrar et, sesin kesiliyor ..."
 }

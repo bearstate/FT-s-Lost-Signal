@@ -160,6 +160,39 @@ public class Hiker extends PathfinderMob {
         state(State.RESCUED);
     }
 
+    // === Hurt ===================================================================
+
+    /** How badly hurt: 0 not, 1 a twisted ankle (they walk, slowly), 2 a broken one (they cannot walk). */
+    private int hurt;
+
+    /** The chance, each minute walking over steep ground, of a fall; and how often a fall is a bad one. */
+    static final float FALLS = 0.04f, BADLY = 0.2f;
+
+    public int hurt() {
+        return hurt;
+    }
+
+    /** Their pace as they are: half, with a twisted ankle. */
+    double pace() {
+        return hurt == 1 ? PACE * 0.5 : PACE;
+    }
+
+    /** Walking over steep ground, now and then a fall: said on the radio to whoever is listening. */
+    void mayFall(net.minecraft.server.level.ServerLevel level) {
+        if (hurt >= 2 || !mission || tickCount % 1200 != 0 || !getNavigation().isInProgress()) return;
+        if (com.jeladastudios.lostsignal.rescue.Sight.drop(level, blockPosition()) < 3) return;
+        if (getRandom().nextFloat() >= FALLS) return;
+        hurt = Math.min(2, hurt + (getRandom().nextFloat() < BADLY ? 2 : 1));
+        if (hurt >= 2) {
+            getNavigation().stop();
+            goal = null;
+            guide = Guide.NONE;
+            state(State.RESTING);
+        }
+        com.jeladastudios.lostsignal.rescue.Lines.say(level, getEyePosition(), com.jeladastudios.lostsignal.rescue.Lines.Speaker.HIKER,
+                hurt >= 2 ? "H_HURT_02" : "H_HURT_01", 0.15f);
+    }
+
     /** When they set off home, in game ticks; -1 while they have not. */
     private long leaving = -1;
 
@@ -173,6 +206,7 @@ public class Hiker extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
+        if (level() instanceof net.minecraft.server.level.ServerLevel s) mayFall(s);
         if (mission && level() instanceof net.minecraft.server.level.ServerLevel server && (tickCount % 100 == 0 || keptAt == null
                 || !keptAt.equals(chunkPosition()))) {
             var chunks = server.getChunkSource();
@@ -237,6 +271,12 @@ public class Hiker extends PathfinderMob {
             Level level = level();
             boolean night = !level.isDay() && level.dimensionType().hasSkyLight();
             boolean moving = getNavigation().isInProgress();
+            // A broken ankle: they stay where they fell, with a fire at night if they can make one.
+            if (hurt >= 2) {
+                getNavigation().stop();
+                if (night && fire == null) makeCamp();
+                return;
+            }
             fatigue = Mth.clamp(fatigue + (moving ? TIRES : -RESTS), 0f, 1.2f);
             switch (state()) {
                 case CAMPING -> {
@@ -333,7 +373,7 @@ public class Hiker extends PathfinderMob {
             return;
         }
         heading = bestHeading;
-        getNavigation().moveTo(best.getX() + 0.5, best.getY(), best.getZ() + 0.5, PACE);
+        getNavigation().moveTo(best.getX() + 0.5, best.getY(), best.getZ() + 0.5, pace());
     }
 
     /** A leg of the way to somewhere further off than a path is found to: twenty-four blocks along the line, on the ground. */
@@ -345,7 +385,7 @@ public class Hiker extends PathfinderMob {
         heading = straight;
         if (length <= 24) {
             var path = getNavigation().createPath(to, 1);
-            if (path != null && getNavigation().moveTo(path, PACE)) return true;
+            if (path != null && getNavigation().moveTo(path, pace())) return true;
         }
         // A leg of the way: straight on where the ground lets them, else round -- further to the side, and shorter,
         // each time the way ahead is a drop or a wall -- as long as it brings them nearer.
@@ -360,7 +400,7 @@ public class Hiker extends PathfinderMob {
                 if (path == null) continue;
                 var end = path.getEndNode();
                 if (end == null || Math.sqrt(end.asBlockPos().distSqr(to)) > far - 3) continue;
-                if (getNavigation().moveTo(path, PACE)) return true;
+                if (getNavigation().moveTo(path, pace())) return true;
             }
         }
         return false;
@@ -456,6 +496,7 @@ public class Hiker extends PathfinderMob {
         tag.putBoolean("Staying", staying);
         tag.putBoolean("Mission", mission);
         tag.putLong("Leaving", leaving);
+        tag.putInt("Hurt", hurt);
         if (!Double.isNaN(heading)) tag.putDouble("Heading", heading);
         if (goal != null) tag.put("Goal", NbtUtils.writeBlockPos(goal));
         if (fire != null) tag.put("Fire", NbtUtils.writeBlockPos(fire));
@@ -484,6 +525,7 @@ public class Hiker extends PathfinderMob {
         staying = tag.getBoolean("Staying");
         mission = tag.getBoolean("Mission");
         leaving = tag.contains("Leaving") ? tag.getLong("Leaving") : -1;
+        hurt = tag.getInt("Hurt");
         heading = tag.contains("Heading") ? tag.getDouble("Heading") : Double.NaN;
         goal = tag.contains("Goal") ? NbtUtils.readBlockPos(tag.getCompound("Goal")) : null;
         fire = tag.contains("Fire") ? NbtUtils.readBlockPos(tag.getCompound("Fire")) : null;

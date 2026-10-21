@@ -123,8 +123,14 @@ public final class Calls {
             Speech.after(level, 40 + Speech.length(night ? "D_ANSWER_NIGHT" : "D_ANSWER"), () -> Lines.say(level, from, Lines.Speaker.DISTRICT, who, 1f));
             return;
         }
+        // Called back after the District's own call: that is what it answers.
+        String reply = District.reply(level);
+        if (reply != null) {
+            Speech.after(level, 40 + Speech.length(night ? "D_ANSWER_NIGHT" : "D_ANSWER"), () -> Lines.say(level, from, Lines.Speaker.DISTRICT, reply, 1f));
+            return;
+        }
         Towers.Notice n = home == null ? null : Towers.takeNotice(level, home);
-        String line = n == null ? (time < 6000 ? "D_MORNING_02" : null) : switch (n.kind()) {
+        String line = n == null ? null : switch (n.kind()) {
             case "silent" -> "D_CHECK_TOWER";
             case "checked" -> "D_TOWER_EMPTY";
             case "stranger_answered" -> "D_NOBODY_POSTED";

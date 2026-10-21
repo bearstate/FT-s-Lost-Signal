@@ -227,5 +227,16 @@
   "radio.fts_lostsignal.line.R_DOOR": "Open the door.",
   "radio.fts_lostsignal.line.R_HELP": "Help. Help. Help.",
   "radio.fts_lostsignal.line.R_THANKS": "Thank you so much.",
-  "radio.fts_lostsignal.line.R_OVER": "Over."
+  "radio.fts_lostsignal.line.R_OVER": "Over.",
+  "radio.fts_lostsignal.line.X_SCREAM_FAR": "[a scream, far off]",
+  "radio.fts_lostsignal.line.D_MORNING_01": "Lookout, District. Morning radio check, over.",
+  "radio.fts_lostsignal.line.D_WEATHER_01": "Lookout, District. Send me your weather when you're ready. Over.",
+  "radio.fts_lostsignal.line.D_WEATHER_02": "Copy your weather. Thanks, Lookout. District clear.",
+  "radio.fts_lostsignal.line.D_EVENING_01": "Lookout, District. End of day check. All quiet up there? Over.",
+  "radio.fts_lostsignal.line.D_EVENING_02": "Copy that. Get some rest. District out.",
+  "radio.fts_lostsignal.line.D_NIGHT_RULES": "Lookout, District. Standard reminder: after dark you stay in the cab. Door shut, lamp lit. Don't go out for anything you can't see. District out.",
+  "radio.fts_lostsignal.line.D_OVERDUE_01": "Lookout, District. We have a hiker overdue in your area. Keep an ear on one-four-five point five tonight. Over.",
+  "radio.fts_lostsignal.line.D_OVERDUE_02": "Lookout, District. Got a call from a family, their kid didn't come down off the mountain. Keep listening, over.",
+  "radio.fts_lostsignal.line.D_CHECK_NIGHT": "Lookout, District. Just checking in. You there? ...Lookout?",
+  "radio.fts_lostsignal.line.D_STATIC": "District, ... say again, you're breaking ..."
 }

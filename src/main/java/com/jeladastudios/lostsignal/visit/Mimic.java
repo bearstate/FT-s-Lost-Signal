@@ -151,6 +151,12 @@ public final class Mimic {
         return true;
     }
 
+    /** His call at a lookout given up: someone really is lost out there tonight, and calling. */
+    public static void cancel(BlockPos tower) {
+        Call c = CALLS.get(tower);
+        if (c != null && !c.echo) CALLS.remove(tower);
+    }
+
     /** Whether he is on the radio at a lookout now, and how: "echo", "call", or null. */
     public static String on(BlockPos tower) {
         Call c = tower == null ? null : CALLS.get(tower);

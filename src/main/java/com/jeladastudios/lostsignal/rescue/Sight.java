@@ -91,7 +91,7 @@ public final class Sight {
     }
 
     /** The deepest drop at the hiker's feet, looking three blocks out each way. */
-    static int drop(ServerLevel level, BlockPos at) {
+    public static int drop(ServerLevel level, BlockPos at) {
         int deepest = 0;
         for (Direction d : Direction.Plane.HORIZONTAL) {
             BlockPos p = at.relative(d, 3);

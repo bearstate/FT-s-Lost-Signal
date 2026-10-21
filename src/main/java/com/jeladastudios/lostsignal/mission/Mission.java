@@ -33,6 +33,12 @@ public final class Mission {
     public float takeChance;
     /** Whether they were heard to be afraid, before. */
     public boolean warned;
+    /** Whether the stranger came to them and offered to walk them down; when; and what the keeper told them (0 nothing yet, 1 stay, 2 go). */
+    public boolean offered;
+    /** For trying: the offer made the next moment it may be. */
+    public transient boolean offerNow;
+    public long offerAt;
+    public int offerAnswer;
     /** When they were taken, where the scene is, and whether the District has sent the keeper to look. */
     public long takenAt;
     public BlockPos scene;
@@ -58,6 +64,9 @@ public final class Mission {
         tag.putLong("TakeAt", takeAt);
         tag.putFloat("TakeChance", takeChance);
         tag.putBoolean("Warned", warned);
+        tag.putBoolean("Offered", offered);
+        tag.putLong("OfferAt", offerAt);
+        tag.putInt("OfferAnswer", offerAnswer);
         tag.putLong("TakenAt", takenAt);
         if (scene != null) tag.put("Scene", NbtUtils.writeBlockPos(scene));
         tag.putBoolean("Told", told);
@@ -82,6 +91,9 @@ public final class Mission {
         m.takeAt = tag.contains("TakeAt") ? tag.getLong("TakeAt") : -1;
         m.takeChance = tag.getFloat("TakeChance");
         m.warned = tag.getBoolean("Warned");
+        m.offered = tag.getBoolean("Offered");
+        m.offerAt = tag.getLong("OfferAt");
+        m.offerAnswer = tag.getInt("OfferAnswer");
         m.takenAt = tag.getLong("TakenAt");
         if (tag.contains("Scene")) m.scene = NbtUtils.readBlockPos(tag.getCompound("Scene"));
         m.told = tag.getBoolean("Told");

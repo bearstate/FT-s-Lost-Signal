@@ -141,6 +141,9 @@ public final class Missions extends SavedData {
             mission.at = h.blockPosition();
             mission.lastCall = level.getGameTime() - CALL_AGAIN + 200;
             m.missions.put(tower, mission);
+            com.jeladastudios.lostsignal.visit.Mimic.cancel(tower);
+            // The District first: someone overdue, keep listening tonight.
+            Lines.say(level, Vec3.atCenterOf(tower), Lines.Speaker.DISTRICT, level.random.nextBoolean() ? "D_OVERDUE_01" : "D_OVERDUE_02", 1f);
             m.setDirty();
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
                 LostSignal.LOGGER.info("MISSION begun at lookout {} : hiker at {} {} {} ({} blocks)", tower.toShortString(), x, y, z, (int) d);
@@ -238,6 +241,19 @@ public final class Missions extends SavedData {
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken {} (chance {})", mission.tower.toShortString(), mission.takeAt >= 0 ? "at " + mission.takeAt : "not", chance);
         }
         if (out && mission.takeAt >= 0) {
+            // Half the time, before it comes to that, he comes to them as a man: friendly, offering to walk them
+            // down. What the keeper tells them is what they do.
+            if (!mission.offered && now >= mission.takeAt - 1400 && (level.random.nextBoolean() || mission.offerNow)) {
+                mission.offered = true;
+                mission.offerAt = now;
+                mission.warned = true;
+                mission.takeAt = Math.max(mission.takeAt, now + OFFER_WAITS);
+                setDirty();
+                Vec3 eye = h.getEyePosition();
+                Lines.say(level, eye, Lines.Speaker.HIKER, "H_SOMEONE", 0.15f);
+                com.jeladastudios.lostsignal.tower.Speech.after(level, 40 + com.jeladastudios.lostsignal.tower.Speech.length("H_SOMEONE"),
+                        () -> Lines.say(level, eye, Lines.Speaker.HIKER, "H_HE_SAYS", 0.15f));
+            }
             if (!mission.warned && now >= mission.takeAt - 600) {
                 mission.warned = true;
                 setDirty();
@@ -264,6 +280,42 @@ public final class Missions extends SavedData {
         }
     }
 
+    /** How long the hiker waits on the keeper's word, once he has offered to walk them down. */
+    static final long OFFER_WAITS = 1400;
+
+    /**
+     * The keeper's word to a hiker he has offered to walk down: stay where they are, and he goes away; go anywhere, and
+     * they go -- with him. True where the word was taken as an answer to that.
+     */
+    public static boolean offerAnswered(ServerLevel level, Hiker h, com.jeladastudios.lostsignal.rescue.Order order) {
+        Missions m = of(level);
+        for (Mission mission : m.missions.values()) {
+            if (!h.getUUID().equals(mission.hiker) || !mission.offered || mission.offerAnswer != 0) continue;
+            long now = level.getGameTime();
+            if (now - mission.offerAt > OFFER_WAITS) return false;
+            boolean goes = order == com.jeladastudios.lostsignal.rescue.Order.BEARING || order == com.jeladastudios.lostsignal.rescue.Order.FOLLOW_WATER
+                    || order == com.jeladastudios.lostsignal.rescue.Order.FOLLOW_TRAIL || order == com.jeladastudios.lostsignal.rescue.Order.FOLLOW_SIGN
+                    || order == com.jeladastudios.lostsignal.rescue.Order.TOWARD_LIGHT;
+            if (order == com.jeladastudios.lostsignal.rescue.Order.STAY) {
+                // Told to stay: they do, and he smiles and goes. Not tonight.
+                mission.offerAnswer = 1;
+                mission.takeAt = -1;
+                h.stay();
+                Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_STAY", 0.15f);
+            } else if (goes) {
+                mission.offerAnswer = 2;
+                mission.takeAt = now + 300;
+                Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_OK_01", 0.15f);
+            } else {
+                return false;
+            }
+            m.setDirty();
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION offer answered {}", mission.offerAnswer == 1 ? "stay" : "go");
+            return true;
+        }
+        return false;
+    }
+
     /** The chance something comes for a hiker out in the small hours, as things stand with them. */
     static float chance(Mission mission, Hiker h) {
         return TAKEN_BASE + (mission.answered ? 0 : TAKEN_UNANSWERED) + (h.state() == Hiker.State.GOING ? TAKEN_WALKING : 0);
@@ -278,6 +330,9 @@ public final class Missions extends SavedData {
         Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "X_SCREAM_CUT", 0.15f);
         String name = com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits());
         int journal = mission.answered ? com.jeladastudios.lostsignal.remains.Journal.ANSWERED : com.jeladastudios.lostsignal.remains.Journal.UNANSWERED;
+        // Heard on the mountain too, not only on the radio, by anyone out there within a few hundred blocks.
+        com.jeladastudios.lostsignal.radio.Voice.say(h, net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"),
+                "X_SCREAM_FAR", 300, 1f);
         BlockPos fire = h.leaveCamp();
         var made = com.jeladastudios.lostsignal.remains.Scene.make(level, h.blockPosition(), fire, h.kit(), name, mission.tower, journal,
                 level.random.nextFloat() < WITH_BODY, level.random);
@@ -317,13 +372,15 @@ public final class Missions extends SavedData {
     }
 
     /** Something come for the hiker of a night under way at a lookout, now: for trying it. */
-    public static boolean takeNow(ServerLevel level, BlockPos tower) {
+    public static boolean takeNow(ServerLevel level, BlockPos tower, boolean offer) {
         Missions m = of(level);
         Mission mission = m.missions.get(tower);
         if (mission == null || (mission.stage != Mission.Stage.CALLING && mission.stage != Mission.Stage.IN_CONTACT)) return false;
         mission.rolled = true;
         mission.takeAt = level.getGameTime() + 200;
         mission.warned = false;
+        mission.offered = false;
+        mission.offerNow = offer;
         m.setDirty();
         return true;
     }

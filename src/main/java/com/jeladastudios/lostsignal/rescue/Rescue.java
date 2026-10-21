@@ -56,6 +56,11 @@ public final class Rescue {
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("RESCUE {} unanswered", order);
             return;
         }
+        // Told what to do about the man who offered to walk them down: that is their answer.
+        if (com.jeladastudios.lostsignal.mission.Missions.offerAnswered(level, h, order)) {
+            com.jeladastudios.lostsignal.mission.Missions.heard(level, h);
+            return;
+        }
         String line = answer(level, h, order, value);
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
             LostSignal.LOGGER.info("RESCUE {} {} -> {} ({})", order, value, line, h.state());
@@ -67,9 +72,15 @@ public final class Rescue {
     /** What the hiker does with an order, and the line they answer with. */
     static String answer(ServerLevel level, Hiker h, Order order, int value) {
         BlockPos at = h.blockPosition();
+        // A broken ankle: told to go anywhere, they cannot.
+        boolean goes = order == Order.BEARING || order == Order.FOLLOW_WATER || order == Order.FOLLOW_TRAIL || order == Order.FOLLOW_SIGN
+                || order == Order.TOWARD_LIGHT;
+        if (goes && h.hurt() >= 2) return "H_HURT_02";
         return switch (order) {
             case WHERE -> Sight.describe(level, h);
-            case HOW -> h.fatigue() > 0.7f ? "H_TIRED" : !level.isDay() ? "H_DARK" : "H_HOW_OK";
+            case HOW -> h.hurt() >= 2 ? "H_HURT_02" : h.hurt() == 1 ? "H_HURT_01"
+                    : !level.isDay() && level.isRaining() && h.state() != Hiker.State.CAMPING ? "H_COLD"
+                    : h.fatigue() > 0.7f ? "H_TIRED" : !level.isDay() ? "H_DARK" : "H_HOW_OK";
             case COMPASS -> h.hasCompass() ? "H_COMPASS_YES" : "H_COMPASS_NO";
             case BEARING -> {
                 if (!h.hasCompass()) yield "H_WHICH_WAY";

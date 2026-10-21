@@ -115,12 +115,20 @@ public final class TestCommands {
                 }))
                 .then(Commands.literal("remains").executes(c -> remains(c, true))
                         .then(Commands.literal("nobody").executes(c -> remains(c, false))))
+                .then(Commands.literal("offer").executes(c -> {
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    boolean ok = tower != null && com.jeladastudios.lostsignal.mission.Missions.takeNow(p.serverLevel(), tower, true);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST offer " + ok), false);
+                    return ok ? 1 : 0;
+                }))
                 .then(Commands.literal("take").executes(c -> {
                     // What comes for the hiker of the lookout's night, in ten seconds.
                     ServerPlayer p = c.getSource().getPlayer();
                     if (p == null) return 0;
                     var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
-                    boolean ok = tower != null && com.jeladastudios.lostsignal.mission.Missions.takeNow(p.serverLevel(), tower);
+                    boolean ok = tower != null && com.jeladastudios.lostsignal.mission.Missions.takeNow(p.serverLevel(), tower, false);
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST take " + ok), false);
                     return ok ? 1 : 0;
                 }))
