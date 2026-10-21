@@ -113,6 +113,17 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST visit " + (v == null ? "none" : "at " + v.foot.toShortString() + " door " + v.door.toShortString())), false);
                     return v == null ? 0 : 1;
                 }))
+                .then(Commands.literal("remains").executes(c -> remains(c, true))
+                        .then(Commands.literal("nobody").executes(c -> remains(c, false))))
+                .then(Commands.literal("take").executes(c -> {
+                    // What comes for the hiker of the lookout's night, in ten seconds.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    boolean ok = tower != null && com.jeladastudios.lostsignal.mission.Missions.takeNow(p.serverLevel(), tower);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST take " + ok), false);
+                    return ok ? 1 : 0;
+                }))
                 .then(Commands.literal("hide").executes(c -> {
                     // Under the nearest bed, as a crouched click on it does.
                     ServerPlayer p = c.getSource().getPlayer();
@@ -133,6 +144,20 @@ public final class TestCommands {
                 }))
                 .then(Commands.literal("watcher").executes(c -> watcher(c, false))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
+    }
+
+    /** A taken hiker's scene twelve blocks ahead of the player, with or without the body. */
+    private static int remains(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, boolean body) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        var level = p.serverLevel();
+        var look = p.getLookAngle();
+        var at = net.minecraft.core.BlockPos.containing(p.getX() + look.x * 12, p.getY(), p.getZ() + look.z * 12);
+        var made = com.jeladastudios.lostsignal.remains.Scene.make(level, at, null, level.random.nextInt(com.jeladastudios.lostsignal.entity.Hiker.KITS),
+                com.jeladastudios.lostsignal.remains.Journal.name(level.random.nextLong()), null, level.random.nextInt(2), body, level.random);
+        c.getSource().sendSuccess(() -> Component.literal("LS_TEST remains at " + made.camp().toShortString() + " end " + made.end().toShortString()
+                + " body " + made.body()), false);
+        return 1;
     }
 
     private static int watcher(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, boolean anywhere) {

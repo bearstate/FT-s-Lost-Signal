@@ -37,6 +37,14 @@ public final class ModEntities {
                     .updateInterval(3)
                     .build("hiker"));
 
+    /** What is left of a hiker: lying, so low and long; seen from not far off, as a thing on the ground is. */
+    public static final RegistryObject<EntityType<com.jeladastudios.lostsignal.remains.Remains>> REMAINS = ENTITIES.register("remains",
+            () -> EntityType.Builder.<com.jeladastudios.lostsignal.remains.Remains>of(com.jeladastudios.lostsignal.remains.Remains::new, MobCategory.MISC)
+                    .sized(1.0f, 0.4f)
+                    .clientTrackingRange(6)
+                    .updateInterval(20)
+                    .build("remains"));
+
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent event) {
         event.put(WATCHER.get(), Watcher.attributes().build());

@@ -402,6 +402,13 @@ public class Hiker extends PathfinderMob {
         }
     }
 
+    /** Their fire, left where it is when they go: it is no longer theirs to put out. */
+    public BlockPos leaveCamp() {
+        BlockPos was = fire;
+        fire = null;
+        return was;
+    }
+
     void breakCamp() {
         if (fire == null) return;
         BlockState s = level().getBlockState(fire);

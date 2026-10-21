@@ -42,6 +42,11 @@ public final class Missions extends SavedData {
     static final long CALL_AGAIN = 1_800;
     /** The chance, once an evening at a kept lookout, that someone is lost. */
     static final float CHANCE = 0.4f;
+    /**
+     * The chance something comes for a hiker still out in the small hours: some always; more if no one ever answered
+     * them; more again if they are walking in the dark. And how often there is a body to find after.
+     */
+    static final float TAKEN_BASE = 0.08f, TAKEN_UNANSWERED = 0.3f, TAKEN_WALKING = 0.2f, WITH_BODY = 0.67f;
 
     final Map<BlockPos, Mission> missions = new HashMap<>();
     final Map<BlockPos, Long> lastNight = new HashMap<>();
@@ -146,8 +151,20 @@ public final class Missions extends SavedData {
     }
 
     void run(ServerLevel level, Mission mission, long day) {
-        Hiker h = mission.hiker == null ? null : level.getEntity(mission.hiker) instanceof Hiker found ? found : null;
         long now = level.getGameTime();
+        if (mission.stage == Mission.Stage.TAKEN) {
+            // The morning after: the District sends the keeper to where they were last heard from.
+            if (!mission.told && day > 0 && day < 4000) {
+                mission.told = true;
+                setDirty();
+                Lines.say(level, Vec3.atCenterOf(mission.tower), Lines.Speaker.DISTRICT, "D_GO_LOOK", 1f);
+                where(level, mission);
+            }
+            // Never found: after three days the night is closed; what is out there stays a while yet.
+            if (now - mission.takenAt > 3 * 24_000L) end(level, mission, "taken");
+            return;
+        }
+        Hiker h = mission.hiker == null ? null : level.getEntity(mission.hiker) instanceof Hiker found ? found : null;
         if (h == null && mission.at != null) keep(level, mission.at);
         if (h == null) {
             // Not loaded yet, or gone: a night without its hiker ends at dawn.
@@ -192,12 +209,92 @@ public final class Missions extends SavedData {
             case OVER -> {
             }
         }
+        // The small hours, with them still out there: something may come for them. Likelier if no one ever answered,
+        // likelier still if they are walking in the dark.
+        boolean out = mission.stage == Mission.Stage.CALLING || mission.stage == Mission.Stage.IN_CONTACT;
+        if (out && !mission.rolled && day >= 18000 && day < 22000) {
+            mission.rolled = true;
+            float chance = TAKEN_BASE + (mission.answered ? 0 : TAKEN_UNANSWERED) + (h.state() == Hiker.State.GOING ? TAKEN_WALKING : 0);
+            if (level.random.nextFloat() < chance) mission.takeAt = now + 200 + level.random.nextInt(Math.max(1, (int) (22500 - day) - 400));
+            setDirty();
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken {} (chance {})", mission.tower.toShortString(), mission.takeAt >= 0 ? "at " + mission.takeAt : "not", chance);
+        }
+        if (out && mission.takeAt >= 0) {
+            if (!mission.warned && now >= mission.takeAt - 600) {
+                mission.warned = true;
+                setDirty();
+                Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING", 0.15f);
+            }
+            if (now >= mission.takeAt) {
+                take(level, mission, h);
+                return;
+            }
+        }
         // Dawn with the hiker still out there: lost contact.
         if ((mission.stage == Mission.Stage.CALLING || mission.stage == Mission.Stage.IN_CONTACT) && day > 23000) {
             Lines.say(level, Vec3.atCenterOf(mission.tower), Lines.Speaker.DISTRICT, "D_LOST_CONTACT", 1f);
             h.discard();
             end(level, mission, "lost");
         }
+    }
+
+    /**
+     * Taken: the last thing on the radio is them running, and a scream cut short. Where they were, the morning will
+     * find what is left.
+     */
+    void take(ServerLevel level, Mission mission, Hiker h) {
+        Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_FEAR_RUN", 0.15f);
+        Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "X_SCREAM_CUT", 0.15f);
+        String name = com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits());
+        int journal = mission.answered ? com.jeladastudios.lostsignal.remains.Journal.ANSWERED : com.jeladastudios.lostsignal.remains.Journal.UNANSWERED;
+        BlockPos fire = h.leaveCamp();
+        var made = com.jeladastudios.lostsignal.remains.Scene.make(level, h.blockPosition(), fire, h.kit(), name, mission.tower, journal,
+                level.random.nextFloat() < WITH_BODY, level.random);
+        h.discard();
+        mission.stage = Mission.Stage.TAKEN;
+        mission.takenAt = level.getGameTime();
+        mission.scene = made.camp();
+        setDirty();
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken at {}", mission.tower.toShortString(), made.camp().toShortString());
+    }
+
+    /** Where to look: told to the keepers at the lookout as the District's note, a compass point and a distance. */
+    void where(ServerLevel level, Mission mission) {
+        if (mission.scene == null) return;
+        int dx = mission.scene.getX() - mission.tower.getX(), dz = mission.scene.getZ() - mission.tower.getZ();
+        int bearing = (int) Math.round(Math.toDegrees(Math.atan2(dx, -dz)) + 360) % 360;
+        String[] points = {"n", "ne", "e", "se", "s", "sw", "w", "nw"};
+        String point = points[Math.floorMod((int) Math.round(bearing / 45.0), 8)];
+        int far = (int) Math.round(Math.hypot(dx, dz) / 10.0) * 10;
+        var text = net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.note.where",
+                net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.point." + point), far, bearing)
+                .withStyle(net.minecraft.ChatFormatting.GRAY, net.minecraft.ChatFormatting.ITALIC);
+        for (ServerPlayer p : level.players()) {
+            if (p.position().distanceTo(Vec3.atCenterOf(mission.tower)) > KEEPS) continue;
+            if (com.jeladastudios.lostsignal.rescue.Stations.poweredNear(level, p.blockPosition(), 8) == null) continue;
+            p.sendSystemMessage(text);
+        }
+    }
+
+    /** The keeper found the body: the night is told to the District, and closed. */
+    public static void bodyFound(ServerLevel level, BlockPos tower) {
+        Missions m = of(level);
+        Mission mission = m.missions.get(tower);
+        if (mission == null || mission.stage != Mission.Stage.TAKEN) return;
+        Lines.say(level, Vec3.atCenterOf(tower), Lines.Speaker.DISTRICT, "D_BODY_FOUND", 1f);
+        m.end(level, mission, "taken_found");
+    }
+
+    /** Something come for the hiker of a night under way at a lookout, now: for trying it. */
+    public static boolean takeNow(ServerLevel level, BlockPos tower) {
+        Missions m = of(level);
+        Mission mission = m.missions.get(tower);
+        if (mission == null || (mission.stage != Mission.Stage.CALLING && mission.stage != Mission.Stage.IN_CONTACT)) return false;
+        mission.rolled = true;
+        mission.takeAt = level.getGameTime() + 200;
+        mission.warned = false;
+        m.setDirty();
+        return true;
     }
 
     /** The ground round a lost hiker kept loaded and alive, so they live on with no player near: renewed every second. */
@@ -229,6 +326,7 @@ public final class Missions extends SavedData {
         for (Mission mission : m.missions.values()) {
             if (h.getUUID().equals(mission.hiker) && mission.stage == Mission.Stage.CALLING) {
                 mission.stage = Mission.Stage.IN_CONTACT;
+                mission.answered = true;
                 m.setDirty();
             }
         }

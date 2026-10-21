@@ -12,7 +12,7 @@ import java.util.UUID;
  */
 public final class Mission {
 
-    public enum Stage { CALLING, IN_CONTACT, FOUND, OVER }
+    public enum Stage { CALLING, IN_CONTACT, FOUND, TAKEN, OVER }
 
     public final BlockPos tower;
     public UUID hiker;
@@ -24,6 +24,17 @@ public final class Mission {
     public String ending = "";
     /** Where the hiker was last seen loaded, to keep their ground loaded from. */
     public BlockPos at;
+    /** Whether the keeper ever answered them. */
+    public boolean answered;
+    /** Whether the small hours have been looked at for what comes for them; when it comes, if it does (-1: not). */
+    public boolean rolled;
+    public long takeAt = -1;
+    /** Whether they were heard to be afraid, before. */
+    public boolean warned;
+    /** When they were taken, where the scene is, and whether the District has sent the keeper to look. */
+    public long takenAt;
+    public BlockPos scene;
+    public boolean told;
 
     public Mission(BlockPos tower) {
         this.tower = tower;
@@ -38,6 +49,13 @@ public final class Mission {
         tag.putLong("LastCall", lastCall);
         tag.putString("Ending", ending);
         if (at != null) tag.put("At", NbtUtils.writeBlockPos(at));
+        tag.putBoolean("Answered", answered);
+        tag.putBoolean("Rolled", rolled);
+        tag.putLong("TakeAt", takeAt);
+        tag.putBoolean("Warned", warned);
+        tag.putLong("TakenAt", takenAt);
+        if (scene != null) tag.put("Scene", NbtUtils.writeBlockPos(scene));
+        tag.putBoolean("Told", told);
         return tag;
     }
 
@@ -53,6 +71,13 @@ public final class Mission {
         m.lastCall = tag.getLong("LastCall");
         m.ending = tag.getString("Ending");
         if (tag.contains("At")) m.at = NbtUtils.readBlockPos(tag.getCompound("At"));
+        m.answered = tag.getBoolean("Answered");
+        m.rolled = tag.getBoolean("Rolled");
+        m.takeAt = tag.contains("TakeAt") ? tag.getLong("TakeAt") : -1;
+        m.warned = tag.getBoolean("Warned");
+        m.takenAt = tag.getLong("TakenAt");
+        if (tag.contains("Scene")) m.scene = NbtUtils.readBlockPos(tag.getCompound("Scene"));
+        m.told = tag.getBoolean("Told");
         return m;
     }
 }
