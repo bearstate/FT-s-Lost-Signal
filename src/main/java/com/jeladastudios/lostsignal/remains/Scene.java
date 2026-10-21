@@ -79,44 +79,79 @@ public final class Scene {
         int splashes = 4 + random.nextInt(4);
         for (int i = 0; i < splashes; i++) {
             BlockPos p = free(level, tent, 0, 3, random);
-            if (p != null) stain(level, p, random.nextInt(4), Direction.Plane.HORIZONTAL.getRandomDirection(random));
+            if (p != null) stain(level, p, random.nextInt(StainBlock.SPLASHES), Direction.Plane.HORIZONTAL.getRandomDirection(random), false);
         }
-        // The smear: off into the thickest trees within reach, or down to a drop.
+        // The smear: off into the thickest trees within reach, or down to a drop. It goes block to block, each piece
+        // of it straight on, turning, or ending, so that it runs on unbroken from one block into the next.
         double heading = towardTrees(level, camp, random);
         int length = 20 + random.nextInt(41);
         boolean body = withBody;
-        BlockPos end = tent;
-        int step = 0;
-        for (double went = 0; went < length; went += 1.6 + random.nextDouble() * 0.9, step++) {
-            // It wanders a little, as a thing dragged does.
-            heading += (random.nextDouble() - 0.5) * 0.35;
-            Vec3 next = Vec3.atBottomCenterOf(tent).add(Math.cos(heading) * went, 0, Math.sin(heading) * went);
-            BlockPos ground = ground(level, (int) Math.floor(next.x), (int) Math.floor(next.z));
-            if (ground == null) break;
-            // Over an edge: the smear stops at the top, and there is no one to find.
-            if (ground.getY() < end.getY() - 4) {
-                body = false;
-                break;
+        BlockPos start = ground(level, tent.getX(), tent.getZ());
+        java.util.List<BlockPos> path = new java.util.ArrayList<>();
+        java.util.List<Direction> moves = new java.util.ArrayList<>();
+        if (start != null) {
+            path.add(start);
+            BlockPos cell = start;
+            double fx = start.getX() + 0.5, fz = start.getZ() + 0.5;
+            walk:
+            while (path.size() < length) {
+                // It wanders a little, as a thing dragged does.
+                heading += (random.nextDouble() - 0.5) * 0.25;
+                fx += Math.cos(heading);
+                fz += Math.sin(heading);
+                int tx = (int) Math.floor(fx), tz = (int) Math.floor(fz);
+                while (cell.getX() != tx || cell.getZ() != tz) {
+                    int dx = tx - cell.getX(), dz = tz - cell.getZ();
+                    Direction d = Math.abs(dx) >= Math.abs(dz) ? (dx > 0 ? Direction.EAST : Direction.WEST) : (dz > 0 ? Direction.SOUTH : Direction.NORTH);
+                    BlockPos next = ground(level, cell.getX() + d.getStepX(), cell.getZ() + d.getStepZ());
+                    if (next == null || next.getY() > cell.getY() + 2) break walk;
+                    // Over an edge: the smear stops at the top, and there is no one to find.
+                    if (next.getY() < cell.getY() - 4) {
+                        body = false;
+                        break walk;
+                    }
+                    moves.add(d);
+                    path.add(next);
+                    cell = next;
+                }
             }
-            Direction along = Direction.fromYRot(Math.toDegrees(heading) - 90);
-            stain(level, ground, StainBlock.SMEAR, along);
-            // The long prints beside it, now one side, now the other.
-            if (step % 2 == 1) {
-                BlockPos foot = ground(level, ground.relative(step % 4 == 1 ? along.getClockWise() : along.getCounterClockWise()).getX(),
-                        ground.relative(step % 4 == 1 ? along.getClockWise() : along.getCounterClockWise()).getZ());
-                if (foot != null) stain(level, foot, StainBlock.PRINT, along);
-            }
-            end = ground;
         }
+        java.util.Set<BlockPos> onPath = new java.util.HashSet<>(path);
+        for (int i = 0; i < path.size() && !moves.isEmpty(); i++) {
+            int kind;
+            Direction facing;
+            if (i == 0) {
+                // Its start, thin at the tent and full where it leaves.
+                kind = StainBlock.END;
+                facing = moves.get(0).getOpposite();
+            } else if (i == path.size() - 1) {
+                kind = StainBlock.END;
+                facing = moves.get(i - 1);
+            } else {
+                Direction in = moves.get(i - 1), out = moves.get(i);
+                facing = in;
+                kind = out == in.getClockWise() ? StainBlock.RIGHT : out == in.getCounterClockWise() ? StainBlock.LEFT
+                        : StainBlock.STRAIGHT + random.nextInt(2);
+            }
+            stain(level, path.get(i), kind, facing, true);
+            // The prints beside it, now one side, now the other, every few blocks.
+            if (i > 0 && i % 3 == 0) {
+                Direction along = moves.get(i - 1);
+                Direction aside = (i / 3) % 2 == 0 ? along.getClockWise() : along.getCounterClockWise();
+                BlockPos foot = ground(level, path.get(i).getX() + aside.getStepX(), path.get(i).getZ() + aside.getStepZ());
+                if (foot != null && !onPath.contains(foot)) stain(level, foot, StainBlock.PRINT, along, false);
+            }
+        }
+        BlockPos end = path.isEmpty() ? tent : path.get(path.size() - 1);
         // Prints at the edge of the camp, coming in from the trees.
         double in = heading + Math.PI + (random.nextDouble() - 0.5);
         for (int i = 0; i < 4; i++) {
             double far = 10 - i * 2.6;
             BlockPos p = ground(level, (int) Math.floor(camp.getX() + Math.cos(in) * far), (int) Math.floor(camp.getZ() + Math.sin(in) * far));
-            if (p != null) stain(level, p, StainBlock.PRINT, Direction.fromYRot(Math.toDegrees(in + Math.PI) - 90));
+            if (p != null && !onPath.contains(p)) stain(level, p, StainBlock.PRINT, Direction.fromYRot(Math.toDegrees(in + Math.PI) - 90), false);
         }
         // Who is left: the body at the smear's end, face down, head on; or the scene's keeper by the fire.
-        Direction lies = Direction.fromYRot(Math.toDegrees(heading) - 90);
+        Direction lies = moves.isEmpty() ? Direction.fromYRot(Math.toDegrees(heading) - 90) : moves.get(moves.size() - 1);
         BlockPos lying = body ? level(level, end, lies) : camp;
         Remains r = ModEntities.REMAINS.get().create(level);
         if (r != null) {
@@ -125,6 +160,15 @@ public final class Scene {
             r.moveTo(place.x, place.y, place.z, lies.toYRot() + (random.nextFloat() - 0.5f) * 30f, 0f);
             r.set(kit, body, name, fire, tower, journal);
             level.addFreshEntity(r);
+        }
+        if (body) {
+            // Dark on the ground under and about them.
+            for (BlockPos p : new BlockPos[]{lying, lying.relative(lies), lying.relative(lies.getOpposite()),
+                    lying.relative(lies.getClockWise()), lying.relative(lies.getCounterClockWise())}) {
+                if (p != lying && random.nextFloat() < 0.4f) continue;
+                BlockPos g = ground(level, p.getX(), p.getZ());
+                if (g != null) stain(level, g, random.nextInt(StainBlock.SPLASHES), Direction.Plane.HORIZONTAL.getRandomDirection(random), true);
+            }
         }
         if (!body) {
             // The journal lies in the tent, then.
@@ -204,10 +248,11 @@ public final class Scene {
         if (p != null && level.getBlockState(p).canBeReplaced() && s.canSurvive(level, p)) level.setBlock(p, s, 3);
     }
 
-    static void stain(ServerLevel level, BlockPos p, int kind, Direction facing) {
+    /** A mark on the ground there; over one already there only if told to (the smear goes over splashes). */
+    static void stain(ServerLevel level, BlockPos p, int kind, Direction facing, boolean over) {
         BlockState s = ModBlocks.STAIN.get().defaultBlockState().setValue(StainBlock.KIND, kind).setValue(StainBlock.FACING, facing);
         BlockState there = level.getBlockState(p);
-        if (!there.canBeReplaced() || there.is(ModBlocks.STAIN.get()) && kind != StainBlock.PRINT) return;
+        if (!there.canBeReplaced() || there.is(ModBlocks.STAIN.get()) && !over) return;
         if (!s.canSurvive(level, p)) return;
         level.setBlock(p, s, 3);
     }

@@ -24,7 +24,7 @@ public class RemainsRenderer extends EntityRenderer<Remains> {
 
     static {
         for (int i = 0; i < Hiker.KITS; i++) {
-            TEXTURES[i] = new ResourceLocation(LostSignal.MODID, "textures/entity/hiker_" + i + ".png");
+            TEXTURES[i] = new ResourceLocation(LostSignal.MODID, "textures/entity/remains_" + i + ".png");
         }
     }
 

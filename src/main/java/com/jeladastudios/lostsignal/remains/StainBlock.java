@@ -25,9 +25,13 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public class StainBlock extends HorizontalDirectionalBlock {
 
-    /** What the mark is: four splashes, a drag smear (along its facing), a print (its toes to its facing). */
-    public static final IntegerProperty KIND = IntegerProperty.create("kind", 0, 5);
-    public static final int SMEAR = 4, PRINT = 5;
+    /**
+     * What the mark is: six splashes; a drag smear across the block toward its facing (two of them), turning left or
+     * right out of it, or ending in it; a print, its toes to its facing. The smear pieces meet at their edges, so a
+     * run of them reads as one smear.
+     */
+    public static final IntegerProperty KIND = IntegerProperty.create("kind", 0, 11);
+    public static final int SPLASHES = 6, STRAIGHT = 6, LEFT = 8, RIGHT = 9, END = 10, PRINT = 11;
     /** Fresh, dried, faint. */
     public static final IntegerProperty AGE = IntegerProperty.create("age", 0, 2);
 
