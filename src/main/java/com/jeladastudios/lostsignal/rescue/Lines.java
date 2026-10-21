@@ -26,16 +26,24 @@ public final class Lines {
     public enum Speaker { HIKER, DISTRICT }
 
     public static void say(ServerLevel level, Vec3 from, Speaker speaker, String line, float power) {
+        sayAs(level, from, Component.translatable("radio.fts_lostsignal.speaker." + speaker.name().toLowerCase(java.util.Locale.ROOT)),
+                line, power, 1f, speaker == Speaker.DISTRICT ? Double.MAX_VALUE : HEARD);
+    }
+
+    /**
+     * Something said on the rescue frequency by anyone: a keeper at another lookout, the man in a lookout no one keeps.
+     * Their voice lifted or lowered by a pitch; heard within some blocks of where it is said from.
+     */
+    public static void sayAs(ServerLevel level, Vec3 from, Component who, String line, float power, float pitch, double reach) {
         String clip = take(line, level);
-        if (clip != null) Broadcast.send(level, from, Broadcast.RESCUE, power, clip);
+        if (clip != null) Broadcast.send(level, from, Broadcast.RESCUE, power, pitch, clip);
         Component text = Component.literal("[" + Broadcast.RESCUE + "] ").withStyle(ChatFormatting.DARK_GRAY)
-                .append(Component.translatable("radio.fts_lostsignal.speaker." + speaker.name().toLowerCase(java.util.Locale.ROOT))
-                        .withStyle(ChatFormatting.GRAY))
+                .append(who.copy().withStyle(ChatFormatting.GRAY))
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(Component.translatable("radio.fts_lostsignal.line." + line).withStyle(ChatFormatting.WHITE));
         // Heard by whoever is at a powered station in reach: a dead set hears nothing. A sleeper there is woken.
         for (ServerPlayer p : level.players()) {
-            if (speaker != Speaker.DISTRICT && p.position().distanceTo(from) > HEARD) continue;
+            if (p.position().distanceTo(from) > reach) continue;
             if (Stations.poweredNear(level, p.blockPosition(), AT) == null) continue;
             if (p.isSleeping()) com.jeladastudios.lostsignal.sleep.FlowingSleep.wake(level, p.position(), 1, "radio");
             p.sendSystemMessage(text);

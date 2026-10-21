@@ -58,24 +58,30 @@ public final class Visit {
         this.out = out;
     }
 
-    /** A visit begun at the lookout standing at a foot, if its cab door is found. */
-    public static Visit begin(ServerLevel level, BlockPos foot) {
-        for (Visit v : UNDER_WAY) if (v.foot.equals(foot)) return v;
-        BlockPos door = null;
-        Direction out = null;
-        for (int dy = 19; dy <= 23 && door == null; dy++) {
+    /** A cab's door: its lower half, and the way out through it. */
+    public record Door(BlockPos at, Direction out) {}
+
+    /** The door of the cab of the lookout standing at a foot, or null where there is none. */
+    public static Door doorOf(ServerLevel level, BlockPos foot) {
+        for (int dy = 19; dy <= 23; dy++) {
             for (Direction d : Direction.Plane.HORIZONTAL) {
                 for (int side = -1; side <= 1; side++) {
                     BlockPos p = foot.above(dy).relative(d, 3).relative(d.getClockWise(), side);
                     BlockState s = level.getBlockState(p);
-                    if (s.getBlock() instanceof DoorBlock && s.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER) {
-                        door = p;
-                        out = d;
-                    }
+                    if (s.getBlock() instanceof DoorBlock && s.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER) return new Door(p, d);
                 }
             }
         }
-        if (door == null) return null;
+        return null;
+    }
+
+    /** A visit begun at the lookout standing at a foot, if its cab door is found. */
+    public static Visit begin(ServerLevel level, BlockPos foot) {
+        for (Visit v : UNDER_WAY) if (v.foot.equals(foot)) return v;
+        Door found = doorOf(level, foot);
+        if (found == null) return null;
+        BlockPos door = found.at();
+        Direction out = found.out();
         Visit v = new Visit(level, foot, door, out);
         UNDER_WAY.add(v);
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT begun at {} door {}", foot.toShortString(), door.toShortString());

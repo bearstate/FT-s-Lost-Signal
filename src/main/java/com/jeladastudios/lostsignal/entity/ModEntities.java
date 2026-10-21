@@ -45,8 +45,17 @@ public final class ModEntities {
                     .updateInterval(20)
                     .build("remains"));
 
+    /** A lookout's keeper: a person's size. */
+    public static final RegistryObject<EntityType<Keeper>> KEEPER = ENTITIES.register("keeper",
+            () -> EntityType.Builder.of(Keeper::new, MobCategory.MISC)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(8)
+                    .updateInterval(3)
+                    .build("keeper"));
+
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent event) {
+        event.put(KEEPER.get(), Keeper.attributes().build());
         event.put(STRANGER.get(), Stranger.attributes().build());
         event.put(HIKER.get(), Hiker.attributes().build());
     }

@@ -85,7 +85,7 @@ public final class Missions extends SavedData {
      * looked for up the middle -- the ground model may lie a few blocks off the ground -- twenty blocks over its foot.
      * Null where no lookout stands there.
      */
-    static BlockPos standing(ServerLevel level, BlockPos foot) {
+    public static BlockPos standing(ServerLevel level, BlockPos foot) {
         for (int dy = 40; dy >= -12; dy--) {
             BlockPos p = foot.above(dy);
             if (level.getBlockState(p).is(BlockTags.PLANKS) && level.getBlockState(p.above()).is(net.minecraft.world.level.block.Blocks.CARTOGRAPHY_TABLE)) {

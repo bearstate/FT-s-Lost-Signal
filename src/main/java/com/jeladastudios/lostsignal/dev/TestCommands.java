@@ -124,6 +124,50 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST take " + ok), false);
                     return ok ? 1 : 0;
                 }))
+                .then(Commands.literal("talk").executes(c -> keeperTalk(c, null))
+                        .then(Commands.argument("topic", com.mojang.brigadier.arguments.StringArgumentType.word())
+                                .executes(c -> keeperTalk(c, com.mojang.brigadier.arguments.StringArgumentType.getString(c, "topic")))))
+                .then(Commands.literal("call").then(Commands.argument("which", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 8)).executes(c -> {
+                    // A call from the panel: 0 the District, 1.. the lookouts round, nearest first.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    int which = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "which");
+                    var list = com.jeladastudios.lostsignal.tower.Calls.neighbours(p);
+                    long key = which == 0 || which > list.size() ? 0 : list.get(which - 1).key();
+                    com.jeladastudios.lostsignal.tower.Calls.call(p, key);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
+                    return 1;
+                })))
+                .then(Commands.literal("towers").executes(c -> {
+                    // The lookout the player is at and the ones round it, as they are.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var level = p.serverLevel();
+                    var foot = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
+                    if (foot == null) foot = com.jeladastudios.lostsignal.mission.Lookouts.near(level, p.blockPosition(), 1);
+                    if (foot == null) return 0;
+                    var home = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
+                    StringBuilder s = new StringBuilder("LS_TEST towers: " + home.number + " " + home.state + " " + home.keeper + " " + home.need
+                            + " ring2=" + com.jeladastudios.lostsignal.mission.Lookouts.around(level, foot, 2));
+                    for (var t : com.jeladastudios.lostsignal.tower.Towers.around(level, home)) {
+                        s.append(" | ").append(t.number).append(" ").append(t.state).append(" ").append(t.keeper).append(" @").append(t.x).append(",").append(t.z);
+                    }
+                    c.getSource().sendSuccess(() -> Component.literal(s.toString()), false);
+                    return 1;
+                })
+                        .then(Commands.argument("state", com.mojang.brigadier.arguments.StringArgumentType.word()).executes(c -> {
+                            // The lookout the player is at, made as asked: kept, empty, abandoned, stranger.
+                            ServerPlayer p = c.getSource().getPlayer();
+                            if (p == null) return 0;
+                            var level = p.serverLevel();
+                            var foot = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
+                            if (foot == null) return 0;
+                            var t = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
+                            String state = com.mojang.brigadier.arguments.StringArgumentType.getString(c, "state");
+                            com.jeladastudios.lostsignal.tower.Towers.force(level, t, state);
+                            c.getSource().sendSuccess(() -> Component.literal("LS_TEST tower " + t.number + " " + t.state + " " + t.keeper + " " + t.need), false);
+                            return 1;
+                        })))
                 .then(Commands.literal("hide").executes(c -> {
                     // Under the nearest bed, as a crouched click on it does.
                     ServerPlayer p = c.getSource().getPlayer();
@@ -150,6 +194,24 @@ public final class TestCommands {
                             return s == null ? 0 : 1;
                         }))
                         .then(Commands.literal("anywhere").executes(c -> watcher(c, true)))));
+    }
+
+    /** The nearest keeper talked to: their talk opened, or a topic asked of them. */
+    private static int keeperTalk(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, String topic) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        var keepers = p.serverLevel().getEntitiesOfClass(com.jeladastudios.lostsignal.entity.Keeper.class, p.getBoundingBox().inflate(16));
+        if (keepers.isEmpty()) return 0;
+        var k = keepers.get(0);
+        var t = k.record();
+        if (t == null) return 0;
+        if (topic == null) {
+            com.jeladastudios.lostsignal.net.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p),
+                    new com.jeladastudios.lostsignal.net.Net.Talk(k.getId(), t.keeper, t.number));
+        } else {
+            com.jeladastudios.lostsignal.tower.Talk.asked(p, k, com.jeladastudios.lostsignal.tower.Talk.Topic.valueOf(topic.toUpperCase(java.util.Locale.ROOT)));
+        }
+        return 1;
     }
 
     /** A taken hiker's scene twelve blocks ahead of the player, with or without the body. */

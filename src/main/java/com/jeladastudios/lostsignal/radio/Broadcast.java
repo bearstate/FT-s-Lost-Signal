@@ -83,6 +83,26 @@ public final class Broadcast {
         return b;
     }
 
+    /** The same, the voice lifted or lowered by a pitch (1: as recorded): one recorded voice for many speakers. */
+    public static Broadcast send(ServerLevel level, Vec3 at, String frequency, float power, float pitch, String... clips) {
+        if (pitch == 1f) return send(level, at, frequency, power, clips);
+        if (CommonRadioPlugin.serverApi == null) return null;
+        List<short[]> frames = new ArrayList<>();
+        for (String clip : clips) {
+            List<short[]> f = Clips.frames(clip);
+            if (f.isEmpty()) return null;
+            frames.addAll(f);
+        }
+        short[] pcm = new short[frames.size() * Clips.FRAME];
+        for (int i = 0; i < frames.size(); i++) System.arraycopy(frames.get(i), 0, pcm, i * Clips.FRAME, Clips.FRAME);
+        pcm = Voice.pitched(pcm, pitch);
+        Broadcast b = new Broadcast(level, at, frequency, power);
+        for (int i = 0; i + Clips.FRAME <= pcm.length; i += Clips.FRAME) b.pending.add(java.util.Arrays.copyOfRange(pcm, i, i + Clips.FRAME));
+        b.start = System.nanoTime();
+        ON_AIR.add(b);
+        return b;
+    }
+
     public boolean onAir() {
         return valid;
     }

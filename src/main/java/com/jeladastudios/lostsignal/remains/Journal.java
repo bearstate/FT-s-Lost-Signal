@@ -16,7 +16,7 @@ public final class Journal {
     private Journal() {}
 
     /** What happened to them, as far as the journal tells it. */
-    public static final int UNANSWERED = 0, ANSWERED = 1;
+    public static final int UNANSWERED = 0, ANSWERED = 1, KEEPER = 2;
 
     /** The names hikers go by; one is drawn for each, from its own number. */
     static final String[] NAMES = {"Dana", "Sam", "Alex", "Jordan", "Casey", "Robin", "Morgan", "Jamie", "Riley", "Avery",
@@ -29,11 +29,12 @@ public final class Journal {
     public static ItemStack of(String name, int how) {
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
         CompoundTag tag = book.getOrCreateTag();
-        tag.putString("title", "Journal");
+        tag.putString("title", how == KEEPER ? "Lookout Log" : "Journal");
         tag.putString("author", name);
         tag.putBoolean("resolved", true);
         ListTag pages = new ListTag();
-        String[] keys = {"start", "lost", how == ANSWERED ? "answered" : "unanswered", "last"};
+        String[] keys = how == KEEPER ? new String[]{"keeper_start", "keeper_man", "keeper_last"}
+                : new String[]{"start", "lost", how == ANSWERED ? "answered" : "unanswered", "last"};
         for (String key : keys) {
             pages.add(StringTag.valueOf(Component.Serializer.toJson(Component.translatable("journal.fts_lostsignal." + key))));
         }

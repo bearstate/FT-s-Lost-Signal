@@ -36,6 +36,30 @@ public class RescueScreen extends Screen {
 
     public RescueScreen() {
         super(Component.translatable("rescue.fts_lostsignal.title"));
+        // Which lookouts are round, for the calls: asked of the server as the panel opens.
+        Net.CHANNEL.sendToServer(new Net.Panel());
+    }
+
+    /** The lookouts round the player's, as the server last told them. */
+    private static java.util.List<Net.Neighbour> round = java.util.List.of();
+
+    public static void neighbours(java.util.List<Net.Neighbour> list) {
+        round = list;
+        if (net.minecraft.client.Minecraft.getInstance().screen instanceof RescueScreen s) s.rebuildWidgets();
+    }
+
+    /** The calls: the District, and the lookouts round, each with its bearing and distance. */
+    private void calls(int left, int y, int width, int h, int gap) {
+        int n = 1 + round.size(), w = (width - (n - 1) * gap) / n, x = left;
+        addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.district"),
+                b -> Net.CHANNEL.sendToServer(new Net.Call(0))).bounds(x, y, w, h).build());
+        for (Net.Neighbour nb : round) {
+            x += w + gap;
+            String point = com.jeladastudios.lostsignal.finder.FireFinder.point(nb.bearing());
+            addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.button", nb.number(),
+                            Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()),
+                    b -> Net.CHANNEL.sendToServer(new Net.Call(nb.key()))).bounds(x, y, w, h).build());
+        }
     }
 
     @Override
@@ -49,7 +73,7 @@ public class RescueScreen extends Screen {
         column(left + 2 * (w + gap), top, w, h, gap, "rescue.fts_lostsignal.signal", Order.FLARE, Order.SMOKE, Order.LAMP);
         // A bearing in degrees, as a compass reads it, and the button to send it.
         int y = top + 6 * (h + gap) + 8;
-        bearing = new EditBox(font, left + 2 * (w + gap), y, w / 2 - 2, h, Component.translatable("rescue.fts_lostsignal.bearing"));
+        bearing = new EditBox(font, left + 2 * (w + gap), y, w / 3 - 2, h, Component.translatable("rescue.fts_lostsignal.bearing"));
         bearing.setMaxLength(3);
         bearing.setFilter(s -> s.matches("\\d{0,3}"));
         // The way back from the last signal read off the fire finder, ready to send; else north.
@@ -59,7 +83,10 @@ public class RescueScreen extends Screen {
         addRenderableWidget(Button.builder(Component.translatable("rescue.fts_lostsignal.order.bearing"), b -> {
             int deg = bearing.getValue().isEmpty() ? 0 : Math.floorMod(Integer.parseInt(bearing.getValue()), 360);
             Net.CHANNEL.sendToServer(new Net.Say(Order.BEARING, deg));
-        }).bounds(left + 2 * (w + gap) + w / 2 + 2, y, w / 2 - 2, h).build());
+        }).bounds(left + 2 * (w + gap) + w / 3 + 2, y, w - w / 3 - 2, h).build());
+        // Calling out: a row under the rest.
+        headings.add(new Object[]{"call.fts_lostsignal.heading", left, y + h + 6});
+        calls(left, y + h + 18, 3 * w + 2 * gap, h, gap);
     }
 
     private void column(int x, int y, int w, int h, int gap, String heading, Order... orders) {
@@ -83,7 +110,7 @@ public class RescueScreen extends Screen {
         if (r != null) {
             g.drawCenteredString(font, Component.translatable("rescue.fts_lostsignal.last_reading",
                     Component.translatable("finder.fts_lostsignal.kind." + r.kind()), r.bearing(), r.distance(),
-                    Math.floorMod(r.bearing() + 180, 360)), width / 2, height / 2 + 124, 0xE0C080);
+                    Math.floorMod(r.bearing() + 180, 360)), width / 2, height / 2 + 150, 0xE0C080);
         }
         super.render(g, mouseX, mouseY, partialTick);
     }

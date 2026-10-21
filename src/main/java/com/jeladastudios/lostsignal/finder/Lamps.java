@@ -97,7 +97,7 @@ public final class Lamps {
     }
 
     /** A signal lamp on or about the walkway of a lookout, or null. */
-    static BlockPos find(ServerLevel level, BlockPos tower) {
+    public static BlockPos find(ServerLevel level, BlockPos tower) {
         for (BlockPos p : BlockPos.betweenClosed(tower.offset(-6, 18, -6), tower.offset(6, 27, 6))) {
             if (level.getBlockState(p).is(ModBlocks.SIGNAL_LAMP.get())) return p.immutable();
         }

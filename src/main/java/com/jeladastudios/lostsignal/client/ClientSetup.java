@@ -29,5 +29,6 @@ public final class ClientSetup {
         event.registerEntityRenderer(ModEntities.STRANGER.get(), StrangerRenderer::new);
         event.registerEntityRenderer(ModEntities.HIKER.get(), HikerRenderer::new);
         event.registerEntityRenderer(ModEntities.REMAINS.get(), RemainsRenderer::new);
+        event.registerEntityRenderer(ModEntities.KEEPER.get(), KeeperRenderer::new);
     }
 }
