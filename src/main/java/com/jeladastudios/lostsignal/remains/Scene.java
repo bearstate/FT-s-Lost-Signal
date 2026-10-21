@@ -82,6 +82,18 @@ public final class Scene {
             BlockPos p = free(level, tent, 0, 3, random);
             if (p != null) stain(level, p, random.nextInt(StainBlock.SPLASHES), Direction.Plane.HORIZONTAL.getRandomDirection(random), false);
         }
+        // His mark, some of the time: black candles set in a ring by the fire, burnt down, out.
+        if (random.nextFloat() < 0.6f) {
+            int candles = 4 + random.nextInt(3);
+            double turn = random.nextDouble() * Math.PI * 2;
+            for (int i = 0; i < candles; i++) {
+                double a = turn + Math.PI * 2 * i / candles;
+                BlockPos p = ground(level, (int) Math.floor(camp.getX() + 0.5 + Math.cos(a) * 3), (int) Math.floor(camp.getZ() + 0.5 + Math.sin(a) * 3));
+                if (p != null && level.getBlockState(p).canBeReplaced()) {
+                    level.setBlock(p, Blocks.BLACK_CANDLE.defaultBlockState().setValue(net.minecraft.world.level.block.CandleBlock.CANDLES, 1 + random.nextInt(2)), 3);
+                }
+            }
+        }
         // The smear: off into the thickest trees within reach, or down to a drop. It goes block to block, each piece
         // of it straight on, turning, or ending, so that it runs on unbroken from one block into the next.
         double heading = towardTrees(level, camp, random);
