@@ -12,7 +12,8 @@ import java.util.UUID;
  */
 public final class Mission {
 
-    public enum Stage { CALLING, IN_CONTACT, FOUND, TAKEN, OVER }
+    /** PENDING: the hiker's ground still being found and loaded; they are not out there yet. */
+    public enum Stage { PENDING, CALLING, IN_CONTACT, FOUND, TAKEN, OVER }
 
     public final BlockPos tower;
     public UUID hiker;
@@ -26,7 +27,7 @@ public final class Mission {
     public BlockPos at;
     /** Whether the keeper ever answered them. */
     public boolean answered;
-    /** Whether the small hours have been looked at for what comes for them; when it comes, if it does (-1: not). */
+    /** Whether the small hours have been looked at for what comes for them; when it comes, on the day's clock (-1: not). */
     public boolean rolled;
     public long takeAt = -1;
     /** The chance it was looked at with: when the time comes, it is looked at again as things then stand. */
@@ -35,11 +36,13 @@ public final class Mission {
     public boolean warned;
     /** Whether the stranger came to them and offered to walk them down; when; and what the keeper told them (0 nothing yet, 1 stay, 2 go). */
     public boolean offered;
+    /** Whether he will come to them first, decided once with the rest. */
+    public boolean offerComes;
     /** For trying: the offer made the next moment it may be. */
     public transient boolean offerNow;
     public long offerAt;
     public int offerAnswer;
-    /** When they were taken, where the scene is, and whether the District has sent the keeper to look. */
+    /** When they were taken (on the day's clock), where the scene is, and whether the District has sent the keeper to look. */
     public long takenAt;
     public BlockPos scene;
     public boolean told;
@@ -65,6 +68,7 @@ public final class Mission {
         tag.putFloat("TakeChance", takeChance);
         tag.putBoolean("Warned", warned);
         tag.putBoolean("Offered", offered);
+        tag.putBoolean("OfferComes", offerComes);
         tag.putLong("OfferAt", offerAt);
         tag.putInt("OfferAnswer", offerAnswer);
         tag.putLong("TakenAt", takenAt);
@@ -92,6 +96,7 @@ public final class Mission {
         m.takeChance = tag.getFloat("TakeChance");
         m.warned = tag.getBoolean("Warned");
         m.offered = tag.getBoolean("Offered");
+        m.offerComes = tag.getBoolean("OfferComes");
         m.offerAt = tag.getLong("OfferAt");
         m.offerAnswer = tag.getInt("OfferAnswer");
         m.takenAt = tag.getLong("TakenAt");

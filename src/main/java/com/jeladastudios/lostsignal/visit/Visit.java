@@ -42,6 +42,9 @@ public final class Visit {
     /** How likely a night brings it up the stair of a lookout someone keeps: more so when a hiker is out. */
     static final float CHANCE = 0.12f, CHANCE_MISSION = 0.3f;
 
+    /** When the small hours were last looked at, on the day's clock. */
+    private static long lastClock = Long.MAX_VALUE;
+
     /** The night each lookout was last looked at for a visit, by its foot: one look a night. */
     private static final java.util.Map<BlockPos, Long> LOOKED = new java.util.HashMap<>();
 
@@ -243,7 +246,9 @@ public final class Visit {
     public static void night(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)
                 || level.dimension() != net.minecraft.world.level.Level.OVERWORLD || level.getGameTime() % 20 != 0) return;
-        long day = level.getDayTime() % 24000;
+        long clock = level.getDayTime(), day = clock % 24000;
+        long since = lastClock;
+        lastClock = clock;
         if (day < 18000 || day > 22000) return;
         long night = level.getDayTime() / 24000;
         for (ServerPlayer p : level.players()) {
@@ -258,7 +263,9 @@ public final class Visit {
             // Two in the cab, the keeper and a guest they let stay, and he is less likely to try it.
             if (com.jeladastudios.lostsignal.tower.Towers.company(level, tower)) chance *= 0.5f;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2.5f;
-            if (level.random.nextFloat() >= chance / 200f) continue;
+            // By how much of the small hours has gone by since the last look -- a second, or many, a keeper asleep.
+            float odds = chance * Math.min(2000, Math.max(0, clock - since)) / 4000f;
+            if (level.random.nextFloat() >= odds) continue;
             LOOKED.put(tower, night);
             begin(level, tower);
         }
@@ -268,5 +275,13 @@ public final class Visit {
     public static boolean at(BlockPos foot) {
         for (Visit v : UNDER_WAY) if (v.foot.equals(foot)) return true;
         return false;
+    }
+
+    /** A server stopped: nothing of its kept for the next world. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void forget(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        UNDER_WAY.clear();
+        lastClock = Long.MAX_VALUE;
+        LOOKED.clear();
     }
 }

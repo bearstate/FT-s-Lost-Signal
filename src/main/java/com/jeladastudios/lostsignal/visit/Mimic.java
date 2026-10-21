@@ -129,7 +129,9 @@ public final class Mimic {
         for (Tower t : Towers.around(level, home)) if (t.state == Tower.State.STRANGER) return t.cab();
         double a = level.random.nextDouble() * Math.PI * 2, d = NEAR + level.random.nextDouble() * (FAR - NEAR);
         int x = (int) Math.floor(tower.getX() + Math.cos(a) * d), z = (int) Math.floor(tower.getZ() + Math.sin(a) * d);
-        return new Vec3(x + 0.5, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) + 1.6, z + 0.5);
+        // Its height by the ground model: out there is not loaded, and is not made to be for a voice on the radio.
+        Integer y = com.jeladastudios.lostsignal.tower.Fires.ground(level, x, z);
+        return new Vec3(x + 0.5, (y == null ? tower.getY() : y) + 1.6, z + 0.5);
     }
 
     /**

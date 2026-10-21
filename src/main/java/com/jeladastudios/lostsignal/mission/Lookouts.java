@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
  * read with the true ground. FT's Geology answers on the server's own thread from a blunter ground unless a search
  * for the true one is under way, and a lookout sited on the blunt ground is not where the world built it.
  */
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = com.jeladastudios.lostsignal.LostSignal.MODID)
 public final class Lookouts {
 
     private Lookouts() {}
@@ -56,6 +57,8 @@ public final class Lookouts {
      * server's thread.
      */
     public static <T> void offThread(ServerLevel level, java.util.function.Supplier<T> work, java.util.function.Consumer<T> then) {
+        int gen = generation;
+        var server = level.getServer();
         SITING.submit(() -> {
             T result;
             try {
@@ -65,8 +68,31 @@ public final class Lookouts {
                 result = null;
             }
             T r = result;
-            level.getServer().execute(() -> then.accept(r));
+            back(server, gen, () -> then.accept(r));
         });
+    }
+
+    /**
+     * Something worked out off the server's thread handed back to it -- but not to a server that has stopped since, nor
+     * into the next world: a stopped server runs what it is handed there and then, on the worker's thread.
+     */
+    public static void back(net.minecraft.server.MinecraftServer server, int gen, Runnable then) {
+        if (gen != generation || !server.isRunning()) return;
+        server.execute(() -> {
+            if (gen == generation && server.isRunning()) then.run();
+        });
+    }
+
+    /** Which run of a server this is: counted up as each stops. */
+    private static volatile int generation;
+
+    public static int generation() {
+        return generation;
+    }
+
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        generation++;
     }
 
     /** The nearest lookout's foot within some cells of a place, or null: for the siting's own thread. */

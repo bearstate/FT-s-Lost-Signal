@@ -59,6 +59,8 @@ public final class FireFinder {
     public record Reading(String kind, int bearing, int distance, Vec3 at, long when) {}
 
     private static final Map<UUID, Reading> LAST = new HashMap<>();
+    /** When each player last pressed on the stand. */
+    private static final Map<UUID, Long> PRESSED = new HashMap<>();
 
     /** A player's last reading off the fire finder, if it is not more than ten minutes old. */
     public static Reading last(ServerPlayer p) {
@@ -87,6 +89,10 @@ public final class FireFinder {
         if (tower == null || Math.abs(pos.getX() - tower.getX()) > 1 || Math.abs(pos.getZ() - tower.getZ()) > 1
                 || pos.getY() < tower.getY() + 18 || pos.getY() > tower.getY() + 24) return;
         event.setCanceled(true);
+        // Once a press: a hand held on the stand, as the game repeats it, does not step up and away again.
+        Long last = PRESSED.get(p.getUUID());
+        if (last != null && level.getGameTime() - last < 10 && last <= level.getGameTime()) return;
+        PRESSED.put(p.getUUID(), level.getGameTime());
         if (SIGHTING.containsKey(p.getUUID())) {
             SIGHTING.remove(p.getUUID());
             p.displayClientMessage(Component.translatable("finder.fts_lostsignal.away"), true);
@@ -155,5 +161,13 @@ public final class FireFinder {
                 new com.jeladastudios.lostsignal.net.Net.Reading(seen.kind(), exact, far));
         LAST.put(p.getUUID(), new Reading(seen.kind(), exact, far, seen.at(), level.getGameTime()));
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FINDER {} at {} ~{} blocks, back {}", seen.kind(), exact, far, back);
+    }
+
+    /** A server stopped: nothing of its kept for the next world. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void forget(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        SIGHTING.clear();
+        LAST.clear();
+        PRESSED.clear();
     }
 }

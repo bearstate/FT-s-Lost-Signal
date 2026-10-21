@@ -48,7 +48,8 @@ public final class District {
         if (level.getGameTime() % 20 != 0 || level.players().isEmpty()) return;
         long day = level.getDayTime() / 24000, time = level.getDayTime() % 24000;
         for (Slot s : DAY) {
-            if (time < s.time() || time > s.time() + 200 || SAID.getOrDefault(s.line(), -1L) == day) continue;
+            // Within a while of its time, once that day: a sleeper's night goes by too fast for a narrow window.
+            if (time < s.time() || time > s.time() + 1500 || SAID.getOrDefault(s.line(), -1L) == day) continue;
             SAID.put(s.line(), day);
             // The rules always the first night; the rest, some days.
             boolean first = s.line().equals("D_NIGHT_RULES") && day == 0;
@@ -57,6 +58,8 @@ public final class District {
             Lines.say(level, from, Lines.Speaker.DISTRICT, s.line(), 1f);
             waiting = REPLY.containsKey(s.line()) ? s.line() : null;
             waitingSince = level.getGameTime();
+            // One call at a time.
+            break;
         }
     }
 

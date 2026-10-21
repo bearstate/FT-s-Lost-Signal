@@ -196,4 +196,11 @@ public final class Director {
         }
         return false;
     }
+
+    /** A server stopped: nothing of its kept for the next world. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void forget(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        NEXT.clear();
+        NEXT_TALK.clear();
+    }
 }

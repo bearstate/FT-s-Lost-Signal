@@ -36,7 +36,7 @@ public final class Missions extends SavedData {
     static final double KEEPS = 64;
     /** Where a hiker is lost: this far from the lookout. */
     static final int NEAR = 180, FAR = 300;
-    /** The quiet after a night at a lookout, in ticks: a day and a half. */
+    /** The quiet after a night at a lookout, on the day's clock: a day and a half. */
     static final long REST = 36_000;
     /** How often a hiker no one has answered calls again, in ticks. */
     static final long CALL_AGAIN = 1_800;
@@ -110,54 +110,118 @@ public final class Missions extends SavedData {
         for (ServerPlayer p : level.players()) {
             BlockPos tower = towerAt(level, p);
             if (tower == null || m.missions.containsKey(tower)) continue;
-            if (day < 13000 || day > 13100) continue;
-            if (level.getGameTime() - m.lastNight.getOrDefault(tower, -REST) < REST) continue;
-            m.lastNight.put(tower, level.getGameTime());
+            // The evening, any time in it: the quiet after a night (on the day's clock) keeps it to one a night, and a
+            // keeper asleep lets the evening go by too fast for a narrow window.
+            if (day < 13000 || day > 16000) continue;
+            if (level.getDayTime() - m.lastNight.getOrDefault(tower, -REST) < REST) continue;
+            m.lastNight.put(tower, level.getDayTime());
             m.setDirty();
             if (level.random.nextFloat() < CHANCE * (com.jeladastudios.lostsignal.dev.TestCommands.ON ? 2.5f : 1f)) begin(level, tower);
         }
         for (Mission mission : new java.util.ArrayList<>(m.missions.values())) m.run(level, mission, day);
     }
 
-    /** A hiker lost within a few hundred blocks of a lookout, from tonight. Null where no spot is found. */
+    /**
+     * A hiker lost within a few hundred blocks of a lookout, from tonight. The District says so now; where they are is
+     * worked out off the server's thread by the ground model -- the ground out there is mostly not loaded, and making
+     * it on the server's thread would hold everything up for seconds -- and the hiker is put there once it is loaded.
+     */
     public static Mission begin(ServerLevel level, BlockPos tower) {
         Missions m = of(level);
         if (m.missions.containsKey(tower)) return m.missions.get(tower);
-        for (int tries = 0; tries < 16; tries++) {
-            double a = level.random.nextDouble() * Math.PI * 2;
-            double d = NEAR + level.random.nextDouble() * (FAR - NEAR);
-            int x = (int) Math.floor(tower.getX() + Math.cos(a) * d), z = (int) Math.floor(tower.getZ() + Math.sin(a) * d);
-            level.getChunk(x >> 4, z >> 4);
-            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-            BlockPos at = new BlockPos(x, y, z);
-            if (!level.getFluidState(at.below()).isEmpty() || !level.getBlockState(at.below()).isSolid()) continue;
-            Hiker h = ModEntities.HIKER.get().create(level);
-            if (h == null) return null;
-            h.kit(level.random.nextInt(Hiker.KITS));
-            h.moveTo(x + 0.5, y, z + 0.5, level.random.nextFloat() * 360f, 0f);
-            h.onMission(tower);
-            level.addFreshEntity(h);
-            keep(level, h.blockPosition());
-            Mission mission = new Mission(tower);
-            mission.hiker = h.getUUID();
-            mission.started = level.getGameTime();
-            mission.at = h.blockPosition();
-            mission.lastCall = level.getGameTime() - CALL_AGAIN + 200;
-            m.missions.put(tower, mission);
-            com.jeladastudios.lostsignal.visit.Mimic.cancel(tower);
-            // The District first: someone overdue, keep listening tonight.
-            Lines.say(level, Vec3.atCenterOf(tower), Lines.Speaker.DISTRICT, level.random.nextBoolean() ? "D_OVERDUE_01" : "D_OVERDUE_02", 1f);
-            m.setDirty();
-            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
-                LostSignal.LOGGER.info("MISSION begun at lookout {} : hiker at {} {} {} ({} blocks)", tower.toShortString(), x, y, z, (int) d);
+        Mission mission = new Mission(tower);
+        mission.stage = Mission.Stage.PENDING;
+        mission.started = level.getGameTime();
+        m.missions.put(tower, mission);
+        m.setDirty();
+        com.jeladastudios.lostsignal.visit.Mimic.cancel(tower);
+        // The District first: someone overdue, keep listening tonight.
+        Lines.say(level, Vec3.atCenterOf(tower), Lines.Speaker.DISTRICT, level.random.nextBoolean() ? "D_OVERDUE_01" : "D_OVERDUE_02", 1f);
+        long seed = level.random.nextLong();
+        Lookouts.offThread(level, () -> lostAt(level, tower, new java.util.Random(seed)), at -> {
+            if (at == null) {
+                m.end(level, mission, "nowhere");
+                return;
             }
-            return mission;
+            mission.at = at;
+            m.setDirty();
+            keep(level, at);
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+                LostSignal.LOGGER.info("MISSION begun at lookout {} : hiker at {} ({} blocks)", tower.toShortString(), at.toShortString(),
+                        (int) Math.hypot(at.getX() - tower.getX(), at.getZ() - tower.getZ()));
+            }
+        });
+        return mission;
+    }
+
+    /** Where someone may be lost: some way off, on ground well over the sea and the lakes, by the ground model; or null. */
+    static BlockPos lostAt(ServerLevel level, BlockPos tower, java.util.Random random) {
+        for (int tries = 0; tries < 16; tries++) {
+            double a = random.nextDouble() * Math.PI * 2, d = NEAR + random.nextDouble() * (FAR - NEAR);
+            int x = (int) Math.floor(tower.getX() + Math.cos(a) * d), z = (int) Math.floor(tower.getZ() + Math.sin(a) * d);
+            Integer y = com.jeladastudios.lostsignal.tower.Fires.ground(level, x, z);
+            if (y != null && y > level.getSeaLevel() + 3) return new BlockPos(x, y, z);
         }
         return null;
     }
 
+    /**
+     * A pending hiker put out on the mountain once their ground is loaded: at the top of it there, or on firm dry
+     * ground nearby. Gives up after two minutes; true once they are out.
+     */
+    boolean putOut(ServerLevel level, Mission mission) {
+        if (mission.at == null) return false;
+        if (level.getGameTime() - mission.started > 2400) {
+            end(level, mission, "nowhere");
+            return false;
+        }
+        keep(level, mission.at);
+        if (!level.isLoaded(mission.at)) return false;
+        BlockPos spot = null;
+        for (int r = 0; r <= 8 && spot == null; r += 2) {
+            for (int dx = -r; dx <= r && spot == null; dx += 2) {
+                for (int dz = -r; dz <= r && spot == null; dz += 2) {
+                    int x = mission.at.getX() + dx, z = mission.at.getZ() + dz;
+                    if (!level.isLoaded(new BlockPos(x, 0, z))) continue;
+                    BlockPos p = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+                    if (level.getFluidState(p.below()).isEmpty() && level.getBlockState(p.below()).isSolid()) spot = p;
+                }
+            }
+        }
+        if (spot == null) {
+            end(level, mission, "nowhere");
+            return false;
+        }
+        Hiker h = ModEntities.HIKER.get().create(level);
+        if (h == null) return false;
+        h.kit(level.random.nextInt(Hiker.KITS));
+        h.moveTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, level.random.nextFloat() * 360f, 0f);
+        h.onMission(mission.tower);
+        level.addFreshEntity(h);
+        mission.hiker = h.getUUID();
+        mission.at = spot;
+        mission.stage = Mission.Stage.CALLING;
+        mission.lastCall = level.getGameTime() - CALL_AGAIN + 200;
+        setDirty();
+        return true;
+    }
+
+    /** Whether a hiker is someone's night still: a hiker whose night is over has no business out there. */
+    public static boolean onNight(ServerLevel level, java.util.UUID hiker) {
+        for (Mission mission : of(level).missions.values()) if (hiker.equals(mission.hiker)) return true;
+        return false;
+    }
+
+    /** When this world's nights were first looked at this run: missing hikers are not given up on in the first moments. */
+    private long firstRun = -1;
+
     void run(ServerLevel level, Mission mission, long day) {
         long now = level.getGameTime();
+        if (firstRun < 0) firstRun = now;
+        if (mission.stage == Mission.Stage.PENDING) {
+            putOut(level, mission);
+            return;
+        }
         if (mission.stage == Mission.Stage.TAKEN) {
             // The morning after: the District sends the keeper to where they were last heard from.
             if (!mission.told && day > 0 && day < 4000) {
@@ -167,7 +231,7 @@ public final class Missions extends SavedData {
                 where(level, mission);
             }
             // Never found: after three days the night is closed; what is out there stays a while yet.
-            if (now - mission.takenAt > 3 * 24_000L) end(level, mission, "taken");
+            if (level.getDayTime() - mission.takenAt > 3 * 24_000L) end(level, mission, "taken");
             return;
         }
         Hiker h = mission.hiker == null ? null : level.getEntity(mission.hiker) instanceof Hiker found ? found : null;
@@ -178,8 +242,9 @@ public final class Missions extends SavedData {
             return;
         }
         if (h == null) {
-            // Not loaded yet, or gone: a night without its hiker ends at dawn.
-            if (day > 23500 || day < 12000) end(level, mission, "lost");
+            // Not loaded yet, or gone: a night without its hiker ends at dawn -- but not in the first half minute of a
+            // run, while their ground is still being loaded back.
+            if ((day > 23500 || day < 12000) && now - firstRun > 600) end(level, mission, "lost");
             return;
         }
         if (!h.blockPosition().equals(mission.at)) {
@@ -193,6 +258,14 @@ public final class Missions extends SavedData {
                     setDirty();
                     String[] calls = {"H_CALL_01", "H_CALL_02", "H_CALL_03", "H_CALL_04"};
                     Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, calls[level.random.nextInt(calls.length)], 0.15f);
+                }
+                // Walked up to by a player who never got them on the radio: found all the same.
+                for (ServerPlayer p : level.players()) {
+                    if (p.distanceTo(h) < 5 && !p.isSpectator()) {
+                        Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_SEE_YOU", 0.15f);
+                        found(level, mission, h, "found");
+                        break;
+                    }
                 }
             }
             case IN_CONTACT -> {
@@ -234,38 +307,43 @@ public final class Missions extends SavedData {
         // The small hours, with them still out there: something may come for them. Likelier if no one ever answered,
         // likelier still if they are walking in the dark.
         boolean out = mission.stage == Mission.Stage.CALLING || mission.stage == Mission.Stage.IN_CONTACT;
+        // Counted on the day's clock, not in ticks: a keeper asleep lets the night go by faster, and with it this.
+        long clock = level.getDayTime();
         if (out && !mission.rolled && day >= 18000 && day < 22000) {
             mission.rolled = true;
             float chance = chance(mission, h);
             mission.takeChance = chance;
+            // Whether he comes to them first, as a man, decided now: once.
+            mission.offerComes = level.random.nextBoolean();
             // Not at once: a keeper who has not answered yet has a while to.
-            if (level.random.nextFloat() < chance) mission.takeAt = now + 1200 + level.random.nextInt(Math.max(1, (int) (22500 - day) - 1400));
+            if (level.random.nextFloat() < chance) mission.takeAt = clock + 1200 + level.random.nextInt(Math.max(1, (int) (22500 - day) - 1400));
             setDirty();
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken {} (chance {})", mission.tower.toShortString(), mission.takeAt >= 0 ? "at " + mission.takeAt : "not", chance);
         }
         if (out && mission.takeAt >= 0) {
             // Half the time, before it comes to that, he comes to them as a man: friendly, offering to walk them
             // down. What the keeper tells them is what they do.
-            if (!mission.offered && now >= mission.takeAt - 1400 && (level.random.nextBoolean() || mission.offerNow)) {
+            if (!mission.offered && clock >= mission.takeAt - 1400 && (mission.offerComes || mission.offerNow)) {
                 mission.offered = true;
                 mission.offerAt = now;
                 mission.warned = true;
-                mission.takeAt = Math.max(mission.takeAt, now + OFFER_WAITS);
+                mission.takeAt = Math.max(mission.takeAt, clock + OFFER_WAITS);
                 setDirty();
                 Vec3 eye = h.getEyePosition();
                 Lines.say(level, eye, Lines.Speaker.HIKER, "H_SOMEONE", 0.15f);
                 com.jeladastudios.lostsignal.tower.Speech.after(level, 40 + com.jeladastudios.lostsignal.tower.Speech.length("H_SOMEONE"),
                         () -> Lines.say(level, eye, Lines.Speaker.HIKER, "H_HE_SAYS", 0.15f));
             }
-            if (!mission.warned && now >= mission.takeAt - 600) {
+            if (!mission.warned && clock >= mission.takeAt - 600) {
                 mission.warned = true;
                 setDirty();
                 Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING", 0.15f);
             }
-            if (now >= mission.takeAt) {
-                // As things stand now: answered since, or stopped walking in the dark, the odds are better.
+            if (clock >= mission.takeAt) {
+                // As things stand now: answered since, or stopped walking in the dark, the odds are better -- unless
+                // the keeper told them to go with him.
                 float current = chance(mission, h);
-                if (mission.takeChance > 0 && level.random.nextFloat() >= current / mission.takeChance) {
+                if (mission.offerAnswer != 2 && mission.takeChance > 0 && level.random.nextFloat() >= current / mission.takeChance) {
                     mission.takeAt = -1;
                     setDirty();
                     if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: spared", mission.tower.toShortString());
@@ -307,7 +385,7 @@ public final class Missions extends SavedData {
                 Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_STAY", 0.15f);
             } else if (goes) {
                 mission.offerAnswer = 2;
-                mission.takeAt = now + 300;
+                mission.takeAt = level.getDayTime() + 300;
                 Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_OK_01", 0.15f);
             } else {
                 return false;
@@ -341,7 +419,7 @@ public final class Missions extends SavedData {
                 level.random.nextFloat() < WITH_BODY, level.random);
         h.discard();
         mission.stage = Mission.Stage.TAKEN;
-        mission.takenAt = level.getGameTime();
+        mission.takenAt = level.getDayTime();
         mission.scene = made.camp();
         setDirty();
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken at {}", mission.tower.toShortString(), made.camp().toShortString());
@@ -380,7 +458,7 @@ public final class Missions extends SavedData {
         Mission mission = m.missions.get(tower);
         if (mission == null || (mission.stage != Mission.Stage.CALLING && mission.stage != Mission.Stage.IN_CONTACT)) return false;
         mission.rolled = true;
-        mission.takeAt = level.getGameTime() + 200;
+        mission.takeAt = level.getDayTime() + 200;
         mission.warned = false;
         mission.offered = false;
         mission.offerNow = offer;
@@ -457,5 +535,12 @@ public final class Missions extends SavedData {
             m.lastNight.put(net.minecraft.nbt.NbtUtils.readBlockPos(n.getCompound("Tower")), n.getLong("At"));
         }
         return m;
+    }
+
+    /** A server stopped: nothing of its kept for the next world. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void forget(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        SEEN.clear();
+        LOOKING.clear();
     }
 }

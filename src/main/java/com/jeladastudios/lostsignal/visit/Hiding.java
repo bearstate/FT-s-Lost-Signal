@@ -39,9 +39,15 @@ public final class Hiding {
 
     @SubscribeEvent
     public static void click(PlayerInteractEvent.RightClickBlock event) {
-        if (!(event.getEntity() instanceof ServerPlayer p) || !p.isShiftKeyDown()) return;
+        if (!(event.getEntity() instanceof ServerPlayer p)) return;
         BlockState s = p.level().getBlockState(event.getPos());
-        if (!(s.getBlock() instanceof BedBlock) || hidden(p)) return;
+        if (!(s.getBlock() instanceof BedBlock)) return;
+        // Lying under it, a hand on the bed does nothing -- above all, it does not get them into it.
+        if (hidden(p)) {
+            event.setCanceled(true);
+            return;
+        }
+        if (!p.isShiftKeyDown()) return;
         event.setCanceled(true);
         hide(p, event.getPos(), s);
     }
@@ -107,5 +113,29 @@ public final class Hiding {
         // Still: they stay where they lie.
         if (p.position().distanceToSqr(h.at()) > 0.04) p.teleportTo(h.at().x, h.at().y, h.at().z);
         p.setForcedPose(Pose.SWIMMING);
+    }
+
+    /** Gone out of the world, or died, or gone through a portal: no longer lying under anything. */
+    @SubscribeEvent
+    public static void loggedOut(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        HIDDEN.remove(event.getEntity().getUUID());
+        CROUCHED.remove(event.getEntity().getUUID());
+    }
+
+    @SubscribeEvent
+    public static void respawned(net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent event) {
+        if (event.getEntity() instanceof ServerPlayer p) unhide(p);
+    }
+
+    @SubscribeEvent
+    public static void changedDimension(net.minecraftforge.event.entity.player.PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer p) unhide(p);
+    }
+
+    /** A server stopped: nothing of its kept for the next world. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void forget(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        HIDDEN.clear();
+        CROUCHED.clear();
     }
 }

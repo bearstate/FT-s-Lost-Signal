@@ -113,7 +113,7 @@ public final class Fires {
     }
 
     /** The ground's height at a column, as the world is made: FT's Geology's model where it gives it, else the generator's. */
-    static Integer ground(ServerLevel level, int x, int z) {
+    public static Integer ground(ServerLevel level, int x, int z) {
         try {
             double h = com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, x, z);
             if (!Double.isNaN(h)) return (int) Math.round(h);

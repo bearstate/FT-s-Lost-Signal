@@ -37,6 +37,8 @@ public final class Lamps {
 
     /** A lamp switched on or off. */
     public static void switched(ServerLevel level, BlockPos lamp, boolean lit) {
+        // The lookouts are the overworld's: a lamp lit anywhere else is not one of theirs to send far off.
+        if (level.dimension() != Level.OVERWORLD) return;
         if (lit) BURNING.add(lamp.immutable());
         else BURNING.remove(lamp);
     }
@@ -45,6 +47,7 @@ public final class Lamps {
     public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
         BURNING.clear();
         LAMP.clear();
+        com.jeladastudios.lostsignal.block.SignalLampBlock.forget();
     }
 
     @SubscribeEvent

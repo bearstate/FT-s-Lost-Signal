@@ -32,6 +32,11 @@ public class SignalLampBlock extends Block {
     /** When each lamp was last switched, in game ticks. */
     private static final java.util.Map<BlockPos, Long> SWITCHED = new java.util.HashMap<>();
 
+    /** A server stopped: when each lamp was switched is its world's, not the next one's. */
+    public static void forget() {
+        SWITCHED.clear();
+    }
+
     private static final VoxelShape SHAPE = Shapes.or(Block.box(4, 0, 4, 12, 1, 12), Block.box(4.5, 1, 4.5, 11.5, 9, 11.5),
             Block.box(4, 9, 4, 12, 10, 12));
 

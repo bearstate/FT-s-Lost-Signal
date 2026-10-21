@@ -22,14 +22,31 @@ public final class Net {
             new ResourceLocation(LostSignal.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 
     public static void register() {
-        CHANNEL.registerMessage(0, Say.class, Say::write, Say::read, Say::handle);
-        CHANNEL.registerMessage(1, Lie.class, Lie::write, Lie::read, Lie::handle);
-        CHANNEL.registerMessage(2, Reading.class, Reading::write, Reading::read, Reading::handle);
-        CHANNEL.registerMessage(3, Talk.class, Talk::write, Talk::read, Talk::handle);
-        CHANNEL.registerMessage(4, Ask.class, Ask::write, Ask::read, Ask::handle);
-        CHANNEL.registerMessage(5, Panel.class, Panel::write, Panel::read, Panel::handle);
-        CHANNEL.registerMessage(6, Neighbours.class, Neighbours::write, Neighbours::read, Neighbours::handle);
-        CHANNEL.registerMessage(7, Call.class, Call::write, Call::read, Call::handle);
+        // Each only the way it is meant to go: a client cannot send what the server sends, nor the other way.
+        var toServer = java.util.Optional.of(net.minecraftforge.network.NetworkDirection.PLAY_TO_SERVER);
+        var toClient = java.util.Optional.of(net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+        CHANNEL.registerMessage(0, Say.class, Say::write, Say::read, Say::handle, toServer);
+        CHANNEL.registerMessage(1, Lie.class, Lie::write, Lie::read, Lie::handle, toClient);
+        CHANNEL.registerMessage(2, Reading.class, Reading::write, Reading::read, Reading::handle, toClient);
+        CHANNEL.registerMessage(3, Talk.class, Talk::write, Talk::read, Talk::handle, toClient);
+        CHANNEL.registerMessage(4, Ask.class, Ask::write, Ask::read, Ask::handle, toServer);
+        CHANNEL.registerMessage(5, Panel.class, Panel::write, Panel::read, Panel::handle, toServer);
+        CHANNEL.registerMessage(6, Neighbours.class, Neighbours::write, Neighbours::read, Neighbours::handle, toClient);
+        CHANNEL.registerMessage(7, Call.class, Call::write, Call::read, Call::handle, toServer);
+    }
+
+    /** When each player last sent each kind of message, by the wall clock, so none can be sent faster than it should. */
+    private static final java.util.Map<String, Long> LAST = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Whether a player may send this kind of message now: not more than once in so many milliseconds. */
+    static boolean allowed(net.minecraft.server.level.ServerPlayer p, String what, long ms) {
+        String key = p.getUUID() + what;
+        long now = System.currentTimeMillis();
+        Long last = LAST.get(key);
+        if (last != null && now - last < ms) return false;
+        LAST.put(key, now);
+        if (LAST.size() > 4096) LAST.clear();
+        return true;
     }
 
     /** A keeper spoken to: the client opens the talk with them. */
@@ -69,7 +86,7 @@ public final class Net {
             var c = ctx.get();
             c.enqueueWork(() -> {
                 var p = c.getSender();
-                if (p == null || m.topic < 0 || m.topic >= com.jeladastudios.lostsignal.tower.Talk.Topic.values().length) return;
+                if (p == null || m.topic < 0 || m.topic >= com.jeladastudios.lostsignal.tower.Talk.Topic.values().length || !allowed(p, "ask", 400)) return;
                 if (p.level().getEntity(m.entity) instanceof com.jeladastudios.lostsignal.entity.Keeper k && k.distanceTo(p) < 8) {
                     com.jeladastudios.lostsignal.tower.Talk.asked(p, k, com.jeladastudios.lostsignal.tower.Talk.Topic.values()[m.topic]);
                 }
@@ -92,7 +109,7 @@ public final class Net {
             var c = ctx.get();
             c.enqueueWork(() -> {
                 var p = c.getSender();
-                if (p != null) com.jeladastudios.lostsignal.tower.Calls.panel(p);
+                if (p != null && allowed(p, "panel", 1000)) com.jeladastudios.lostsignal.tower.Calls.panel(p);
             });
             c.setPacketHandled(true);
         }
@@ -128,21 +145,24 @@ public final class Net {
         }
     }
 
-    /** A call from the panel: to the District (0), or to a lookout by its place. */
-    public record Call(long key) {
+    /** A call from the panel: to the District, a fire called in, or to a lookout by its place. */
+    public record Call(int kind, long key) {
+
+        public static final int DISTRICT = 0, FIRE = 1, LOOKOUT = 2;
 
         static void write(Call m, FriendlyByteBuf buf) {
+            buf.writeVarInt(m.kind);
             buf.writeLong(m.key);
         }
 
         static Call read(FriendlyByteBuf buf) {
-            return new Call(buf.readLong());
+            return new Call(buf.readVarInt(), buf.readLong());
         }
 
         static void handle(Call m, Supplier<NetworkEvent.Context> ctx) {
             var c = ctx.get();
             c.enqueueWork(() -> {
-                if (c.getSender() != null) com.jeladastudios.lostsignal.tower.Calls.call(c.getSender(), m.key);
+                if (c.getSender() != null && allowed(c.getSender(), "call", 2000)) com.jeladastudios.lostsignal.tower.Calls.call(c.getSender(), m.kind, m.key);
             });
             c.setPacketHandled(true);
         }
@@ -205,7 +225,7 @@ public final class Net {
         static void handle(Say m, Supplier<NetworkEvent.Context> ctx) {
             var c = ctx.get();
             c.enqueueWork(() -> {
-                if (c.getSender() != null) Rescue.said(c.getSender(), m.order, m.value);
+                if (c.getSender() != null && allowed(c.getSender(), "say", 500)) Rescue.said(c.getSender(), m.order, m.value);
             });
             c.setPacketHandled(true);
         }

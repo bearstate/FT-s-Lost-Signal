@@ -142,7 +142,7 @@ public final class TestCommands {
                     int which = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "which");
                     var list = com.jeladastudios.lostsignal.tower.Calls.neighbours(p);
                     long key = which == 0 || which > list.size() ? 0 : list.get(which - 1).key();
-                    com.jeladastudios.lostsignal.tower.Calls.call(p, key);
+                    com.jeladastudios.lostsignal.tower.Calls.call(p, key == 0 ? com.jeladastudios.lostsignal.net.Net.Call.DISTRICT : com.jeladastudios.lostsignal.net.Net.Call.LOOKOUT, key);
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
                     return 1;
                 })))
@@ -156,7 +156,7 @@ public final class TestCommands {
                 }))
                 .then(Commands.literal("report").executes(c -> {
                     if (c.getSource().getPlayer() == null) return 0;
-                    com.jeladastudios.lostsignal.tower.Calls.call(c.getSource().getPlayer(), com.jeladastudios.lostsignal.tower.Calls.FIRE);
+                    com.jeladastudios.lostsignal.tower.Calls.call(c.getSource().getPlayer(), com.jeladastudios.lostsignal.net.Net.Call.FIRE, 0);
                     return 1;
                 }))
                 .then(Commands.literal("mimic").then(Commands.argument("how", com.mojang.brigadier.arguments.StringArgumentType.word()).executes(c -> {

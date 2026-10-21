@@ -206,7 +206,14 @@ public class Hiker extends PathfinderMob {
     @Override
     public void tick() {
         super.tick();
-        if (level() instanceof net.minecraft.server.level.ServerLevel s) mayFall(s);
+        if (level() instanceof net.minecraft.server.level.ServerLevel s) {
+            mayFall(s);
+            // Out on a night that is over -- loaded back after it ended -- they are not out there any more.
+            if (mission && tickCount > 400 && tickCount % 200 == 0 && !com.jeladastudios.lostsignal.mission.Missions.onNight(s, getUUID())) {
+                discard();
+                return;
+            }
+        }
         if (mission && level() instanceof net.minecraft.server.level.ServerLevel server && (tickCount % 100 == 0 || keptAt == null
                 || !keptAt.equals(chunkPosition()))) {
             var chunks = server.getChunkSource();
@@ -232,11 +239,10 @@ public class Hiker extends PathfinderMob {
     public BlockPos tower() {
         if (!towerSought && level() instanceof net.minecraft.server.level.ServerLevel server) {
             towerSought = true;
-            try {
-                tower = com.jeladastudios.lostsignal.mission.Lookouts.near(server, blockPosition(), 3);
-            } catch (LinkageError e) {
-                tower = null;
-            }
+            // Looked up off the server's thread: the siting of new ground takes seconds. Not known until then.
+            BlockPos at = blockPosition();
+            com.jeladastudios.lostsignal.mission.Lookouts.offThread(server, () -> com.jeladastudios.lostsignal.mission.Lookouts.nearOffThread(server, at, 3),
+                    found -> tower = found);
         }
         return tower;
     }

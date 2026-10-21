@@ -52,17 +52,17 @@ public class RescueScreen extends Screen {
     private void calls(int left, int y, int width, int h, int gap) {
         int n = 2 + round.size(), w = (width - (n - 1) * gap) / n, x = left;
         addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.district"),
-                b -> Net.CHANNEL.sendToServer(new Net.Call(0))).bounds(x, y, w, h).build());
+                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.DISTRICT, 0))).bounds(x, y, w, h).build());
         // A fire called in, by the last bearing taken on it.
         x += w + gap;
         addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.report_smoke"),
-                b -> Net.CHANNEL.sendToServer(new Net.Call(com.jeladastudios.lostsignal.tower.Calls.FIRE))).bounds(x, y, w, h).build());
+                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.FIRE, 0))).bounds(x, y, w, h).build());
         for (Net.Neighbour nb : round) {
             x += w + gap;
             String point = com.jeladastudios.lostsignal.finder.FireFinder.point(nb.bearing());
             addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.button", nb.number(),
                             Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()),
-                    b -> Net.CHANNEL.sendToServer(new Net.Call(nb.key()))).bounds(x, y, w, h).build());
+                    b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.LOOKOUT, nb.key()))).bounds(x, y, w, h).build());
         }
     }
 

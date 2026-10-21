@@ -78,7 +78,7 @@ public final class Towers extends SavedData {
     Tower found(ServerLevel level, BlockPos foot) {
         RandomSource random = level.random;
         Tower tower = new Tower(foot.getX(), foot.getY(), foot.getZ());
-        tower.number = 1 + Math.floorMod(foot.getX() * 31 + foot.getZ() * 17, 40);
+        tower.number = number(foot);
         tower.since = level.getGameTime();
         float roll = random.nextFloat();
         if (roll < FOUND_KEPT) keep(tower, random);
@@ -87,6 +87,15 @@ public final class Towers extends SavedData {
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER {} found at {}: {} {}", tower.number,
                 foot.toShortString(), tower.state, tower.keeper);
         return tower;
+    }
+
+    /** A number for a lookout found, as the District calls it: from its place, and not one another has round here. */
+    int number(BlockPos foot) {
+        java.util.Set<Integer> taken = new java.util.HashSet<>();
+        for (Tower t : towers.values()) taken.add(t.number);
+        int n = 1 + Math.floorMod(foot.getX() * 31 + foot.getZ() * 17, 90);
+        for (int i = 0; i < 99 && taken.contains(n); i++) n = n % 99 + 1;
+        return n;
     }
 
     /** Someone posted there. */
@@ -164,6 +173,20 @@ public final class Towers extends SavedData {
         return found;
     }
 
+    /**
+     * The lookouts round one already known, and only those: what the dawn goes by, so that lookouts no one has come
+     * near are not found -- and theirs round them, and so on -- of themselves, day after day.
+     */
+    List<Tower> knownAround(Tower tower) {
+        List<Tower> found = new ArrayList<>();
+        if (tower.near == null) return found;
+        for (BlockPos foot : tower.near) {
+            Tower t = towers.get(Tower.key(foot.getX(), foot.getZ()));
+            if (t != null && t.key() != tower.key()) found.add(t);
+        }
+        return found;
+    }
+
     /** The one thread the lookouts round are worked out on, one lookout at a time. */
     private static final java.util.concurrent.ExecutorService FINDER = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "Lost Signal lookout finder");
@@ -191,6 +214,8 @@ public final class Towers extends SavedData {
         FINDING.put(tower.key(), waiting);
         BlockPos foot = tower.foot();
         long started = System.nanoTime();
+        int gen = Lookouts.generation();
+        var server = level.getServer();
         FINDER.submit(() -> {
             List<BlockPos> feet;
             try {
@@ -200,7 +225,7 @@ public final class Towers extends SavedData {
                 feet = List.of();
             }
             List<BlockPos> result = feet;
-            level.getServer().execute(() -> {
+            Lookouts.back(server, gen, () -> {
                 tower.near = result;
                 of(level).setDirty();
                 List<Runnable> done = FINDING.remove(tower.key());
@@ -283,7 +308,7 @@ public final class Towers extends SavedData {
      */
     static void nightfall(ServerLevel level, Tower t, BlockPos foot, ServerPlayer p) {
         long time = level.getDayTime() % 24000, day = level.getDayTime() / 24000;
-        if (t.state != Tower.State.KEPT || time < 13000 || time > 13600 || t.nightSaid == day || p.getY() < foot.getY() + 18) return;
+        if (t.state != Tower.State.KEPT || time < 13000 || time > 15000 || t.nightSaid == day || p.getY() < foot.getY() + 18) return;
         t.nightSaid = day;
         boolean guest = p.getUUID().equals(t.guest) && t.guestNight == day;
         for (var k : level.getEntitiesOfClass(com.jeladastudios.lostsignal.entity.Keeper.class, p.getBoundingBox().inflate(10), k -> k.tower() == t.key())) {
@@ -361,7 +386,7 @@ public final class Towers extends SavedData {
                         if (n < NEEDS_COAL) tower.need = Tower.Need.COAL;
                         else if (n < NEEDS_COAL + NEEDS_CHECK) {
                             // A neighbour gone quiet, or with a light in it no one should have lit.
-                            for (Tower other : around(level, tower)) {
+                            for (Tower other : knownAround(tower)) {
                                 if (other.state == Tower.State.ABANDONED || other.state == Tower.State.STRANGER) {
                                     tower.need = Tower.Need.CHECK;
                                     tower.checkOn = other.key();
@@ -413,6 +438,9 @@ public final class Towers extends SavedData {
         for (Tower tower : towers.values()) list.add(tower.save());
         tag.put("Towers", list);
         tag.putLong("LastDawn", lastDawn);
+        CompoundTag asked = new CompoundTag();
+        for (var e : checking.entrySet()) asked.putLong(e.getKey().toString(), e.getValue());
+        tag.put("Checking", asked);
         ListTag ns = new ListTag();
         for (Notice n : notices) {
             CompoundTag c = new CompoundTag();
@@ -432,6 +460,14 @@ public final class Towers extends SavedData {
             t.towers.put(tower.key(), tower);
         }
         t.lastDawn = tag.getLong("LastDawn");
+        CompoundTag asked = tag.getCompound("Checking");
+        for (String k : asked.getAllKeys()) {
+            try {
+                t.checking.put(java.util.UUID.fromString(k), asked.getLong(k));
+            } catch (IllegalArgumentException e) {
+                // Not a player's: skipped.
+            }
+        }
         for (Tag e : tag.getList("Notices", Tag.TAG_COMPOUND)) {
             CompoundTag c = (CompoundTag) e;
             t.notices.add(new Notice(c.getString("Kind"), c.getLong("Tower"), c.getLong("At")));

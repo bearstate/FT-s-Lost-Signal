@@ -27,9 +27,6 @@ public final class Calls {
 
     /** How far a station's call carries, lookout to lookout, in blocks. */
     static final double REACH = 3500;
-    /** The call that is a fire called in, not a call to anyone. */
-    public static final long FIRE = -1;
-
     /** How many of the lookouts round are on the panel. */
     static final int LISTED = 3;
 
@@ -66,7 +63,7 @@ public final class Calls {
     }
 
     /** A call made from the panel: to the District (key 0), or to a lookout. */
-    public static void call(ServerPlayer p, long key) {
+    public static void call(ServerPlayer p, int kind, long key) {
         ServerLevel level = p.serverLevel();
         BlockPos station = Stations.near(level, p.blockPosition(), 6);
         if (station == null || !Stations.powered(level, station)) {
@@ -75,16 +72,20 @@ public final class Calls {
         }
         Tower home = home(level, p);
         // A fire called in, by the bearing just taken on it.
-        if (key == FIRE) {
+        if (kind == Net.Call.FIRE) {
             Fires.report(p);
             return;
         }
-        if (key == 0) {
+        if (kind == Net.Call.DISTRICT) {
             district(level, p, home);
             return;
         }
-        Tower t = Towers.known(level, key);
-        if (t == null) return;
+        // Only a lookout on the panel's list: within reach of the player's own.
+        if (kind != Net.Call.LOOKOUT || home == null || home.near == null) return;
+        Tower found = null;
+        for (Tower n : Towers.around(level, home)) if (n.key() == key) found = n;
+        if (found == null) return;
+        Tower t = found;
         p.displayClientMessage(Component.translatable("call.fts_lostsignal.calling", t.number), true);
         switch (t.state) {
             case KEPT -> keeper(level, p, t);
@@ -114,6 +115,7 @@ public final class Calls {
             if (topic == Talk.Topic.HELP && t.need == Tower.Need.CHECK) {
                 Talk.where(level, p, t);
                 Towers.of(level).checking.put(p.getUUID(), t.checkOn);
+                Towers.of(level).setDirty();
             }
         });
         at += Speech.length(news);
@@ -161,7 +163,10 @@ public final class Calls {
             Tower about = Towers.known(level, n == null ? 0 : n.tower());
             if (about != null && ("silent".equals(n.kind()) || "new_keeper".equals(n.kind()))) {
                 note(p, home, about);
-                if ("silent".equals(n.kind())) Towers.of(level).checking.put(p.getUUID(), about.key());
+                if ("silent".equals(n.kind())) {
+                    Towers.of(level).checking.put(p.getUUID(), about.key());
+                    Towers.of(level).setDirty();
+                }
             }
         });
     }

@@ -202,6 +202,7 @@ public final class Scene {
             int leaves = 0;
             for (int d = 8; d <= 32; d += 6) {
                 int x = (int) Math.floor(from.getX() + Math.cos(a) * d), z = (int) Math.floor(from.getZ() + Math.sin(a) * d);
+                if (!level.isLoaded(new BlockPos(x, 0, z))) continue;
                 int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z) - 1;
                 if (level.getBlockState(new BlockPos(x, top, z)).is(BlockTags.LEAVES)) leaves++;
             }
@@ -237,6 +238,8 @@ public final class Scene {
 
     /** The spot over the ground at a column, where it is open ground, not water; or null. */
     static BlockPos ground(ServerLevel level, int x, int z) {
+        // Not where the ground is not loaded: it would be loaded, or made, for this.
+        if (!level.isLoaded(new BlockPos(x, 0, z))) return null;
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         BlockPos p = new BlockPos(x, y, z);
         BlockState below = level.getBlockState(p.below());

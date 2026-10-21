@@ -39,6 +39,23 @@ public final class Tape {
     private static final Map<UUID, List<short[]>> SAYING = new ConcurrentHashMap<>();
     private static final Map<UUID, Deque<List<short[]>>> SAID = new ConcurrentHashMap<>();
 
+    /** Which listener keeps what each player is saying now, and when it last heard them (wall-clock ms). */
+    private record Listening(BlockPos ear, long at) {}
+
+    private static final Map<UUID, Listening> SPEAKING = new ConcurrentHashMap<>();
+    /** The players online: kept by the server's thread, read by the radio's. */
+    private static final java.util.Set<UUID> ONLINE = ConcurrentHashMap.newKeySet();
+
+    @SubscribeEvent
+    public static void in(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        ONLINE.add(event.getEntity().getUUID());
+    }
+
+    @SubscribeEvent
+    public static void out(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        ONLINE.remove(event.getEntity().getUUID());
+    }
+
     @SubscribeEvent
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
@@ -48,18 +65,29 @@ public final class Tape {
             if (tower == null || EARS.containsKey(tower)) continue;
             Vec3 cab = Vec3.atCenterOf(tower.above(22));
             try {
-                EARS.put(tower, new Ear(level, cab, Broadcast.RESCUE, h -> heard(level, h)));
+                BlockPos ear = tower.immutable();
+                EARS.put(tower, new Ear(level, cab, Broadcast.RESCUE, h -> heard(ear, h)));
             } catch (RuntimeException | LinkageError e) {
                 LostSignal.LOGGER.warn("No listener at the lookout: {}", e.toString());
             }
         }
     }
 
-    /** A frame heard: a player's, added to what they are saying; the end of it, kept. */
-    static void heard(ServerLevel level, Ear.Heard h) {
+    /**
+     * A frame heard: a player's, added to what they are saying; the end of it, kept. Called on the radio's own
+     * thread, by every lookout's listener in reach of the speaker: what a player says is kept from one listener only,
+     * the first to hear them, or each frame would be kept as many times over.
+     */
+    static void heard(BlockPos ear, Ear.Heard h) {
         UUID who = h.speaker();
-        if (who == null || level.getServer().getPlayerList().getPlayer(who) == null) return;
+        if (who == null || !ONLINE.contains(who)) return;
+        long now = System.currentTimeMillis();
+        Listening was = SPEAKING.get(who);
+        // Another listener has them: theirs is kept, unless it has heard nothing for a couple of seconds.
+        if (was != null && !was.ear().equals(ear) && now - was.at() < 2000) return;
+        SPEAKING.put(who, new Listening(ear, now));
         if (h.end()) {
+            SPEAKING.remove(who);
             List<short[]> said = SAYING.remove(who);
             if (said != null && said.size() >= SHORTEST) {
                 Deque<List<short[]>> kept = SAID.computeIfAbsent(who, k -> new ArrayDeque<>());
@@ -127,5 +155,8 @@ public final class Tape {
         for (Ear ear : EARS.values()) ear.close();
         EARS.clear();
         SAYING.clear();
+        SAID.clear();
+        SPEAKING.clear();
+        ONLINE.clear();
     }
 }

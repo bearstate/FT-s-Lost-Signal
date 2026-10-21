@@ -190,7 +190,10 @@ public final class Rescue {
 
     public static BlockPos ground(ServerLevel level, double x, double z) {
         int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-        return new BlockPos(bx, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz), bz);
+        // The ground there as it is, if loaded; else as the ground model has it -- not loaded, and not made, for this.
+        if (level.isLoaded(new BlockPos(bx, 0, bz))) return new BlockPos(bx, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz), bz);
+        Integer y = com.jeladastudios.lostsignal.tower.Fires.ground(level, bx, bz);
+        return new BlockPos(bx, y == null ? level.getSeaLevel() : y, bz);
     }
 
     /** Whether a radio station of the ham fork stands within reach of a place. */
@@ -204,9 +207,21 @@ public final class Rescue {
 
     /** The lost hiker on the air nearest a place, if any is within a handheld's reach. */
     static Hiker inContact(ServerLevel level, Vec3 from) {
+        // The hiker of the night at the lookout the keeper is at, if there is one: not another lookout's.
+        for (ServerPlayer p : level.players()) {
+            if (p.position().distanceToSqr(from) > 1) continue;
+            BlockPos tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
+            var mission = tower == null ? null : com.jeladastudios.lostsignal.mission.Missions.at(level, tower);
+            if (mission != null && mission.hiker != null) {
+                return level.getEntity(mission.hiker) instanceof Hiker h && h.state() != Hiker.State.RESCUED
+                        && h.position().distanceToSqr(from) < IN_CONTACT * IN_CONTACT ? h : null;
+            }
+        }
+        // Else the nearest hiker who is no lookout's (one put out by hand).
         Hiker best = null;
         double nearest = IN_CONTACT * IN_CONTACT;
-        for (Hiker h : level.getEntities(ModEntities.HIKER.get(), h -> h.state() != Hiker.State.RESCUED)) {
+        for (Hiker h : level.getEntities(ModEntities.HIKER.get(), h -> h.state() != Hiker.State.RESCUED
+                && !com.jeladastudios.lostsignal.mission.Missions.onNight(level, h.getUUID()))) {
             double d = h.position().distanceToSqr(from);
             if (d < nearest) {
                 nearest = d;
@@ -225,5 +240,11 @@ public final class Rescue {
             if (!p.hiker().isAlive()) continue;
             Lines.say(p.level(), p.hiker().getEyePosition(), Lines.Speaker.HIKER, p.line(), HANDHELD);
         }
+    }
+
+    /** A server stopped: nothing of its kept for the next world. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void forget(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        PENDING.clear();
     }
 }
