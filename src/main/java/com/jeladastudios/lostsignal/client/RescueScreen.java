@@ -50,9 +50,13 @@ public class RescueScreen extends Screen {
 
     /** The calls: the District, and the lookouts round, each with its bearing and distance. */
     private void calls(int left, int y, int width, int h, int gap) {
-        int n = 1 + round.size(), w = (width - (n - 1) * gap) / n, x = left;
+        int n = 2 + round.size(), w = (width - (n - 1) * gap) / n, x = left;
         addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.district"),
                 b -> Net.CHANNEL.sendToServer(new Net.Call(0))).bounds(x, y, w, h).build());
+        // A fire called in, by the last bearing taken on it.
+        x += w + gap;
+        addRenderableWidget(Button.builder(Component.translatable("call.fts_lostsignal.report_smoke"),
+                b -> Net.CHANNEL.sendToServer(new Net.Call(com.jeladastudios.lostsignal.tower.Calls.FIRE))).bounds(x, y, w, h).build());
         for (Net.Neighbour nb : round) {
             x += w + gap;
             String point = com.jeladastudios.lostsignal.finder.FireFinder.point(nb.bearing());

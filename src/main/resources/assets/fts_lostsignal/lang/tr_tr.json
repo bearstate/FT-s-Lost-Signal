@@ -238,5 +238,12 @@
   "radio.fts_lostsignal.line.D_OVERDUE_01": "Gözcü, Merkez. Bölgende dönmesi geciken bir yürüyüşçü var. Bu gece bir kulağın yüz kırk beş nokta beşte olsun. Tamam.",
   "radio.fts_lostsignal.line.D_OVERDUE_02": "Gözcü, Merkez. Bir aile aradı, çocukları dağdan inmemiş. Dinlemeye devam et, tamam.",
   "radio.fts_lostsignal.line.D_CHECK_NIGHT": "Gözcü, Merkez. Sadece bir yokluyorum. Orada mısın? ...Gözcü?",
-  "radio.fts_lostsignal.line.D_STATIC": "Merkez, ... tekrar et, sesin kesiliyor ..."
+  "radio.fts_lostsignal.line.D_STATIC": "Merkez, ... tekrar et, sesin kesiliyor ...",
+  "radio.fts_lostsignal.line.D_SMOKE_01": "Dumanını aldım. Oraya bir ekip gönderiyoruz. İyi gözlem, Gözcü.",
+  "finder.fts_lostsignal.kind.fire": "yangın dumanı",
+  "fire.fts_lostsignal.read_first": "Önce gözlem masasıyla dumanın kerterizini al, sonra bildir.",
+  "fire.fts_lostsignal.crossed": "Gözcü %s dumanı %s° kerterizle kesiştiriyor. Merkez yerini belirledi.",
+  "call.fts_lostsignal.report_smoke": "Duman bildir",
+  "block.fts_lostsignal.supply_crate": "Malzeme Sandığı",
+  "supply.fts_lostsignal.where": "Sandık: kule ayağının yaklaşık %s blok %s tarafında, patikanın başladığı yerde."
 }

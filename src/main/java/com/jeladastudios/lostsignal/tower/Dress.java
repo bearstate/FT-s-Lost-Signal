@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,11 @@ final class Dress {
         if (t.remainsPending) {
             remains(level, t, foot);
             t.remainsPending = false;
+            towers.setDirty();
+        }
+        if (t.supplyPending && supply(level, t, foot)) {
+            t.supplyPending = false;
+            t.lastSupply = level.getGameTime();
             towers.setDirty();
         }
         if (t.state == Tower.State.KEPT) keeper(level, t, floor);
@@ -123,6 +129,45 @@ final class Dress {
         level.getChunk(at.getX() >> 4, at.getZ() >> 4);
         com.jeladastudios.lostsignal.remains.Scene.make(level, at, null, random.nextInt(com.jeladastudios.lostsignal.entity.Hiker.KITS),
                 t.keeper.isEmpty() ? "-" : t.keeper, null, com.jeladastudios.lostsignal.remains.Journal.KEEPER, random.nextBoolean(), random);
+    }
+
+    /**
+     * The District's supply crate, set down where the trail starts up to the lookout -- some way down the slope below
+     * it -- and said on the radio, with where it is. False where its ground is not loaded yet.
+     */
+    static boolean supply(ServerLevel level, Tower t, BlockPos foot) {
+        Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, foot);
+        double a = down != null ? Math.atan2(down.z, down.x) : level.random.nextDouble() * Math.PI * 2;
+        int x = (int) Math.floor(foot.getX() + 0.5 + Math.cos(a) * 26), z = (int) Math.floor(foot.getZ() + 0.5 + Math.sin(a) * 26);
+        if (!level.isLoaded(new BlockPos(x, foot.getY(), z))) return false;
+        BlockPos at = new BlockPos(x, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+        if (!level.getBlockState(at).canBeReplaced() || !level.getFluidState(at.below()).isEmpty()) return false;
+        level.setBlock(at, Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, Direction.UP), 3);
+        if (level.getBlockEntity(at) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity barrel) {
+            barrel.setCustomName(net.minecraft.network.chat.Component.translatable("block.fts_lostsignal.supply_crate"));
+            var random = level.random;
+            int slot = 0;
+            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COAL, 10 + random.nextInt(9)));
+            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 4 + random.nextInt(4)));
+            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(random.nextBoolean() ? net.minecraft.world.item.Items.COOKED_SALMON
+                    : net.minecraft.world.item.Items.BAKED_POTATO, 3 + random.nextInt(4)));
+            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.FIREWORK_ROCKET, 2)
+                    .setHoverName(net.minecraft.network.chat.Component.translatable("item.fts_lostsignal.flare")));
+            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CANDLE, 4));
+            if (random.nextBoolean()) barrel.setItem(slot, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.PAPER, 6));
+        }
+        // On the radio, to whoever is at the lookout's set: and where it is from the tower's foot.
+        Vec3 from = Vec3.atCenterOf(foot.above(22));
+        com.jeladastudios.lostsignal.rescue.Lines.say(level, from, com.jeladastudios.lostsignal.rescue.Lines.Speaker.DISTRICT, "D_SUPPLY", 1f);
+        int bearing = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(x - foot.getX(), -(z - foot.getZ())))), 360);
+        for (ServerPlayer p : level.players()) {
+            if (p.position().distanceTo(from) > 64) continue;
+            p.sendSystemMessage(net.minecraft.network.chat.Component.translatable("supply.fts_lostsignal.where", 26,
+                    net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.point." + com.jeladastudios.lostsignal.finder.FireFinder.point(bearing)))
+                    .withStyle(net.minecraft.ChatFormatting.GRAY, net.minecraft.ChatFormatting.ITALIC));
+        }
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("SUPPLY at {}", at.toShortString());
+        return true;
     }
 
     /** The keeper in their cab: put there if they are not. */

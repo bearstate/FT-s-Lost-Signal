@@ -38,7 +38,11 @@ public final class Talk {
             where(level, p, t);
             Towers.of(level).checking.put(p.getUUID(), t.checkOn);
         }
-        if (topic == Topic.STAY && "K_STAY_YES".equals(line)) t.trust = Math.max(t.trust, 1);
+        if (topic == Topic.STAY && "K_STAY_YES".equals(line)) {
+            t.trust = Math.max(t.trust, 1);
+            t.guest = p.getUUID();
+            t.guestNight = level.getDayTime() / 24000;
+        }
     }
 
     /** The line a keeper answers a topic with, as things are. */

@@ -27,14 +27,27 @@ public final class Calls {
 
     /** How far a station's call carries, lookout to lookout, in blocks. */
     static final double REACH = 3500;
+    /** The call that is a fire called in, not a call to anyone. */
+    public static final long FIRE = -1;
+
     /** How many of the lookouts round are on the panel. */
     static final int LISTED = 3;
 
-    /** The lookout a player calls from: the one they are at, or the nearest. */
+    /** The lookout a player calls from: the one they are at. */
     static Tower home(ServerLevel level, ServerPlayer p) {
         BlockPos foot = Missions.towerAt(level, p);
-        if (foot == null) foot = Lookouts.near(level, p.blockPosition(), 1);
         return foot == null ? null : Towers.at(level, foot);
+    }
+
+    /**
+     * The panel opened: the lookouts round sent to it -- now, if they are known, else once they have been worked out.
+     */
+    public static void panel(ServerPlayer p) {
+        ServerLevel level = p.serverLevel();
+        Tower home = home(level, p);
+        Runnable send = () -> Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Neighbours(neighbours(p)));
+        if (home == null) send.run();
+        else Towers.find(level, home, send);
     }
 
     /** The lookouts round the player's, for the panel: number, bearing, distance. */
@@ -61,6 +74,11 @@ public final class Calls {
             return;
         }
         Tower home = home(level, p);
+        // A fire called in, by the bearing just taken on it.
+        if (key == FIRE) {
+            Fires.report(p);
+            return;
+        }
         if (key == 0) {
             district(level, p, home);
             return;

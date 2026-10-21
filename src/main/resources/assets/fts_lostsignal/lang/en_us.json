@@ -238,5 +238,12 @@
   "radio.fts_lostsignal.line.D_OVERDUE_01": "Lookout, District. We have a hiker overdue in your area. Keep an ear on one-four-five point five tonight. Over.",
   "radio.fts_lostsignal.line.D_OVERDUE_02": "Lookout, District. Got a call from a family, their kid didn't come down off the mountain. Keep listening, over.",
   "radio.fts_lostsignal.line.D_CHECK_NIGHT": "Lookout, District. Just checking in. You there? ...Lookout?",
-  "radio.fts_lostsignal.line.D_STATIC": "District, ... say again, you're breaking ..."
+  "radio.fts_lostsignal.line.D_STATIC": "District, ... say again, you're breaking ...",
+  "radio.fts_lostsignal.line.D_SMOKE_01": "Copy your smoke. We'll get a crew out there. Good eyes, Lookout.",
+  "finder.fts_lostsignal.kind.fire": "a fire's smoke",
+  "fire.fts_lostsignal.read_first": "Take a bearing on the smoke with the fire finder first, then call it in.",
+  "fire.fts_lostsignal.crossed": "Lookout %s crosses it on %s°. The District has a fix.",
+  "call.fts_lostsignal.report_smoke": "Report smoke",
+  "block.fts_lostsignal.supply_crate": "Supply Crate",
+  "supply.fts_lostsignal.where": "The crate: about %s blocks %s of the tower's foot, where the trail starts up."
 }

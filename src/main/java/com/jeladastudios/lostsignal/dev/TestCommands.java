@@ -146,6 +146,19 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
                     return 1;
                 })))
+                .then(Commands.literal("fire").executes(c -> {
+                    // A fire started a few hundred blocks from the lookout the player is at.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    var tower = p == null ? null : com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    if (tower == null) return 0;
+                    com.jeladastudios.lostsignal.tower.Fires.start(p.serverLevel(), tower);
+                    return 1;
+                }))
+                .then(Commands.literal("report").executes(c -> {
+                    if (c.getSource().getPlayer() == null) return 0;
+                    com.jeladastudios.lostsignal.tower.Calls.call(c.getSource().getPlayer(), com.jeladastudios.lostsignal.tower.Calls.FIRE);
+                    return 1;
+                }))
                 .then(Commands.literal("mimic").then(Commands.argument("how", com.mojang.brigadier.arguments.StringArgumentType.word()).executes(c -> {
                     // Him on the radio now: "echo" (the player's own voice off his tape) or "call" (lost, as he plays it).
                     ServerPlayer p = c.getSource().getPlayer();
@@ -165,8 +178,7 @@ public final class TestCommands {
                     if (foot == null) foot = com.jeladastudios.lostsignal.mission.Lookouts.near(level, p.blockPosition(), 1);
                     if (foot == null) return 0;
                     var home = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
-                    StringBuilder s = new StringBuilder("LS_TEST towers: " + home.number + " " + home.state + " " + home.keeper + " " + home.need
-                            + " ring2=" + com.jeladastudios.lostsignal.mission.Lookouts.around(level, foot, 2));
+                    StringBuilder s = new StringBuilder("LS_TEST towers: " + home.number + " " + home.state + " " + home.keeper + " " + home.need);
                     for (var t : com.jeladastudios.lostsignal.tower.Towers.around(level, home)) {
                         s.append(" | ").append(t.number).append(" ").append(t.state).append(" ").append(t.keeper).append(" @").append(t.x).append(",").append(t.z);
                     }

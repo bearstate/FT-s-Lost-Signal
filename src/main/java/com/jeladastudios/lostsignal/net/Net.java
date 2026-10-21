@@ -92,8 +92,7 @@ public final class Net {
             var c = ctx.get();
             c.enqueueWork(() -> {
                 var p = c.getSender();
-                if (p != null) CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p),
-                        new Neighbours(com.jeladastudios.lostsignal.tower.Calls.neighbours(p)));
+                if (p != null) com.jeladastudios.lostsignal.tower.Calls.panel(p);
             });
             c.setPacketHandled(true);
         }

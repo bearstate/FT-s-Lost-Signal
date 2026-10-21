@@ -86,8 +86,8 @@ public final class Sight {
         Vec3 cab = Vec3.atCenterOf(tower).add(0, 22, 0);
         Vec3 eye = h.getEyePosition();
         if (cab.distanceTo(eye) > 400) return false;
-        return level.clip(new ClipContext(eye, cab, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, h)).getType() == HitResult.Type.MISS
-                || level.clip(new ClipContext(eye, cab, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, h)).getLocation().distanceTo(cab) < 6;
+        // Not Minecraft's ray: it would load every chunk along a line hundreds of blocks long.
+        return com.jeladastudios.lostsignal.signal.Sightline.clear(level, eye, cab);
     }
 
     /** The deepest drop at the hiker's feet, looking three blocks out each way. */

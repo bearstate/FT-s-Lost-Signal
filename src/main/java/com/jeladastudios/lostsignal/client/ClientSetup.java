@@ -17,6 +17,7 @@ public final class ClientSetup {
     public static void particles(net.minecraftforge.client.event.RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.FLARE.get(), SignalParticle.Flare::new);
         event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.LAMP.get(), SignalParticle.Lamp::new);
+        event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.SMOKE.get(), FarSmoke.Provider::new);
     }
 
     @SubscribeEvent

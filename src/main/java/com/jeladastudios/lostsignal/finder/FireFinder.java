@@ -55,6 +55,17 @@ public final class FireFinder {
 
     private static final Map<UUID, Sighting> SIGHTING = new HashMap<>();
 
+    /** A reading taken: what, its bearing, its distance by eye, where it truly was, and when. */
+    public record Reading(String kind, int bearing, int distance, Vec3 at, long when) {}
+
+    private static final Map<UUID, Reading> LAST = new HashMap<>();
+
+    /** A player's last reading off the fire finder, if it is not more than ten minutes old. */
+    public static Reading last(ServerPlayer p) {
+        Reading r = LAST.get(p.getUUID());
+        return r != null && p.level().getGameTime() - r.when() < 20 * 60 * 10 ? r : null;
+    }
+
     /** A compass bearing from a look: 0 north, 90 east. */
     public static int bearing(float yaw) {
         return Math.floorMod(Math.round(yaw + 180f), 360);
@@ -142,6 +153,7 @@ public final class FireFinder {
         p.displayClientMessage(Component.translatable("finder.fts_lostsignal.read"), true);
         com.jeladastudios.lostsignal.net.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p),
                 new com.jeladastudios.lostsignal.net.Net.Reading(seen.kind(), exact, far));
+        LAST.put(p.getUUID(), new Reading(seen.kind(), exact, far, seen.at(), level.getGameTime()));
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FINDER {} at {} ~{} blocks, back {}", seen.kind(), exact, far, back);
     }
 }

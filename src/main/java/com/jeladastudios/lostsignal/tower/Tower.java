@@ -52,6 +52,18 @@ public final class Tower {
 
     /** Whether the world has been made to look as it is: the door left open, the candles. */
     public boolean dressed;
+    /** The lookouts round it, by their feet, once worked out (see Towers.find); null until then. */
+    public java.util.List<BlockPos> near;
+
+    /** Who was let stay the night with its keeper, and which night; and the night they were last told to lock up. */
+    public transient java.util.UUID guest;
+    public transient long guestNight = -1, nightSaid = -1;
+
+    /** A supply crate the District has sent up, still to be set down at the foot of the trail. */
+    public boolean supplyPending;
+    /** When the last crate was sent, in game ticks. */
+    public long lastSupply;
+
     /** What was left of its keeper, still to be set out near it when its ground is next loaded. */
     public boolean remainsPending;
 
@@ -96,6 +108,13 @@ public final class Tower {
         t.putLong("MetStranger", metStranger);
         t.putBoolean("Dressed", dressed);
         t.putBoolean("RemainsPending", remainsPending);
+        t.putBoolean("SupplyPending", supplyPending);
+        t.putLong("LastSupply", lastSupply);
+        if (near != null) {
+            net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+            for (BlockPos p : near) list.add(net.minecraft.nbt.NbtUtils.writeBlockPos(p));
+            t.put("Near", list);
+        }
         return t;
     }
 
@@ -114,6 +133,12 @@ public final class Tower {
         tower.metStranger = t.contains("MetStranger") ? t.getLong("MetStranger") : -1;
         tower.dressed = t.getBoolean("Dressed");
         tower.remainsPending = t.getBoolean("RemainsPending");
+        tower.supplyPending = t.getBoolean("SupplyPending");
+        tower.lastSupply = t.getLong("LastSupply");
+        if (t.contains("Near")) {
+            tower.near = new java.util.ArrayList<>();
+            for (net.minecraft.nbt.Tag e : t.getList("Near", net.minecraft.nbt.Tag.TAG_COMPOUND)) tower.near.add(net.minecraft.nbt.NbtUtils.readBlockPos((CompoundTag) e));
+        }
         return tower;
     }
 

@@ -36,6 +36,8 @@ public final class Towers extends SavedData {
     /** What may change at dawn, each day, at each. */
     static final float KEPT_TAKEN = 0.04f, EMPTY_KEPT = 0.06f, EMPTY_STRANGER = 0.03f, STRANGER_GONE = 0.15f, ABANDONED_CLEARED = 0.08f;
     static final float NEEDS_COAL = 0.15f, NEEDS_CHECK = 0.3f;
+    /** The chance each dawn, once two days have gone by since the last, that supplies are sent up to a kept lookout. */
+    static final float SUPPLIES = 0.35f;
 
     static final String[] NAMES = {"Maggie", "Tom", "Ruth", "Eli", "Nora", "Walt", "June", "Hal", "Bea", "Cal", "Iris", "Dale",
             "Gus", "Pearl", "Vern", "Ada"};
@@ -122,6 +124,13 @@ public final class Towers extends SavedData {
                 }
             }
             case "met" -> t.metStranger = level.getGameTime();
+            case "supply" -> t.supplyPending = true;
+            case "cross" -> {
+                for (Tower other : around(level, t)) {
+                    keep(other, level.random);
+                    break;
+                }
+            }
             case "silent" -> {
                 for (Tower other : around(level, t)) {
                     other.state = Tower.State.ABANDONED;
@@ -135,14 +144,19 @@ public final class Towers extends SavedData {
             default -> {
             }
         }
-        if (!what.equals("coal") && !what.equals("check") && !what.equals("met") && !what.equals("silent")) t.dressed = false;
+        if (!what.equals("coal") && !what.equals("check") && !what.equals("met") && !what.equals("silent") && !what.equals("supply") && !what.equals("cross")) t.dressed = false;
         towers.setDirty();
     }
 
     /** The lookouts round one -- in the cells about it -- found now if they were not, for the radio. */
     public static List<Tower> around(ServerLevel level, Tower tower) {
         List<Tower> found = new ArrayList<>();
-        for (BlockPos foot : NEAR.computeIfAbsent(tower.key(), k -> Lookouts.around(level, tower.foot(), 2))) {
+        if (tower.near == null) {
+            // Not worked out yet: worked out off the server's thread, and none known meanwhile.
+            find(level, tower, null);
+            return found;
+        }
+        for (BlockPos foot : tower.near) {
             Tower t = at(level, foot);
             if (t.key() != tower.key()) found.add(t);
         }
@@ -150,8 +164,53 @@ public final class Towers extends SavedData {
         return found;
     }
 
-    /** The lookouts round each, as found: worked out once a run, the siting being the same each time. */
-    private static final Map<Long, List<BlockPos>> NEAR = new HashMap<>();
+    /** The one thread the lookouts round are worked out on, one lookout at a time. */
+    private static final java.util.concurrent.ExecutorService FINDER = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "Lost Signal lookout finder");
+        t.setDaemon(true);
+        return t;
+    });
+    private static final Map<Long, List<Runnable>> FINDING = new HashMap<>();
+
+    /**
+     * The lookouts round one worked out on the finder's thread -- the siting takes seconds the first time -- and kept
+     * with the lookout, so it is done once a world; then, back on the server's thread, whatever was waiting on it.
+     */
+    public static void find(ServerLevel level, Tower tower, Runnable then) {
+        if (tower.near != null) {
+            if (then != null) then.run();
+            return;
+        }
+        List<Runnable> waiting = FINDING.get(tower.key());
+        if (waiting != null) {
+            if (then != null) waiting.add(then);
+            return;
+        }
+        waiting = new ArrayList<>();
+        if (then != null) waiting.add(then);
+        FINDING.put(tower.key(), waiting);
+        BlockPos foot = tower.foot();
+        long started = System.nanoTime();
+        FINDER.submit(() -> {
+            List<BlockPos> feet;
+            try {
+                feet = Lookouts.aroundOffThread(level, foot, 2);
+            } catch (RuntimeException e) {
+                LostSignal.LOGGER.warn("The lookouts round {} could not be worked out: {}", foot.toShortString(), e.toString());
+                feet = List.of();
+            }
+            List<BlockPos> result = feet;
+            level.getServer().execute(() -> {
+                tower.near = result;
+                of(level).setDirty();
+                List<Runnable> done = FINDING.remove(tower.key());
+                if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+                    LostSignal.LOGGER.info("TOWER {}: {} round, found in {} ms", tower.number, result.size(), (System.nanoTime() - started) / 1_000_000);
+                }
+                if (done != null) for (Runnable r : done) r.run();
+            });
+        });
+    }
 
     /** Something the District will tell the keepers round a lookout when next called. */
     public static void notice(ServerLevel level, String kind, Tower tower) {
@@ -189,7 +248,11 @@ public final class Towers extends SavedData {
         if (now % 100 == 13) {
             for (ServerPlayer p : level.players()) {
                 BlockPos foot = Missions.towerAt(level, p);
-                if (foot != null) Dress.near(level, at(level, foot), foot);
+                if (foot != null) {
+                    Tower here = at(level, foot);
+                    Dress.near(level, here, foot);
+                    nightfall(level, here, foot, p);
+                }
                 lookedIn(level, t, p);
             }
             // The keepers and the dressing of the lookouts round the players, when their ground is loaded.
@@ -212,6 +275,27 @@ public final class Towers extends SavedData {
                 }
             }
         }
+    }
+
+    /**
+     * Nightfall at a kept lookout with a player in its cab: the keeper tells a guest they let stay to lock up, and one
+     * they did not let stay that they cannot stay.
+     */
+    static void nightfall(ServerLevel level, Tower t, BlockPos foot, ServerPlayer p) {
+        long time = level.getDayTime() % 24000, day = level.getDayTime() / 24000;
+        if (t.state != Tower.State.KEPT || time < 13000 || time > 13600 || t.nightSaid == day || p.getY() < foot.getY() + 18) return;
+        t.nightSaid = day;
+        boolean guest = p.getUUID().equals(t.guest) && t.guestNight == day;
+        for (var k : level.getEntitiesOfClass(com.jeladastudios.lostsignal.entity.Keeper.class, p.getBoundingBox().inflate(10), k -> k.tower() == t.key())) {
+            com.jeladastudios.lostsignal.radio.Voice.say(k, net.minecraft.network.chat.Component.literal(t.keeper), guest ? "K_NIGHT" : "K_STAY_NO", 16, t.pitch);
+            break;
+        }
+    }
+
+    /** Whether a keeper has company tonight: someone they let stay. */
+    public static boolean company(ServerLevel level, BlockPos foot) {
+        Tower t = of(level).towers.get(Tower.key(foot.getX(), foot.getZ()));
+        return t != null && t.state == Tower.State.KEPT && t.guest != null && t.guestNight == level.getDayTime() / 24000;
     }
 
     /**
@@ -244,7 +328,20 @@ public final class Towers extends SavedData {
     void dawn(ServerLevel level) {
         RandomSource random = level.random;
         for (Tower tower : new ArrayList<>(towers.values())) {
-            if (someoneAt(level, tower)) continue;
+            if (someoneAt(level, tower)) {
+                // A guest who stayed the night with its keeper, the keeper more at ease with them for it.
+                if (tower.guest != null && tower.guestNight == level.getDayTime() / 24000 - 1) {
+                    tower.trust++;
+                    tower.guest = null;
+                    setDirty();
+                }
+                // A lookout someone keeps: now and then, every few days, the District sends supplies up.
+                if (!tower.supplyPending && level.getGameTime() - tower.lastSupply > 2 * 24_000 && random.nextFloat() < SUPPLIES) {
+                    tower.supplyPending = true;
+                    setDirty();
+                }
+                continue;
+            }
             Tower.State was = tower.state;
             float r = random.nextFloat();
             switch (tower.state) {
@@ -344,6 +441,6 @@ public final class Towers extends SavedData {
 
     @SubscribeEvent
     public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
-        NEAR.clear();
+        FINDING.clear();
     }
 }

@@ -18,4 +18,6 @@ public final class ModParticles {
     public static final RegistryObject<SimpleParticleType> FLARE = PARTICLES.register("flare", () -> new SimpleParticleType(true));
     /** A lamp's warm point, held up and waved. */
     public static final RegistryObject<SimpleParticleType> LAMP = PARTICLES.register("lamp", () -> new SimpleParticleType(true));
+    /** A puff of a smoke column, seen across a valley: big, grey, through the haze. */
+    public static final RegistryObject<SimpleParticleType> SMOKE = PARTICLES.register("far_smoke", () -> new SimpleParticleType(true));
 }

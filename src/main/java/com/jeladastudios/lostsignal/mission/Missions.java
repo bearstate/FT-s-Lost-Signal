@@ -60,23 +60,26 @@ public final class Missions extends SavedData {
     private record Seen(BlockPos tower, long until) {}
 
     private static final Map<UUID, Seen> SEEN = new HashMap<>();
+    private static final java.util.Set<UUID> LOOKING = new java.util.HashSet<>();
 
-    /** The lookout a player is at, if any: found by Feel the Nature's own siting, and checked for its cab's floor. */
+    /**
+     * The lookout a player is at, if any: found by Feel the Nature's own siting, and checked for its cab's floor. Looked
+     * up again every ten seconds, off the server's thread (the siting of new cells takes seconds); meanwhile, and until
+     * the first answer, the last one found.
+     */
     public static BlockPos towerAt(ServerLevel level, ServerPlayer p) {
         long now = level.getGameTime();
-        Seen seen = SEEN.get(p.getUUID());
-        if (seen == null || seen.until < now) {
-            BlockPos tower = null;
-            try {
-                BlockPos foot = Lookouts.near(level, p.blockPosition(), 1);
-                if (foot != null && level.hasChunkAt(foot)) tower = standing(level, foot);
-            } catch (LinkageError e) {
-                tower = null;
-            }
-            seen = new Seen(tower, now + 200);
-            SEEN.put(p.getUUID(), seen);
+        UUID id = p.getUUID();
+        Seen seen = SEEN.get(id);
+        if ((seen == null || seen.until < now) && LOOKING.add(id)) {
+            BlockPos at = p.blockPosition();
+            Lookouts.offThread(level, () -> Lookouts.nearOffThread(level, at, 1), foot -> {
+                LOOKING.remove(id);
+                BlockPos tower = foot != null && level.hasChunkAt(foot) ? standing(level, foot) : null;
+                SEEN.put(id, new Seen(tower, level.getGameTime() + 200));
+            });
         }
-        if (seen.tower == null || p.position().distanceTo(Vec3.atCenterOf(seen.tower)) > KEEPS) return null;
+        if (seen == null || seen.tower == null || p.position().distanceTo(Vec3.atCenterOf(seen.tower)) > KEEPS) return null;
         return seen.tower;
     }
 

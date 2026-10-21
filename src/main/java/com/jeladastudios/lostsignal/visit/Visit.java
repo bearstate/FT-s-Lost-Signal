@@ -255,6 +255,8 @@ public final class Visit {
             // The moment within the small hours it comes, drawn as the night goes: a look every second, at odds
             // that add up to the night's chance over the four hours.
             float chance = com.jeladastudios.lostsignal.mission.Missions.at(level, tower) != null ? CHANCE_MISSION : CHANCE;
+            // Two in the cab, the keeper and a guest they let stay, and he is less likely to try it.
+            if (com.jeladastudios.lostsignal.tower.Towers.company(level, tower)) chance *= 0.5f;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2.5f;
             if (level.random.nextFloat() >= chance / 200f) continue;
             LOOKED.put(tower, night);

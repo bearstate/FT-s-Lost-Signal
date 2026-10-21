@@ -65,11 +65,12 @@ public final class Signals {
             if (far < 8 || far > REACH) continue;
             double cos = to.normalize().dot(look.normalize());
             if (cos < bestCos) continue;
-            // From a little way out: the looker's own walls and windows are not in the way.
+            // The line to it clear, from a little way out (the looker's own walls and windows are not in the way); for a
+            // fire's smoke, to anywhere up its column.
             Vec3 from = eye.add(to.normalize().scale(6));
-            var hit = level.clip(new net.minecraft.world.level.ClipContext(from, at, net.minecraft.world.level.ClipContext.Block.VISUAL,
-                    net.minecraft.world.level.ClipContext.Fluid.NONE, looker));
-            if (hit.getType() != net.minecraft.world.phys.HitResult.Type.MISS && hit.getLocation().distanceTo(at) > 3) continue;
+            boolean visible = Sightline.clear(level, from, at);
+            if (!visible && s.kind().equals("fire")) visible = Sightline.clear(level, from, at.add(0, 12, 0)) || Sightline.clear(level, from, at.add(0, 26, 0));
+            if (!visible) continue;
             bestCos = cos;
             best = new Seen(s.kind(), at);
         }
@@ -124,8 +125,10 @@ public final class Signals {
                         double d = p.position().distanceTo(fire);
                         // Near the fire its own smoke is seen; this is for the far side of the valley.
                         if (d < 48 || d > REACH) continue;
-                        level.sendParticles(p, ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, fire.x + level.random.nextGaussian() * 0.3,
-                                fire.y + 0.5, fire.z + level.random.nextGaussian() * 0.3, 0, 0, 0.07, 0, 1);
+                        // Further off than the game draws its own smoke clearly, the column drawn large and through the haze.
+                        boolean far = d > 64;
+                        level.sendParticles(p, far ? ModParticles.SMOKE.get() : ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, fire.x + level.random.nextGaussian() * 0.3,
+                                fire.y + 0.5, fire.z + level.random.nextGaussian() * 0.3, 0, 0, far ? 0.2 : 0.07, 0, 1);
                     }
                 }
                 return age < seconds * 20;
@@ -142,6 +145,68 @@ public final class Signals {
                 return "smoke";
             }
         });
+    }
+
+    /** A fire's smoke, under way: put out by the crew, or burnt out. */
+    public interface Burning {
+        void out();
+
+        boolean burning();
+    }
+
+    /**
+     * A fire in the forest, for some seconds: a broad column of smoke from a few points across it, thick and rising
+     * high, seen from any lookout in reach; and by night a dull glow at its foot.
+     */
+    public static Burning fire(ServerLevel level, Vec3 at, int seconds) {
+        Signal s = new Signal(level) {
+            boolean out;
+
+            @Override
+            boolean tick() {
+                age++;
+                if (out) return false;
+                if (age % 3 == 0) {
+                    boolean night = level.getDayTime() % 24000 > 13000 && level.getDayTime() % 24000 < 23000;
+                    for (ServerPlayer p : level.players()) {
+                        double d = p.position().distanceTo(at);
+                        if (d < 48 || d > REACH) continue;
+                        boolean far = d > 64;
+                        for (int i = 0; i < (far ? 2 : 3); i++) {
+                            level.sendParticles(p, far ? ModParticles.SMOKE.get() : ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, at.x + level.random.nextGaussian() * 4,
+                                    at.y + 1 + level.random.nextDouble() * 3, at.z + level.random.nextGaussian() * 4, 0, 0, far ? 0.25 : 0.09, 0, 1);
+                        }
+                        if (night && age % 12 == 0) {
+                            level.sendParticles(p, ModParticles.FLARE.get(), true, at.x + level.random.nextGaussian() * 3, at.y + 1,
+                                    at.z + level.random.nextGaussian() * 3, 1, 0, 0, 0, 0);
+                        }
+                    }
+                }
+                return age < seconds * 20;
+            }
+
+            @Override
+            Vec3 at() {
+                return at.add(0, 14, 0);
+            }
+
+            @Override
+            String kind() {
+                return "fire";
+            }
+        };
+        ACTIVE.add(s);
+        return new Burning() {
+            @Override
+            public void out() {
+                ACTIVE.remove(s);
+            }
+
+            @Override
+            public boolean burning() {
+                return ACTIVE.contains(s);
+            }
+        };
     }
 
     /** A lamp waved by someone, for some seconds: a small warm light swinging at their shoulder. */
