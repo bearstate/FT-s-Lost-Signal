@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * What the morning finds where a hiker was taken in the night. Their fire out and cold, still smoking a little; their
  * tent down, the cloth of it on the ground and one pole left standing; their things thrown about, the lamp left
- * burning in the grass; dark splashes on the ground, and a smear leading off from the tent into the trees, long prints
+ * burning in the grass; dark splashes on the ground, and a smear leading off from the tent into the trees, footprints
  * beside it -- and where the smear ends, twenty to sixty blocks off, the hiker, face down. Or, one time in three, no
  * one: the smear goes to the edge of a drop, or into the thick of the trees, and stops.
  */
@@ -135,7 +135,7 @@ public final class Scene {
                         : StainBlock.STRAIGHT + random.nextInt(2);
             }
             stain(level, path.get(i), kind, facing, true);
-            // The prints beside it, now one side, now the other, every few blocks.
+            // The steps of whoever dragged it beside it, now one side, now the other, every few blocks.
             if (i > 0 && i % 3 == 0) {
                 Direction along = moves.get(i - 1);
                 Direction aside = (i / 3) % 2 == 0 ? along.getClockWise() : along.getCounterClockWise();
@@ -144,7 +144,7 @@ public final class Scene {
             }
         }
         BlockPos end = path.isEmpty() ? tent : path.get(path.size() - 1);
-        // Prints at the edge of the camp, coming in from the trees.
+        // Steps at the edge of the camp, coming in from the trees.
         double in = heading + Math.PI + (random.nextDouble() - 0.5);
         for (int i = 0; i < 4; i++) {
             double far = 10 - i * 2.6;

@@ -19,15 +19,15 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * A dark mark on the ground where something happened: a splash, a smear where something was dragged, the print of a
- * long foot. Flat on the ground, nothing to walk into, gone under a step; it dries and fades over a few days, and is
+ * A dark mark on the ground where something happened: a splash, a smear where something was dragged, the steps of
+ * whoever dragged it. Flat on the ground, nothing to walk into, gone under a step; it dries and fades over a few days, and is
  * gone.
  */
 public class StainBlock extends HorizontalDirectionalBlock {
 
     /**
      * What the mark is: six splashes; a drag smear across the block toward its facing (two of them), turning left or
-     * right out of it, or ending in it; a print, its toes to its facing. The smear pieces meet at their edges, so a
+     * right out of it, or ending in it; footprints, two square steps toward its facing. The smear pieces meet at their edges, so a
      * run of them reads as one smear.
      */
     public static final IntegerProperty KIND = IntegerProperty.create("kind", 0, 11);
