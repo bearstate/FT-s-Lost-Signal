@@ -116,6 +116,13 @@ public final class Calls {
         boolean night = time > 13000;
         Vec3 from = p.position();
         Speech.after(level, 40, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, night ? "D_ANSWER_NIGHT" : "D_ANSWER", 1f));
+        // While he is on the radio: the District has heard no one, and sent no one.
+        String his = com.jeladastudios.lostsignal.visit.Mimic.on(Missions.towerAt(level, p));
+        if (his != null) {
+            String who = his.equals("call") ? "D_WHO_01" : "D_WHO_02";
+            Speech.after(level, 40 + Speech.length(night ? "D_ANSWER_NIGHT" : "D_ANSWER"), () -> Lines.say(level, from, Lines.Speaker.DISTRICT, who, 1f));
+            return;
+        }
         Towers.Notice n = home == null ? null : Towers.takeNotice(level, home);
         String line = n == null ? (time < 6000 ? "D_MORNING_02" : null) : switch (n.kind()) {
             case "silent" -> "D_CHECK_TOWER";

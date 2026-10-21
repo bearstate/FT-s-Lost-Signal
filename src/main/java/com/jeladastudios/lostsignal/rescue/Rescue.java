@@ -51,6 +51,8 @@ public final class Rescue {
         }
         Hiker h = inContact(level, keeper.position());
         if (h == null) {
+            // No one lost out there to hear it -- but someone may be listening who is not lost.
+            if (com.jeladastudios.lostsignal.visit.Mimic.answered(level, keeper)) return;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("RESCUE {} unanswered", order);
             return;
         }

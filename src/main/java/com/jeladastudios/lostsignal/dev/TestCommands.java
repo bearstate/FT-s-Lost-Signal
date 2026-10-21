@@ -138,6 +138,16 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
                     return 1;
                 })))
+                .then(Commands.literal("mimic").then(Commands.argument("how", com.mojang.brigadier.arguments.StringArgumentType.word()).executes(c -> {
+                    // Him on the radio now: "echo" (the player's own voice off his tape) or "call" (lost, as he plays it).
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    boolean ok = tower != null && com.jeladastudios.lostsignal.visit.Mimic.begin(p.serverLevel(), p, tower,
+                            "echo".equals(com.mojang.brigadier.arguments.StringArgumentType.getString(c, "how")));
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST mimic " + ok), false);
+                    return ok ? 1 : 0;
+                })))
                 .then(Commands.literal("towers").executes(c -> {
                     // The lookout the player is at and the ones round it, as they are.
                     ServerPlayer p = c.getSource().getPlayer();

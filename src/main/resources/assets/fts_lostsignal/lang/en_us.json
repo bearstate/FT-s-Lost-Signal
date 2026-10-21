@@ -215,5 +215,17 @@
   "talk.fts_lostsignal.topic.bye": "See you.",
   "journal.fts_lostsignal.keeper_start": "Week three.\n\nQuiet. Two smokes, both lightning, both out by noon. Saw elk on the north slope.\n\nThe generator eats more coal than they said it would.",
   "journal.fts_lostsignal.keeper_man": "There's a man who walks the ridge trail without a pack. Today he stood at the foot of the tower for an hour and looked up.\n\nWhen I waved, he waved back. Slowly. Like he was copying me.",
-  "journal.fts_lostsignal.keeper_last": "He came up the stairs tonight.\n\nHe says he only wants to talk. He says the mountain is owed. He says it kindly.\n\nI'm not opening the door. I'm not"
+  "journal.fts_lostsignal.keeper_last": "He came up the stairs tonight.\n\nHe says he only wants to talk. He says the mountain is owed. He says it kindly.\n\nI'm not opening the door. I'm not",
+  "radio.fts_lostsignal.speaker.unknown": "???",
+  "radio.fts_lostsignal.line.X_YOUR_VOICE": "[your own voice, as if off a tape]",
+  "radio.fts_lostsignal.line.D_WHO_01": "Lookout, District... say again? We didn't send anyone up there tonight.",
+  "radio.fts_lostsignal.line.D_WHO_02": "Lookout... who are you talking to? That channel's been quiet all night.",
+  "radio.fts_lostsignal.line.R_CALL": "Hello. Is anyone on this channel. Over.",
+  "radio.fts_lostsignal.line.R_LOST": "I think. I'm lost.",
+  "radio.fts_lostsignal.line.R_TOWER": "I can see your tower.",
+  "radio.fts_lostsignal.line.R_COME": "Come outside. I'm right here.",
+  "radio.fts_lostsignal.line.R_DOOR": "Open the door.",
+  "radio.fts_lostsignal.line.R_HELP": "Help. Help. Help.",
+  "radio.fts_lostsignal.line.R_THANKS": "Thank you so much.",
+  "radio.fts_lostsignal.line.R_OVER": "Over."
 }

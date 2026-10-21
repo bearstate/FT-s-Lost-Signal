@@ -215,5 +215,17 @@
   "talk.fts_lostsignal.topic.bye": "Görüşürüz.",
   "journal.fts_lostsignal.keeper_start": "Üçüncü hafta.\n\nSakin. İki duman, ikisi de yıldırım, ikisi de öğlene sönmüş. Kuzey yamaçta geyik gördüm.\n\nJeneratör söyledikleri kadar değil, çok daha fazla kömür yiyor.",
   "journal.fts_lostsignal.keeper_man": "Sırt patikasında sırt çantasız yürüyen bir adam var. Bugün bir saat kulenin dibinde durup yukarı baktı.\n\nEl salladığımda o da salladı. Yavaşça. Beni taklit ediyormuş gibi.",
-  "journal.fts_lostsignal.keeper_last": "Bu gece merdivenden çıktı.\n\nSadece konuşmak istediğini söylüyor. Dağa borcumuz olduğunu söylüyor. Kibarca söylüyor.\n\nKapıyı açmıyorum. Açmı"
+  "journal.fts_lostsignal.keeper_last": "Bu gece merdivenden çıktı.\n\nSadece konuşmak istediğini söylüyor. Dağa borcumuz olduğunu söylüyor. Kibarca söylüyor.\n\nKapıyı açmıyorum. Açmı",
+  "radio.fts_lostsignal.speaker.unknown": "???",
+  "radio.fts_lostsignal.line.X_YOUR_VOICE": "[kendi sesin, sanki bir kasetten]",
+  "radio.fts_lostsignal.line.D_WHO_01": "Gözcü, Merkez... tekrar eder misin? Bu gece oraya kimseyi göndermedik.",
+  "radio.fts_lostsignal.line.D_WHO_02": "Gözcü... kiminle konuşuyorsun? O kanal bütün gece sessizdi.",
+  "radio.fts_lostsignal.line.R_CALL": "Merhaba. Bu kanalda kimse var mı. Tamam.",
+  "radio.fts_lostsignal.line.R_LOST": "Galiba. Kayboldum.",
+  "radio.fts_lostsignal.line.R_TOWER": "Kuleni görüyorum.",
+  "radio.fts_lostsignal.line.R_COME": "Dışarı gel. Hemen buradayım.",
+  "radio.fts_lostsignal.line.R_DOOR": "Aç kapıyı.",
+  "radio.fts_lostsignal.line.R_HELP": "Yardım. Yardım. Yardım.",
+  "radio.fts_lostsignal.line.R_THANKS": "Çok teşekkür ederim.",
+  "radio.fts_lostsignal.line.R_OVER": "Tamam."
 }

@@ -103,6 +103,16 @@ public final class Broadcast {
         return b;
     }
 
+    /** Frames sent as they are -- a recording played back -- rather than clips by name. */
+    public static Broadcast sendFrames(ServerLevel level, Vec3 at, String frequency, float power, List<short[]> frames) {
+        if (CommonRadioPlugin.serverApi == null || frames.isEmpty()) return null;
+        Broadcast b = new Broadcast(level, at, frequency, power);
+        b.pending.addAll(frames);
+        b.start = System.nanoTime();
+        ON_AIR.add(b);
+        return b;
+    }
+
     public boolean onAir() {
         return valid;
     }
