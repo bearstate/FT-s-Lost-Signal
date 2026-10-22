@@ -39,15 +39,17 @@ public final class Fires {
      */
     static final int NEAR = 200, FAR = 450, BURNS = 15 * 60, CREW = 3 * 60;
 
-    /** A fire: where, when it started, whether it has been called in. */
+    /** A fire: where, when it started, whether it has been called in; and whether it is one burning in the world. */
     static final class Fire {
         final Vec3 at;
         final Signals.Burning smoke;
+        final boolean real;
         boolean called;
 
-        Fire(Vec3 at, Signals.Burning smoke) {
+        Fire(Vec3 at, Signals.Burning smoke, boolean real) {
             this.at = at;
             this.smoke = smoke;
+            this.real = real;
         }
     }
 
@@ -58,7 +60,11 @@ public final class Fires {
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
         for (Fire f : FIRES) if (!f.smoke.burning()) FIRES.remove(f);
-        if (level.getGameTime() % 600 != 77 || starting || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FIRES)) return;
+        if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FIRES)) return;
+        scan(level);
+        // A real fire burnt itself out: its smoke goes too.
+        if (level.getGameTime() % 100 == 31) for (Fire f : FIRES) if (f.real && level.isLoaded(BlockPos.containing(f.at)) && !stillBurning(level, f.at)) f.smoke.out();
+        if (level.getGameTime() % 600 != 77 || starting) return;
         long time = level.getDayTime() % 24000;
         float chance = level.isThundering() ? STORM : !level.isRaining() && time > 6000 && time < 11000 ? DRY : 0;
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2;
@@ -91,26 +97,127 @@ public final class Fires {
                 }
             }
             if (at == null) return;
-            FIRES.add(new Fire(at, Signals.fire(level, at, BURNS)));
+            FIRES.add(new Fire(at, Signals.fire(level, at, BURNS), false));
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FIRE at {}", BlockPos.containing(at).toShortString());
         });
     }
 
     /**
-     * Where a fire may start: a few hundred blocks from the lookout, on ground well over the sea and any lake: spots
-     * in forest or meadow, not in water. Empty where none is found.
+     * Where a fire may start: a few hundred blocks from the lookout, in forest (a meadow or bare rock does not go up
+     * like a stand of pines), on ground well over the sea and any lake. Empty where none is found.
      */
     static List<Vec3> spots(ServerLevel level, BlockPos tower, java.util.Random random) {
         List<Vec3> found = new java.util.ArrayList<>();
         int sea = level.getSeaLevel();
-        for (int tries = 0; tries < 24; tries++) {
+        for (int tries = 0; tries < 40; tries++) {
             double a = random.nextDouble() * Math.PI * 2, d = NEAR + random.nextDouble() * (FAR - NEAR);
             int x = (int) Math.floor(tower.getX() + Math.cos(a) * d), z = (int) Math.floor(tower.getZ() + Math.sin(a) * d);
             Integer y = ground(level, x, z);
-            if (y == null || y < sea + 4) continue;
+            if (y == null || y < sea + 4 || !forested(level, x, y, z)) continue;
             found.add(new Vec3(x + 0.5, y, z + 0.5));
         }
         return found;
+    }
+
+    /** Whether the country at a place is forest, by its biome as the world is made (asked off the server's thread). */
+    static boolean forested(ServerLevel level, int x, int y, int z) {
+        var source = level.getChunkSource();
+        var biome = source.getGenerator().getBiomeSource().getNoiseBiome(net.minecraft.core.QuartPos.fromBlock(x),
+                net.minecraft.core.QuartPos.fromBlock(y), net.minecraft.core.QuartPos.fromBlock(z), source.randomState().sampler());
+        if (biome.is(net.minecraft.tags.BiomeTags.IS_FOREST) || biome.is(net.minecraft.tags.BiomeTags.IS_TAIGA)
+                || biome.is(net.minecraft.tags.BiomeTags.IS_JUNGLE)) return true;
+        String name = biome.unwrapKey().map(k -> k.location().getPath()).orElse("");
+        for (String w : new String[]{"forest", "taiga", "wood", "grove", "pine", "conifer", "jungle", "spruce", "fir"}) {
+            if (name.contains(w)) return true;
+        }
+        return false;
+    }
+
+    // === Fires burning in the world =============================================
+
+    /** How far round a kept lookout fire is looked for in the loaded ground, in chunks; and how many chunks a tick. */
+    static final int SCANS = 16, SCANNED = 6;
+    /** How long a real fire's smoke stands after it is found, at most, in seconds: as long as it burns, really. */
+    static final int REAL_BURNS = 60 * 60;
+    /** The chunks round a lookout, nearest first, and where each player's look has got to among them. */
+    private static final List<int[]> RING = new java.util.ArrayList<>();
+    private static final java.util.Map<java.util.UUID, Integer> CURSOR = new java.util.HashMap<>();
+
+    static {
+        for (int dx = -SCANS; dx <= SCANS; dx++) for (int dz = -SCANS; dz <= SCANS; dz++) if (dx * dx + dz * dz <= SCANS * SCANS) RING.add(new int[]{dx, dz});
+        RING.sort(java.util.Comparator.comparingInt(c -> c[0] * c[0] + c[1] * c[1]));
+    }
+
+    /**
+     * Fire burning in the world round a lookout someone is at (lightning, a camper's fire got away, another mod's
+     * wildfires): a few chunks looked over a tick, the top of each column, and a fire found made one the lookouts see,
+     * read, call in and have put out.
+     */
+    static void scan(ServerLevel level) {
+        for (ServerPlayer p : level.players()) {
+            BlockPos tower = Missions.towerAt(level, p);
+            if (tower == null) continue;
+            int cursor = CURSOR.getOrDefault(p.getUUID(), 0);
+            int cx0 = tower.getX() >> 4, cz0 = tower.getZ() >> 4;
+            for (int n = 0; n < SCANNED; n++, cursor = (cursor + 1) % RING.size()) {
+                int[] c = RING.get(cursor);
+                var chunk = level.getChunkSource().getChunkNow(cx0 + c[0], cz0 + c[1]);
+                if (chunk == null) continue;
+                BlockPos found = burning(chunk);
+                if (found != null) found(level, found);
+            }
+            CURSOR.put(p.getUUID(), cursor);
+        }
+    }
+
+    /** A block on fire at the top of a chunk's columns, or null. */
+    static BlockPos burning(net.minecraft.world.level.chunk.LevelChunk chunk) {
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                int y = chunk.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, x, z);
+                for (int dy = 0; dy >= -1; dy--) {
+                    m.set(x0 + x, y + dy, z0 + z);
+                    if (chunk.getBlockState(m).getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock) return m.immutable();
+                }
+            }
+        }
+        return null;
+    }
+
+    /** A fire found burning: one more for the lookouts, unless it is part of one they already have. */
+    static void found(ServerLevel level, BlockPos at) {
+        Vec3 v = Vec3.atBottomCenterOf(at);
+        for (Fire f : FIRES) if (f.at.distanceTo(v) < 48) return;
+        FIRES.add(new Fire(v, Signals.fire(level, v, REAL_BURNS), true));
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FIRE burning found at {}", at.toShortString());
+    }
+
+    /** A real fire's ground looked over: any fire left in it. */
+    static boolean stillBurning(ServerLevel level, Vec3 at) {
+        BlockPos c = BlockPos.containing(at);
+        for (BlockPos p : BlockPos.betweenClosed(c.offset(-POUT, -10, -POUT), c.offset(POUT, 14, POUT))) {
+            if (level.isLoaded(p) && level.getBlockState(p).getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock) return true;
+        }
+        return false;
+    }
+
+    /** How far round a real fire the crew puts out what burns, in blocks. */
+    static final int POUT = 28;
+
+    /** The crew on a real fire: every flame in the ground round it out, and the hiss of it. */
+    static void putOut(ServerLevel level, Vec3 at) {
+        BlockPos c = BlockPos.containing(at);
+        int out = 0;
+        for (BlockPos p : BlockPos.betweenClosed(c.offset(-POUT, -10, -POUT), c.offset(POUT, 14, POUT))) {
+            if (level.isLoaded(p) && level.getBlockState(p).getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock) {
+                level.removeBlock(p, false);
+                out++;
+            }
+        }
+        if (out > 0) level.playSound(null, c, net.minecraft.sounds.SoundEvents.FIRE_EXTINGUISH, net.minecraft.sounds.SoundSource.BLOCKS, 2f, 0.8f);
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FIRE at {} put out: {} blocks", c.toShortString(), out);
     }
 
     /** The ground's height at a column, as the world is made: FT's Geology's model where it gives it, else the generator's. */
@@ -174,7 +281,10 @@ public final class Fires {
         String done = crossing != null ? "D_SMOKE_CROSS" : "D_SMOKE_01";
         Speech.after(level, at, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, done, 1f));
         // The crew on it: out in a few minutes. And the District remembers good eyes: supplies come up, once it is said.
-        Speech.after(level, CREW * 20, called.smoke::out);
+        Speech.after(level, CREW * 20, () -> {
+            called.smoke.out();
+            if (called.real) putOut(level, called.at);
+        });
         if (home != null && com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.SUPPLIES)) {
             Tower h = home;
             Speech.after(level, at + Speech.length(done) + 60, () -> {
@@ -188,6 +298,7 @@ public final class Fires {
     @SubscribeEvent
     public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
         FIRES.clear();
+        CURSOR.clear();
         starting = false;
     }
 }

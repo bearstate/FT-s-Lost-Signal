@@ -20,4 +20,8 @@ public final class ModParticles {
     public static final RegistryObject<SimpleParticleType> LAMP = PARTICLES.register("lamp", () -> new SimpleParticleType(true));
     /** A puff of a smoke column, seen across a valley: big, grey, through the haze. */
     public static final RegistryObject<SimpleParticleType> SMOKE = PARTICLES.register("far_smoke", () -> new SimpleParticleType(true));
+    /** A puff of a forest fire's smoke: dark brown off the burning, greying as it rises and drifts on the wind. */
+    public static final RegistryObject<SimpleParticleType> FIRE_SMOKE = PARTICLES.register("fire_smoke", () -> new SimpleParticleType(true));
+    /** The glow of a fire under its smoke at night: a broad dull orange. */
+    public static final RegistryObject<SimpleParticleType> FIRE_GLOW = PARTICLES.register("fire_glow", () -> new SimpleParticleType(true));
 }

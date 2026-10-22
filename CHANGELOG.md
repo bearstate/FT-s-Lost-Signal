@@ -25,7 +25,10 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
 - **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch
   over the stairwell in its floor, and lanterns under it.
-- **Forest fires** seen far off, read off the fire finder, reported and crossed; nothing burns.
+- **Forest fires** in forest country, seen far off: smoke from a few places across it, dark off the burning and
+  greying as it rises, leaning and drifting on FT's Geology's wind, an orange glow under it at night, flames close to
+  that burn nothing. Read off the fire finder, reported and crossed. Fire really burning round a lookout (lightning,
+  a campfire got away, another mod's wildfires) is found too, and the crew sent to it puts it out.
 - **Supply crates** at the foot of the trail.
 - **The stranger**: by day a man with things to say; by night the mask, the door, the window. He comes up to the
   lookout on foot: up the trail, up the stair, along the walkway, seen from the windows if you look (and he looks back).

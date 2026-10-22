@@ -91,6 +91,17 @@ public class SignalParticle extends TextureSheetParticle {
         }
     }
 
+    /** A fire's glow at night under its smoke: broad, dull orange, flickering as it comes and goes. */
+    public record Glow(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
+        @Override
+        public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double dx, double dy, double dz) {
+            SignalParticle p = new SignalParticle(level, x, y, z, dx, dy, dz, sprites, 0.9f, 14, 30);
+            p.setColor(1f, 0.45f + level.random.nextFloat() * 0.15f, 0.12f);
+            p.setAlpha(0.7f);
+            return p;
+        }
+    }
+
     public record Lamp(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double dx, double dy, double dz) {

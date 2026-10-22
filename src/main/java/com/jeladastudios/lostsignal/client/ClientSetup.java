@@ -18,6 +18,8 @@ public final class ClientSetup {
         event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.FLARE.get(), SignalParticle.Flare::new);
         event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.LAMP.get(), SignalParticle.Lamp::new);
         event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.SMOKE.get(), FarSmoke.Provider::new);
+        event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.FIRE_SMOKE.get(), FarSmoke.Fire::new);
+        event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.FIRE_GLOW.get(), SignalParticle.Glow::new);
     }
 
     /** The view from under a bed, under everything else on the screen: the words of the radio and the chat over it. */

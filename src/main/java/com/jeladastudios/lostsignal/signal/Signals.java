@@ -147,6 +147,17 @@ public final class Signals {
         });
     }
 
+    /** The wind at a place, in blocks a second the way it blows: FT's Geology's, else a light westerly. */
+    static Vec3 wind(ServerLevel level, Vec3 at) {
+        try {
+            Vec3 w = com.jeladastudios.ftsgeology.api.FtsGeologyApi.windAt(level, at.x, at.z);
+            if (w != null && w.lengthSqr() > 0) return new Vec3(w.x, 0, w.z);
+        } catch (LinkageError e) {
+            // No such thing in this version of it: the westerly.
+        }
+        return new Vec3(1.5, 0, 0.3);
+    }
+
     /** A fire's smoke, under way: put out by the crew, or burnt out. */
     public interface Burning {
         void out();
@@ -155,34 +166,65 @@ public final class Signals {
     }
 
     /**
-     * A fire in the forest, for some seconds: a broad column of smoke from a few points across it, thick and rising
-     * high, seen from any lookout in reach; and by night a dull glow at its foot.
+     * A fire in the forest, for some seconds: smoke from a few places across it, dark off the burning and greying as it
+     * rises, leaning and drifting downwind (FT's Geology's wind where there is one), seen from any lookout in reach; by
+     * night an orange glow under it; and close to, flames in among the trees that burn nothing.
      */
     public static Burning fire(ServerLevel level, Vec3 at, int seconds) {
+        // Where it burns: a few seats across a stretch of forest, one bigger than the rest.
+        List<Vec3> seats = new java.util.ArrayList<>();
+        seats.add(at);
+        for (int i = 0, n = 1 + level.random.nextInt(3); i < n; i++) {
+            seats.add(at.add(level.random.nextGaussian() * 9, level.random.nextGaussian() * 1.5, level.random.nextGaussian() * 9));
+        }
         Signal s = new Signal(level) {
             boolean out;
+            Vec3 drift = Vec3.ZERO;
 
             @Override
             boolean tick() {
                 age++;
                 if (out) return false;
+                // The wind, looked at now and then: a breeze leans the smoke; a gale lays it along the ground.
+                if (age % 100 == 1) drift = wind(level, at).scale(0.03);
                 if (age % 3 == 0) {
                     boolean night = level.getDayTime() % 24000 > 13000 && level.getDayTime() % 24000 < 23000;
                     for (ServerPlayer p : level.players()) {
                         double d = p.position().distanceTo(at);
-                        if (d < 48 || d > REACH) continue;
-                        boolean far = d > 64;
-                        for (int i = 0; i < (far ? 2 : 3); i++) {
-                            level.sendParticles(p, far ? ModParticles.SMOKE.get() : ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, at.x + level.random.nextGaussian() * 4,
-                                    at.y + 1 + level.random.nextDouble() * 3, at.z + level.random.nextGaussian() * 4, 0, 0, far ? 0.25 : 0.09, 0, 1);
+                        if (d > REACH) continue;
+                        if (d < 64) {
+                            near(p, night);
+                            continue;
                         }
-                        if (night && age % 12 == 0) {
-                            level.sendParticles(p, ModParticles.FLARE.get(), true, at.x + level.random.nextGaussian() * 3, at.y + 1,
-                                    at.z + level.random.nextGaussian() * 3, 1, 0, 0, 0, 0);
+                        for (int i = 0; i < seats.size(); i++) {
+                            Vec3 seat = seats.get(i);
+                            int puffs = i == 0 ? 3 : 2;
+                            for (int k = 0; k < puffs; k++) {
+                                level.sendParticles(p, ModParticles.FIRE_SMOKE.get(), true, seat.x + level.random.nextGaussian() * 3,
+                                        seat.y + 1 + level.random.nextDouble() * 3, seat.z + level.random.nextGaussian() * 3, 0,
+                                        drift.x, 0.22 + level.random.nextDouble() * 0.06, drift.z, 1);
+                            }
+                            if (night && age % 6 == 0) {
+                                level.sendParticles(p, ModParticles.FIRE_GLOW.get(), true, seat.x + level.random.nextGaussian() * 3, seat.y + 1.5,
+                                        seat.z + level.random.nextGaussian() * 3, 1, 0, 0, 0, 0);
+                            }
                         }
                     }
                 }
                 return age < seconds * 20;
+            }
+
+            /** Close to: flames low in the trees and on the ground, sparks, and the smoke as the game draws it. */
+            void near(ServerPlayer p, boolean night) {
+                for (Vec3 seat : seats) {
+                    for (int k = 0; k < 3; k++) {
+                        double x = seat.x + level.random.nextGaussian() * 4, z = seat.z + level.random.nextGaussian() * 4;
+                        double y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, (int) Math.floor(x), (int) Math.floor(z)) + 0.1;
+                        level.sendParticles(p, ParticleTypes.FLAME, true, x, y + level.random.nextDouble() * 1.5, z, 3, 0.3, 0.4, 0.3, 0.01);
+                        level.sendParticles(p, ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, x, y + 1, z, 0, drift.x * 0.4, 0.08, drift.z * 0.4, 1);
+                        if (level.random.nextInt(5) == 0) level.sendParticles(p, ParticleTypes.LAVA, true, x, y + 0.5, z, 1, 0, 0, 0, 0);
+                    }
+                }
             }
 
             @Override
