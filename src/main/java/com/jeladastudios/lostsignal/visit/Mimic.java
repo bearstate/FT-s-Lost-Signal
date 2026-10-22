@@ -125,6 +125,8 @@ public final class Mimic {
             // Nothing of theirs on his tape yet: he calls as someone lost instead.
         }
         if (Missions.at(level, tower) != null) return false;
+        // The call ends at the cab's door: a lookout with none (fallen in a quake, a door taken out) is not called.
+        if (Visit.doorOf(level, tower) == null) return false;
         Call c = new Call(tower, from, false, level.getGameTime() + 1800);
         c.calls = 1;
         CALLS.put(tower, c);
@@ -152,6 +154,14 @@ public final class Mimic {
         BlockPos tower = Missions.towerAt(level, keeper);
         Call c = tower == null ? null : CALLS.get(tower);
         if (c == null || c.echo || c.step >= ANSWERS.length) return false;
+        if (c.step == ANSWERS.length - 1 && Visit.doorOf(level, tower) == null) {
+            // No door left to ask to have opened: nothing more on the radio; a while later, one knock, somewhere below.
+            c.step = ANSWERS.length;
+            Speech.after(level, 400 + level.random.nextInt(200), () -> level.playSound(null, tower.above(2), net.minecraft.sounds.SoundEvents.WOODEN_DOOR_CLOSE,
+                    net.minecraft.sounds.SoundSource.HOSTILE, 1.2f, 0.5f));
+            Speech.after(level, 1600, () -> CALLS.remove(tower));
+            return true;
+        }
         String line = ANSWERS[c.step++];
         c.next = level.getGameTime() + 20 * 60 * 10;
         Speech.after(level, 40 + level.random.nextInt(40), () -> Lines.say(level, c.from, Lines.Speaker.HIKER, line, 0.15f));
