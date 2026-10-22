@@ -53,6 +53,15 @@ public final class Visit {
     final Direction out;
     int t, shutAt = -1;
     boolean broke;
+    /** Whether he is still on his way up, walking, and for how long he has been. */
+    boolean approaching;
+    int approachTicks;
+    /** How long he may take over it before he is simply there: a minute and a half. */
+    static final int APPROACH_MAX = 20 * 90;
+    /** How far down the trail he is first seen coming. */
+    static final int COMES_FROM = 32;
+    /** Whether he went back down the stair on foot, rather than out of sight. */
+    boolean walkedOff;
 
     private Visit(ServerLevel level, BlockPos foot, BlockPos door, Direction out) {
         this.level = level;
@@ -87,8 +96,37 @@ public final class Visit {
         Direction out = found.out();
         Visit v = new Visit(level, foot, door, out);
         UNDER_WAY.add(v);
-        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT begun at {} door {}", foot.toShortString(), door.toShortString());
+        v.comeUp();
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT begun at {} door {}{}", foot.toShortString(), door.toShortString(), v.approaching ? ", walking up" : "");
         return v;
+    }
+
+    /**
+     * Him, masked, out on the trail below, walking up to it: along the trail to the foot, up the stair, along the
+     * walkway; seen from the cab's windows by anyone looking out. Where the stair cannot be walked (a lookout built before
+     * it came out onto the walkway) or the trail below is not loaded, he is only heard on the stair, as before.
+     */
+    void comeUp() {
+        Vec3 middle = Vec3.atCenterOf(foot);
+        ServerPlayer p = null;
+        for (ServerPlayer q : level.players()) {
+            if (q.isSpectator() || q.position().distanceTo(middle) > 96) continue;
+            if (p == null || q.distanceToSqr(middle) < p.distanceToSqr(middle)) p = q;
+        }
+        if (p == null || !com.jeladastudios.lostsignal.tower.Stair.walkable(level, foot, out)) return;
+        Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, foot);
+        double a = down != null ? Math.atan2(down.z, down.x) : level.random.nextDouble() * Math.PI * 2;
+        int x = (int) Math.floor(foot.getX() + 0.5 + Math.cos(a) * COMES_FROM), z = (int) Math.floor(foot.getZ() + 0.5 + Math.sin(a) * COMES_FROM);
+        if (!level.isLoaded(new BlockPos(x, foot.getY(), z))) return;
+        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        Stranger s = ModEntities.STRANGER.get().create(level);
+        if (s == null) return;
+        s.moveTo(x + 0.5, y, z + 0.5, (float) Math.toDegrees(Math.atan2(-(foot.getX() - x), foot.getZ() - z)), 0f);
+        s.masked(true);
+        s.approach(p, foot, com.jeladastudios.lostsignal.tower.Stair.up(foot, out));
+        level.addFreshEntity(s);
+        at = s;
+        approaching = true;
     }
 
     /** The players in the cab: within its walls, at its floor. */
@@ -108,9 +146,24 @@ public final class Visit {
 
     /** One beat of it. False when it is over. */
     boolean tick() {
+        if (approaching) {
+            // Driven off on the way, hurt, or gone: no knock tonight.
+            if (at == null || !at.isAlive()) {
+                if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT at {} ended on the way up", foot.toShortString());
+                return false;
+            }
+            if (!at.arrived() && ++approachTicks < APPROACH_MAX) return true;
+            // At the door: he knocks.
+            BlockPos outside = door.relative(out);
+            if (at.distanceToSqr(Vec3.atBottomCenterOf(outside)) > 4) at.moveTo(outside.getX() + 0.5, outside.getY(), outside.getZ() + 0.5, out.getOpposite().toYRot(), 0f);
+            at.stand(Integer.MAX_VALUE);
+            approaching = false;
+            t = KNOCK - 1;
+        }
         t++;
         Vec3 middle = Vec3.atBottomCenterOf(foot);
-        if (t < KNOCK && t % 14 == 0) {
+        // The stair heard, a step at a time, where he is not seen to come up it.
+        if (at == null && t < KNOCK && t % 14 == 0) {
             // The stair, a step at a time, up through the frame: slow, unhurried.
             double up = (double) t / KNOCK * 20;
             double sway = (t / 14) % 2 == 0 ? 1.5 : -1.5;
@@ -138,9 +191,15 @@ public final class Visit {
                 breakIn(in);
             }
         }
-        if (t == DECIDE + 40 && !broke && at != null) at.discard();
-        if (t >= GONE && at != null) at.discard();
-        if (t > DECIDE && t < GONE && !broke && t % 16 == 0) {
+        if (t == DECIDE + 2 && !broke && at != null && at.isAlive() && com.jeladastudios.lostsignal.tower.Stair.walkable(level, foot, out)) {
+            // Back down the stair, and off down the trail, walking.
+            at.walkTo(com.jeladastudios.lostsignal.tower.Stair.down(foot, out), true, 0);
+            walkedOff = true;
+        }
+        if (t == DECIDE + 40 && !broke && !walkedOff && at != null) at.discard();
+        if (t >= GONE && at != null && !walkedOff) at.discard();
+        if (t >= GONE) settle();
+        if (t > DECIDE && t < GONE && !broke && !walkedOff && t % 16 == 0) {
             // Back down the stair and away.
             double up = 20 - (double) (t - DECIDE) / (GONE - DECIDE) * 20;
             sound(middle.add(0, up, 0), SoundEvents.WOOD_STEP, 0.7f, 0.6f);
@@ -148,7 +207,19 @@ public final class Visit {
         return t < GONE;
     }
 
-    /** The mask at a window: he is on the walkway outside the cab, looking in at whoever is there. */
+    /** The lookout as he leaves it: broken in on, he has had what he came for, and the anger of a hurt one is spent. */
+    void settle() {
+        var t = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
+        if (broke && t.anger > 0) {
+            t.anger = 0;
+            com.jeladastudios.lostsignal.tower.Towers.of(level).setDirty();
+        }
+    }
+
+    /**
+     * The mask at a window: he is on the walkway outside the cab, looking in at whoever is there. Walked round to it
+     * from the door if he came up the stair; else there, of a sudden.
+     */
     void peek() {
         List<ServerPlayer> in = inCab();
         if (in.isEmpty()) return;
@@ -157,6 +228,18 @@ public final class Visit {
         Direction side = Direction.fromYRot(p.getYRot());
         if (side == out) side = side.getClockWise();
         BlockPos spot = foot.above(door.getY() - foot.getY()).relative(side, 4);
+        // Somewhere on the walkway he can stand: not over the stairwell.
+        for (int k : new int[]{0, 1, -1, 2, -2}) {
+            BlockPos q = spot.relative(side.getClockWise(), k);
+            if (level.getBlockState(q).isAir() && level.getBlockState(q.below()).isFaceSturdy(level, q.below(), Direction.UP)) {
+                spot = q;
+                break;
+            }
+        }
+        if (at != null && at.isAlive()) {
+            at.walkTo(List.of(spot), false, 12);
+            return;
+        }
         Stranger s = masked(p, spot, side.getOpposite(), 160);
         if (s != null) s.close(12);
     }
@@ -176,9 +259,16 @@ public final class Visit {
     Stranger at;
 
     void atDoor() {
+        BlockPos outside = door.relative(out);
+        // Back round from the window.
+        if (at != null && at.isAlive()) {
+            at.moveTo(outside.getX() + 0.5, outside.getY(), outside.getZ() + 0.5, out.getOpposite().toYRot(), 0f);
+            at.stand(Integer.MAX_VALUE);
+            return;
+        }
         List<ServerPlayer> in = inCab();
         if (in.isEmpty()) return;
-        at = masked(in.get(0), door.relative(out), out.getOpposite(), GONE);
+        at = masked(in.get(0), outside, out.getOpposite(), GONE);
         // Through the door's window he may be seen: it does not send him off.
         if (at != null) at.close(Integer.MAX_VALUE);
     }
@@ -227,7 +317,8 @@ public final class Visit {
         say("S_DOOR_IN");
         for (ServerPlayer p : in) {
             if (Hiding.hidden(p)) continue;
-            p.hurt(level.damageSources().magic(), 10f);
+            // The worse for each time he was driven off hurt.
+            p.hurt(level.damageSources().magic(), 10f + 4f * com.jeladastudios.lostsignal.tower.Towers.at(level, foot).anger);
             p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 160, 0));
             p.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0));
             p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
@@ -262,6 +353,8 @@ public final class Visit {
             float chance = com.jeladastudios.lostsignal.mission.Missions.at(level, tower) != null ? CHANCE_MISSION : CHANCE;
             // Two in the cab, the keeper and a guest they let stay, and he is less likely to try it.
             if (com.jeladastudios.lostsignal.tower.Towers.company(level, tower)) chance *= 0.5f;
+            // Driven off hurt before, he comes back sooner.
+            chance *= 1 + 0.5f * com.jeladastudios.lostsignal.tower.Towers.at(level, tower).anger;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2.5f;
             chance *= com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.VISITS);
             // By how much of the small hours has gone by since the last look: a second, or many, a keeper asleep.

@@ -120,18 +120,18 @@ final class Dress {
     static void fit(ServerLevel level, BlockPos foot, com.jeladastudios.lostsignal.visit.Visit.Door door) {
         Direction east = door.out(), south = east.getClockWise();
         // The old hole: three open cells along the north wall, the last step at their end.
-        boolean old = level.getBlockState(local(foot, east, 1, 20, -2)).getBlock() instanceof net.minecraft.world.level.block.StairBlock;
-        for (int x = -2; x <= 0 && old; x++) old = level.getBlockState(local(foot, east, x, 20, -2)).isAir();
+        boolean old = level.getBlockState(Stair.at(foot, east, 1, 20, -2)).getBlock() instanceof net.minecraft.world.level.block.StairBlock;
+        for (int x = -2; x <= 0 && old; x++) old = level.getBlockState(Stair.at(foot, east, x, 20, -2)).isAir();
         if (old) {
             // Up against the wall when they are opened, so the flight is clear.
             BlockState hatch = Blocks.SPRUCE_TRAPDOOR.defaultBlockState()
                     .setValue(net.minecraft.world.level.block.TrapDoorBlock.HALF, net.minecraft.world.level.block.state.properties.Half.TOP)
                     .setValue(net.minecraft.world.level.block.TrapDoorBlock.FACING, south);
-            for (int x = -2; x <= 0; x++) level.setBlock(local(foot, east, x, 20, -2), hatch, 3);
+            for (int x = -2; x <= 0; x++) level.setBlock(Stair.at(foot, east, x, 20, -2), hatch, 3);
         }
         BlockState hung = Blocks.LANTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true);
         for (int[] l : LIGHTS) {
-            BlockPos p = local(foot, east, l[0], l[1], l[2]);
+            BlockPos p = Stair.at(foot, east, l[0], l[1], l[2]);
             if (level.getBlockState(p).isAir() && hung.canSurvive(level, p)) level.setBlock(p, hung, 3);
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER at {} fitted{}", foot.toShortString(), old ? " with a hatch" : "");
@@ -139,11 +139,6 @@ final class Dress {
 
     /** Where Feel the Nature hangs the lanterns under a lookout: under two landings and under the cab's floor. */
     static final int[][] LIGHTS = {{2, 1, 0}, {-2, 10, 0}, {1, 19, 2}};
-
-    /** A block of a lookout as it is laid out: x out through its door, z to the door's right as one goes out. */
-    static BlockPos local(BlockPos foot, Direction east, int x, int y, int z) {
-        return foot.relative(east, x).above(y).relative(east.getClockWise(), z);
-    }
 
     /** The spots on the cab's floor with nothing on them. */
     static List<BlockPos> free(ServerLevel level, BlockPos floor) {

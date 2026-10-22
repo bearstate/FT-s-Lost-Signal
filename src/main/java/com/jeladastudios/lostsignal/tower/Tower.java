@@ -49,6 +49,8 @@ public final class Tower {
     public long checkOn;
     /** When they last met the stranger, or saw him, in game ticks; -1 never. */
     public long metStranger = -1;
+    /** How many times he has been driven off from it, hurt, and not yet come back for it: he comes sooner, and worse. */
+    public int anger;
 
     /** Whether the world has been made to look as it is: the door left open, the candles. */
     public boolean dressed;
@@ -108,6 +110,7 @@ public final class Tower {
         t.putString("Need", need.name());
         t.putLong("CheckOn", checkOn);
         t.putLong("MetStranger", metStranger);
+        t.putInt("Anger", anger);
         t.putBoolean("Dressed", dressed);
         t.putBoolean("Fitted", fitted);
         t.putBoolean("RemainsPending", remainsPending);
@@ -134,6 +137,7 @@ public final class Tower {
         tower.need = parse(Need.class, t.getString("Need"), Need.NONE);
         tower.checkOn = t.getLong("CheckOn");
         tower.metStranger = t.contains("MetStranger") ? t.getLong("MetStranger") : -1;
+        tower.anger = t.getInt("Anger");
         tower.dressed = t.getBoolean("Dressed");
         tower.fitted = t.getBoolean("Fitted");
         tower.remainsPending = t.getBoolean("RemainsPending");

@@ -319,6 +319,14 @@ public final class Towers extends SavedData {
         }
     }
 
+    /** The stranger driven off from a lookout, hurt: he will be back for it, sooner, and worse. */
+    public static void angered(ServerLevel level, BlockPos foot) {
+        Tower t = at(level, foot);
+        t.anger = Math.min(3, t.anger + 1);
+        of(level).setDirty();
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER {} anger {}", t.number, t.anger);
+    }
+
     /** The spots on a cab's floor with nothing on them, to stand on. */
     public static java.util.List<BlockPos> room(ServerLevel level, BlockPos floor) {
         return Dress.free(level, floor);

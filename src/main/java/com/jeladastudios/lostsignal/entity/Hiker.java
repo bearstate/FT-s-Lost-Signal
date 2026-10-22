@@ -347,25 +347,13 @@ public class Hiker extends PathfinderMob {
         var door = com.jeladastudios.lostsignal.visit.Visit.doorOf(server, foot);
         if (door == null) return;
         Direction out = door.out();
-        if (!server.getBlockState(local(foot, out, 0, 20, -4)).isAir()
-                || !(server.getBlockState(local(foot, out, 1, 20, -4)).getBlock() instanceof net.minecraft.world.level.block.StairBlock)) return;
+        if (!com.jeladastudios.lostsignal.tower.Stair.walkable(server, foot, out)) return;
         var room = com.jeladastudios.lostsignal.tower.Towers.room(server, foot.above(20));
         if (room.isEmpty()) return;
         lookout = foot;
         way.clear();
-        for (int[] at : STAIR_UP) way.add(local(foot, out, at[0], at[1], at[2]));
+        way.addAll(com.jeladastudios.lostsignal.tower.Stair.up(foot, out));
         way.add(room.get(getRandom().nextInt(room.size())));
-    }
-
-    /**
-     * Where to stand on the way up a lookout, as Feel the Nature lays it out (x out through the cab's door, z to its
-     * right): on two landings of the switchback, at the head of the stair on the walkway, round the corner, before the
-     * door. A walker's path up twenty blocks of switchback is too long to be found in one; in legs it is not.
-     */
-    static final int[][] STAIR_UP = {{2, 9, -1}, {-2, 18, -1}, {2, 21, -4}, {4, 21, -4}, {4, 21, 0}};
-
-    static BlockPos local(BlockPos foot, Direction out, int x, int y, int z) {
-        return foot.relative(out, x).above(y).relative(out.getClockWise(), z);
     }
 
     /** The places they are walking through, in order, on a lookout's stair; not kept. */
@@ -409,8 +397,8 @@ public class Hiker extends PathfinderMob {
         if (lookout != null && getY() > lookout.getY() + 15 && level() instanceof net.minecraft.server.level.ServerLevel server) {
             var door = com.jeladastudios.lostsignal.visit.Visit.doorOf(server, lookout);
             if (door != null) {
-                for (int i = STAIR_UP.length - 1; i >= 0; i--) way.add(local(lookout, door.out(), STAIR_UP[i][0], STAIR_UP[i][1], STAIR_UP[i][2]));
-                way.add(local(lookout, door.out(), -2, 0, -1));
+                way.add(com.jeladastudios.lostsignal.tower.Stair.outside(lookout, door.out()));
+                way.addAll(com.jeladastudios.lostsignal.tower.Stair.down(lookout, door.out()));
             }
         }
     }

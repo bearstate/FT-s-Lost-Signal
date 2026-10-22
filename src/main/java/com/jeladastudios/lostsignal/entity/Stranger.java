@@ -35,8 +35,8 @@ public class Stranger extends PathfinderMob {
 
     private static final EntityDataAccessor<Boolean> MASKED = SynchedEntityData.defineId(Stranger.class, EntityDataSerializers.BOOLEAN);
 
-    /** What he is out for: to watch from off, to come and talk, or at a lookout in the night. */
-    public enum Mode { WATCH, TALK, VISIT }
+    /** What he is out for: to watch from off, to come and talk, at a lookout in the night, or on his way up to one. */
+    public enum Mode { WATCH, TALK, VISIT, APPROACH }
 
     /** How long a steady look he bears, in ticks, before he goes. */
     static final int BEARS_LOOK = 40;
@@ -64,7 +64,8 @@ public class Stranger extends PathfinderMob {
 
     public static AttributeSupplier.Builder attributes() {
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MAX_HEALTH, 400.0)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
                 .add(Attributes.FOLLOW_RANGE, 96.0);
     }
@@ -111,6 +112,93 @@ public class Stranger extends PathfinderMob {
         return watching;
     }
 
+    /** The places he is walking through, in order, on his way up to a lookout; not kept. */
+    private final java.util.ArrayDeque<net.minecraft.core.BlockPos> way = new java.util.ArrayDeque<>();
+    private int wayTries, stood, stops;
+    /** The lookout he came up to, by its foot: where he is the angrier for having been driven off. */
+    private net.minecraft.core.BlockPos visiting;
+
+    /**
+     * Up to a lookout in the night, at a walk: along the trail to its foot, up the stair landing by landing, along the
+     * walkway to the door. Seen, he stops and looks back up at whoever is looking; then comes on.
+     */
+    public void approach(ServerPlayer player, net.minecraft.core.BlockPos foot, java.util.List<net.minecraft.core.BlockPos> path) {
+        watching = player.getUUID();
+        visiting = foot;
+        mode = Mode.APPROACH;
+        lifetime = Integer.MAX_VALUE;
+        keepsOff = 0;
+        way.clear();
+        way.addAll(path);
+    }
+
+    /**
+     * On to somewhere else about the lookout: round the walkway to a window, there to watch, bearing a look so long; or
+     * down the stair, and then off into the trees.
+     */
+    public void walkTo(java.util.List<net.minecraft.core.BlockPos> path, boolean thenLeave, int thenBears) {
+        mode = Mode.APPROACH;
+        way.clear();
+        way.addAll(path);
+        wayTries = 0;
+        stops = 3;
+        this.thenLeave = thenLeave;
+        this.thenBears = thenBears;
+    }
+
+    private boolean thenLeave;
+    private int thenBears;
+
+    /** Where he was making for, reached. */
+    public boolean arrived() {
+        return way.isEmpty();
+    }
+
+    /** Standing where he is, now, as at the door or a window: watching, bearing a look as long as given. */
+    public void stand(int bears) {
+        way.clear();
+        getNavigation().stop();
+        close(bears);
+    }
+
+    /** A leg of his way; where it cannot be walked, he is simply there, the next time no one is looking. */
+    void onTheWay(ServerPlayer player) {
+        net.minecraft.core.BlockPos next = way.peek();
+        if (next == null) {
+            if (thenLeave) leave(player);
+            else if (thenBears > 0) stand(thenBears);
+            else face(player);
+            return;
+        }
+        // Looked at from up there, he stops and looks back, a while; a few times on the way, no more.
+        if (stood > 0) {
+            stood--;
+            getNavigation().stop();
+            face(player);
+            return;
+        }
+        if (stops < 3 && distanceToSqr(player) > 12 * 12 && lookedAt(player)) {
+            stops++;
+            stood = 60 + random.nextInt(60);
+            return;
+        }
+        if (distanceToSqr(Vec3.atBottomCenterOf(next)) < 2.0) {
+            way.poll();
+            wayTries = 0;
+            return;
+        }
+        if (getNavigation().isInProgress() || tickCount % 5 != 0) return;
+        var path = getNavigation().createPath(next, 0);
+        if (path != null && path.canReach()) {
+            getNavigation().moveTo(path, 0.6);
+            wayTries = 0;
+        } else if (++wayTries > 4 && !lookedAt(player)) {
+            moveTo(next.getX() + 0.5, next.getY(), next.getZ() + 0.5, getYRot(), 0f);
+            way.poll();
+            wayTries = 0;
+        }
+    }
+
     @Override
     protected void registerGoals() {
         // Nothing of his own to do: what he does, tick() sees to.
@@ -135,6 +223,7 @@ public class Stranger extends PathfinderMob {
         }
         double distance = Math.sqrt(distanceToSqr(player));
         switch (mode) {
+            case APPROACH -> onTheWay(player);
             case WATCH, VISIT -> {
                 face(player);
                 if (distance < keepsOff) {
@@ -287,9 +376,29 @@ public class Stranger extends PathfinderMob {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        // A man struck at steps back from it and goes; it does him no harm the game can see.
-        if (!level().isClientSide() && source.getEntity() instanceof ServerPlayer p) leave(p);
-        return false;
+        if (level().isClientSide()) return false;
+        // By day, a man struck at steps back from it and goes; it does him no harm the game can see.
+        if (!masked()) {
+            if (source.getEntity() instanceof ServerPlayer p) leave(p);
+            return false;
+        }
+        // Masked, in the night, it does; and he does not run from it. Brought to the end of it he does not fall: he
+        // steps back into the dark and is gone, and some other night he is back, and worse.
+        if (!source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY) && getHealth() - amount <= 1f) {
+            withdraw();
+            return true;
+        }
+        return super.hurt(source, amount);
+    }
+
+    /** Gone back into the dark, hurt: the lookout he came to is the worse for it. */
+    void withdraw() {
+        if (level() instanceof ServerLevel server) {
+            server.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, getX(), getY() + 1, getZ(), 40, 0.4, 0.8, 0.4, 0.02);
+            server.playSound(null, getX(), getY(), getZ(), net.minecraft.sounds.SoundEvents.SOUL_ESCAPE, net.minecraft.sounds.SoundSource.HOSTILE, 2f, 0.5f);
+            if (visiting != null) com.jeladastudios.lostsignal.tower.Towers.angered(server, visiting);
+        }
+        gone("withdrew, hurt");
     }
 
     @Override
