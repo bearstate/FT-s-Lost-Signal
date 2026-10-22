@@ -52,9 +52,15 @@ public final class Lines {
 
     /** One of a line's recorded takes, or the line itself where it was recorded once, or null where not yet. */
     public static String take(String line, ServerLevel level) {
+        java.util.List<String> takes = takes(line);
+        return takes.isEmpty() ? null : takes.get(level.random.nextInt(takes.size()));
+    }
+
+    /** All of a line's recorded takes: {@code _a} to {@code _e}, or the line itself recorded once; none where not yet. */
+    public static java.util.List<String> takes(String line) {
         java.util.List<String> takes = new java.util.ArrayList<>();
         for (char c = 'a'; c <= 'e'; c++) if (Clips.exists(line + "_" + c)) takes.add(line + "_" + c);
-        if (!takes.isEmpty()) return takes.get(level.random.nextInt(takes.size()));
-        return Clips.exists(line) ? line : null;
+        if (takes.isEmpty() && Clips.exists(line)) takes.add(line);
+        return takes;
     }
 }
