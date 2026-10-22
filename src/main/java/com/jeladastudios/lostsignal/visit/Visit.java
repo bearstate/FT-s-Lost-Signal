@@ -173,6 +173,11 @@ public final class Visit {
             sound(Vec3.atCenterOf(door), SoundEvents.WOODEN_DOOR_CLOSE, 1.2f, 0.5f);
             FlowingSleep.wake(level, Vec3.atCenterOf(door), 10, "knock");
         }
+        // A nervous keeper knows that knock: under the bed at once. The others stay up, unless told.
+        if (t == KNOCK + 40) {
+            var tower = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
+            if (tower.temper == com.jeladastudios.lostsignal.tower.Tower.Temper.NERVOUS) for (var k : keepersIn()) k.hide();
+        }
         if (t == WINDOW) peek();
         if (t == RATTLE - 10) atDoor();
         // His voice through the door: asking, then waiting.
@@ -182,13 +187,22 @@ public final class Visit {
         if (t == shutAt) slam();
         if (t == DECIDE) {
             List<ServerPlayer> in = inCab();
-            boolean allHidden = !in.isEmpty() && in.stream().allMatch(Hiding::hidden);
-            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) for (ServerPlayer p : in) LostSignal.LOGGER.info("VISIT finds {} hidden {} at {}", p.getScoreboardName(), Hiding.hidden(p), p.position());
-            if (in.isEmpty() || allHidden) {
+            boolean allHidden = in.stream().allMatch(Hiding::hidden);
+            // A keeper up and about is someone for him too, where a world lets him take keepers.
+            List<com.jeladastudios.lostsignal.entity.Keeper> exposed = new ArrayList<>();
+            if (com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.TAKES_KEEPERS)) {
+                for (var k : keepersIn()) if (!k.hidden()) exposed.add(k);
+            }
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+                for (ServerPlayer p : in) LostSignal.LOGGER.info("VISIT finds {} hidden {} at {}", p.getScoreboardName(), Hiding.hidden(p), p.position());
+                LostSignal.LOGGER.info("VISIT finds {} keeper(s) not hidden", exposed.size());
+            }
+            if (allHidden && exposed.isEmpty()) {
                 say("S_DOOR_LEAVE");
                 if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT went away ({})", in.isEmpty() ? "no one in" : "hidden");
             } else {
                 breakIn(in);
+                for (var k : exposed) take(k);
             }
         }
         if (t == DECIDE + 2 && !broke && at != null && at.isAlive() && com.jeladastudios.lostsignal.tower.Stair.walkable(level, foot, out)) {
@@ -305,6 +319,38 @@ public final class Visit {
         }
     }
 
+    /** The keepers of this lookout in its cab now. */
+    List<com.jeladastudios.lostsignal.entity.Keeper> keepersIn() {
+        long key = com.jeladastudios.lostsignal.tower.Towers.at(level, foot).key();
+        return level.getEntitiesOfClass(com.jeladastudios.lostsignal.entity.Keeper.class,
+                new net.minecraft.world.phys.AABB(door).inflate(5, 3, 5), k -> k.tower() == key);
+    }
+
+    /** The player nearest the lookout, within earshot of it; or null. */
+    ServerPlayer nearest() {
+        ServerPlayer best = null;
+        Vec3 middle = Vec3.atCenterOf(door);
+        for (ServerPlayer p : level.players()) {
+            if (p.isSpectator() || p.position().distanceTo(middle) > 96) continue;
+            if (best == null || p.distanceToSqr(middle) < best.distanceToSqr(middle)) best = p;
+        }
+        return best;
+    }
+
+    /**
+     * A keeper who did not hide, taken: a scream, cut off; the dark on whoever is in the cab; and in the morning the
+     * lookout as one left in a hurry, the door open, the marks by it, what is left of them out on the mountain.
+     */
+    void take(com.jeladastudios.lostsignal.entity.Keeper k) {
+        var tower = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
+        com.jeladastudios.lostsignal.radio.Voice.say(k, net.minecraft.network.chat.Component.literal(tower.keeper), "X_SCREAM_CUT", 48, tower.pitch);
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, k.getX(), k.getY() + 1, k.getZ(), 30, 0.3, 0.6, 0.3, 0.01);
+        for (ServerPlayer p : inCab()) p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0));
+        k.discard();
+        com.jeladastudios.lostsignal.tower.Towers.force(level, tower, "abandoned");
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT took keeper {} of {}", tower.keeper, tower.number);
+    }
+
     /** The door gives, and it is in among whoever did not hide. */
     void breakIn(List<ServerPlayer> in) {
         broke = true;
@@ -312,7 +358,9 @@ public final class Visit {
         level.destroyBlock(door, false);
         if (level.getBlockState(door.above()).getBlock() instanceof DoorBlock) level.destroyBlock(door.above(), false);
         // In the doorway.
-        if (at == null || !at.isAlive()) at = masked(in.get(0), door, out.getOpposite(), GONE);
+        ServerPlayer watched = in.isEmpty() ? nearest() : in.get(0);
+        if ((at == null || !at.isAlive()) && watched != null) at = masked(watched, door, out.getOpposite(), GONE);
+        else if (at == null || !at.isAlive()) return;
         else at.moveTo(door.getX() + 0.5, door.getY(), door.getZ() + 0.5, out.getOpposite().toYRot(), 0f);
         say("S_DOOR_IN");
         for (ServerPlayer p : in) {

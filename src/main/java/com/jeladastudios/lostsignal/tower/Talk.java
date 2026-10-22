@@ -21,7 +21,7 @@ public final class Talk {
     private Talk() {}
 
     /** What a keeper may be asked. */
-    public enum Topic { NEWS, SEEN, HELP, STAY, BYE }
+    public enum Topic { NEWS, SEEN, HELP, STAY, HIDE, BYE }
 
     /** How recent a meeting with the stranger is still on a keeper's mind: three days. */
     static final long ON_MIND = 72_000;
@@ -39,6 +39,7 @@ public final class Talk {
             Towers.of(level).checking.put(p.getUUID(), t.checkOn);
             Towers.of(level).setDirty();
         }
+        if (topic == Topic.HIDE && "K_HIDE_YES".equals(line)) k.hide();
         if (topic == Topic.STAY && "K_STAY_YES".equals(line)) {
             t.trust = Math.max(t.trust, 1);
             t.guest = p.getUUID();
@@ -73,6 +74,8 @@ public final class Talk {
                 case NONE -> "K_QUIET";
             };
             case STAY -> t.trust >= 1 || t.temper == Tower.Temper.CHATTY ? "K_STAY_YES" : "K_STAY_NO";
+            // Told to hide: by day, from what; at night, they go, unless a terse one who does not know you yet.
+            case HIDE -> !night ? "K_HIDE_DAY" : t.temper == Tower.Temper.TERSE && t.trust < 1 ? "K_HIDE_NO" : "K_HIDE_YES";
             case BYE -> "K_BYE";
         };
     }

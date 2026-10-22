@@ -297,5 +297,9 @@
   "weather.fts_lostsignal.sky.thunder": "a thunderstorm (no instruments reading)",
   "rescue.fts_lostsignal.static": "static, a voice somewhere in it, too faint to make out",
   "call.fts_lostsignal.signal": "S%s",
-  "call.fts_lostsignal.no_signal": "no signal"
+  "call.fts_lostsignal.no_signal": "no signal",
+  "talk.fts_lostsignal.topic.hide": "Hide! Get under the bed.",
+  "radio.fts_lostsignal.line.K_HIDE_YES": "Okay. Okay. Under the bed. Don't make a sound.",
+  "radio.fts_lostsignal.line.K_HIDE_NO": "I'm not crawling under a bed in my own tower.",
+  "radio.fts_lostsignal.line.K_HIDE_DAY": "Hide? From what? It's broad daylight."
 }

@@ -52,36 +52,38 @@ public final class Hiding {
         hide(p, event.getPos(), s);
     }
 
-    /** Down on the floor beside the bed, on the side away from the door if it can be told. */
-    public static void hide(ServerPlayer p, BlockPos bed, BlockState s) {
+    /** Where to lie under a bed: tucked against its side, and the way out from under it, into the room. */
+    public record Under(Vec3 at, Direction out) {}
+
+    /** The spot beside either half of a bed with room to lie, or null. */
+    public static Under under(net.minecraft.world.level.Level level, BlockPos bed, BlockState s) {
         Direction along = s.getValue(BedBlock.FACING);
-        BlockPos spot = null;
-        Direction out = along;
-        double floor = 0;
-        // Beside either half of it.
         BlockPos other = bed.relative(BedBlock.getConnectedDirection(s));
         for (BlockPos half : new BlockPos[]{bed, other}) {
             for (Direction side : new Direction[]{along.getClockWise(), along.getCounterClockWise()}) {
                 BlockPos q = half.relative(side);
                 // Room to lie: nothing there, or only something low on the floor: a rug, a pressure plate.
-                var shape = p.level().getBlockState(q).getCollisionShape(p.level(), q);
+                var shape = level.getBlockState(q).getCollisionShape(level, q);
                 if ((shape.isEmpty() || shape.max(Direction.Axis.Y) <= 0.1875)
-                        && p.level().getBlockState(q.above()).getCollisionShape(p.level(), q.above()).isEmpty()) {
-                    spot = q;
-                    out = side;
-                    floor = shape.isEmpty() ? 0 : shape.max(Direction.Axis.Y);
-                    break;
+                        && level.getBlockState(q.above()).getCollisionShape(level, q.above()).isEmpty()) {
+                    double floor = shape.isEmpty() ? 0 : shape.max(Direction.Axis.Y);
+                    return new Under(Vec3.atBottomCenterOf(q).add(-side.getStepX() * 0.18, floor, -side.getStepZ() * 0.18), side);
                 }
             }
-            if (spot != null) break;
         }
-        if (spot == null) {
+        return null;
+    }
+
+    /** Down on the floor beside the bed, tucked against it, looking out from under it into the room. */
+    public static void hide(ServerPlayer p, BlockPos bed, BlockState s) {
+        Under under = under(p.level(), bed, s);
+        if (under == null) {
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("HIDE no room by {}", bed.toShortString());
             p.displayClientMessage(Component.translatable("hide.fts_lostsignal.no_room"), true);
             return;
         }
-        // Tucked against the bed's side, looking out from under it into the room.
-        Vec3 at = Vec3.atBottomCenterOf(spot).add(0, floor, 0).add(out.getOpposite().getStepX() * 0.18, 0, out.getOpposite().getStepZ() * 0.18);
+        Vec3 at = under.at();
+        Direction out = under.out();
         p.setForcedPose(Pose.SWIMMING);
         p.teleportTo(at.x, at.y, at.z);
         p.setYRot(out.toYRot());

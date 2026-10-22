@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A lookout's keeper: someone posted there for the season, who lives in the cab (at the fire finder, at the stove,
@@ -77,6 +78,37 @@ public class Keeper extends PathfinderMob {
         return tower;
     }
 
+    /** Where they lie under the bed; null while they do not. */
+    private Vec3 hidden;
+
+    public boolean hidden() {
+        return hidden != null;
+    }
+
+    /** Down under the cab's bed, tucked against it: true where there is a bed and room by it. */
+    public boolean hide() {
+        if (hidden != null) return true;
+        if (floor == null) return false;
+        for (BlockPos p : BlockPos.betweenClosed(floor.offset(-3, 1, -3), floor.offset(3, 1, 3))) {
+            var s = level().getBlockState(p);
+            if (!(s.getBlock() instanceof net.minecraft.world.level.block.BedBlock)) continue;
+            var under = com.jeladastudios.lostsignal.visit.Hiding.under(level(), p.immutable(), s);
+            if (under == null) continue;
+            hidden = under.at();
+            getNavigation().stop();
+            moveTo(hidden.x, hidden.y, hidden.z, under.out().toYRot(), 0f);
+            setYHeadRot(under.out().toYRot());
+            setPose(net.minecraft.world.entity.Pose.SWIMMING);
+            return true;
+        }
+        return false;
+    }
+
+    public void unhide() {
+        hidden = null;
+        setPose(net.minecraft.world.entity.Pose.STANDING);
+    }
+
     public Tower record() {
         return level() instanceof ServerLevel server ? Towers.known(server, tower) : null;
     }
@@ -93,6 +125,14 @@ public class Keeper extends PathfinderMob {
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON && tickCount % 20 == 0 && getY() < floor.getY()) {
             com.jeladastudios.lostsignal.LostSignal.LOGGER.info("KEEPER below the cab at {} {} {}", (int) getX(), (int) getY(), (int) getZ());
+        }
+        // Under the bed, as still as they can be, until it is light.
+        if (hidden != null) {
+            getNavigation().stop();
+            if (position().distanceToSqr(hidden) > 0.04) moveTo(hidden.x, hidden.y, hidden.z, getYRot(), 0f);
+            setPose(net.minecraft.world.entity.Pose.SWIMMING);
+            if (server.isDay()) unhide();
+            return;
         }
         // About the cab: a few steps to somewhere else in it now and then, and a while there.
         if (!getNavigation().isInProgress() && --idle <= 0) {

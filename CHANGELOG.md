@@ -8,7 +8,9 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 
 - **Lookouts with people in them**: empty, kept, abandoned in a hurry, or kept by the stranger; changing from dawn to
   dawn.
-- **Keepers**: a name, a voice, a temper; talk to them, run their errands, earn their trust, stay the night.
+- **Keepers**: a name, a voice, a temper; talk to them, run their errands, earn their trust, stay the night. When he
+  comes to the door a nervous keeper gets under the bed; tell any of them to hide. One still standing when the door
+  gives is taken, and in the morning the lookout is one left in a hurry.
 - **The rescue frequency**: the District's day, calls to and from the lookouts round you, the rescue panel (`J`).
   The District's own calls are answered from the panel: the radio check, the end of day check, and the weather, sent
   as the cab's instruments read it (FT's Geology's weather terminal); unanswered, it asks once more. What comes over

@@ -297,5 +297,9 @@
   "weather.fts_lostsignal.sky.thunder": "fırtına (aletler okumuyor)",
   "rescue.fts_lostsignal.static": "parazit, içinde bir yerde bir ses, seçilemeyecek kadar zayıf",
   "call.fts_lostsignal.signal": "S%s",
-  "call.fts_lostsignal.no_signal": "sinyal yok"
+  "call.fts_lostsignal.no_signal": "sinyal yok",
+  "talk.fts_lostsignal.topic.hide": "Saklan! Yatağın altına gir.",
+  "radio.fts_lostsignal.line.K_HIDE_YES": "Tamam. Tamam. Yatağın altına. Sakın ses çıkarma.",
+  "radio.fts_lostsignal.line.K_HIDE_NO": "Kendi kulemde yatağın altına sürünmem.",
+  "radio.fts_lostsignal.line.K_HIDE_DAY": "Saklanmak mı? Neyden? Güpegündüz."
 }
