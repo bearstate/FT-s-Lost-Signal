@@ -61,13 +61,30 @@ public final class Rescue {
             com.jeladastudios.lostsignal.mission.Missions.heard(level, h);
             return;
         }
+        long at = level.getGameTime() + 30 + level.random.nextInt(30);
+        // Far off, now and then, what was said does not get through: they ask for it again, and do nothing yet.
+        if (h.distanceTo(keeper) > BREAKS_UP && level.random.nextFloat() < BREAKING) {
+            PENDING.add(new Pending(level, h, "H_SAY_AGAIN", at));
+            com.jeladastudios.lostsignal.mission.Missions.heard(level, h);
+            return;
+        }
+        // Answered for the first time: relief before anything else.
+        if (com.jeladastudios.lostsignal.mission.Missions.firstContact(level, h)) {
+            String reply = level.random.nextBoolean() ? "H_REPLY_01" : "H_REPLY_02";
+            PENDING.add(new Pending(level, h, reply, at));
+            at += com.jeladastudios.lostsignal.tower.Speech.length(reply);
+        }
         String line = answer(level, h, order, value);
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
             LostSignal.LOGGER.info("RESCUE {} {} -> {} ({})", order, value, line, h.state());
         }
-        PENDING.add(new Pending(level, h, line, level.getGameTime() + 30 + level.random.nextInt(30)));
+        PENDING.add(new Pending(level, h, line, at));
         com.jeladastudios.lostsignal.mission.Missions.heard(level, h);
     }
+
+    /** Beyond how far, in blocks, a keeper's words may break up on a hiker's handheld, and how often then. */
+    static final double BREAKS_UP = 200;
+    static final float BREAKING = 0.08f;
 
     /** What the hiker does with an order, and the line they answer with. */
     static String answer(ServerLevel level, Hiker h, Order order, int value) {
@@ -79,7 +96,7 @@ public final class Rescue {
         return switch (order) {
             case WHERE -> Sight.describe(level, h);
             case HOW -> h.hurt() >= 2 ? "H_HURT_02" : h.hurt() == 1 ? "H_HURT_01"
-                    : !level.isDay() && level.isRaining() && h.state() != Hiker.State.CAMPING ? "H_COLD"
+                    : !level.isDay() && level.isRaining() && h.state() != Hiker.State.CAMPING ? (level.random.nextBoolean() ? "H_COLD" : "H_FREEZING")
                     : h.fatigue() > 0.7f ? "H_TIRED" : !level.isDay() ? "H_DARK" : "H_HOW_OK";
             case COMPASS -> h.hasCompass() ? "H_COMPASS_YES" : "H_COMPASS_NO";
             case BEARING -> {
@@ -87,7 +104,7 @@ public final class Rescue {
                 // A bearing as a compass reads it: 0 north, 90 east.
                 double a = Math.toRadians(value);
                 h.follow(Hiker.Guide.NONE, ground(level, at.getX() + Math.sin(a) * LEG * 1.5, at.getZ() - Math.cos(a) * LEG * 1.5));
-                yield "H_OK_01";
+                yield ok(level);
             }
             case FOLLOW_WATER -> {
                 BlockPos next = nextLeg(level, h, Hiker.Guide.WATER);
@@ -114,7 +131,7 @@ public final class Rescue {
                 if (tower == null || level.isDay() || !com.jeladastudios.lostsignal.finder.Lamps.lit(level, tower)
                         || !Sight.seesTower(level, h, tower)) yield "H_NO_LIGHT";
                 h.follow(Hiker.Guide.TOWER, toward(level, at, tower, LEG));
-                yield "H_OK_01";
+                yield ok(level);
             }
             case STAY -> {
                 h.stay();
@@ -130,6 +147,11 @@ public final class Rescue {
                 yield "H_LAMP";
             }
         };
+    }
+
+    /** Their word that they are going: one way of saying it or another. */
+    static String ok(ServerLevel level) {
+        return level.random.nextBoolean() ? "H_OK_01" : "H_OK_02";
     }
 
     /**

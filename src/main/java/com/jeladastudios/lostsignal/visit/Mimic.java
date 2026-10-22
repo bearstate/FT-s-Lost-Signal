@@ -109,6 +109,16 @@ public final class Mimic {
                 }
                 CALLS.put(tower, new Call(tower, from, true, level.getGameTime() + 2400));
                 Speech.after(level, 2400, () -> CALLS.remove(tower));
+                // A hiker out there talking to this lookout heard it too, and knows it was not the keeper.
+                var night = Missions.at(level, tower);
+                if (night != null && night.stage == com.jeladastudios.lostsignal.mission.Mission.Stage.IN_CONTACT && night.hiker != null) {
+                    java.util.UUID hiker = night.hiker;
+                    Speech.after(level, frames.size() * 2 / 5 + 40, () -> {
+                        if (level.getEntity(hiker) instanceof com.jeladastudios.lostsignal.entity.Hiker h && h.isAlive()) {
+                            Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_FEAR_NOT_YOU", 0.15f);
+                        }
+                    });
+                }
                 if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MIMIC echo at {}", tower.toShortString());
                 return true;
             }

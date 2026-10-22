@@ -173,7 +173,7 @@ public class Stranger extends PathfinderMob {
         // "Afternoon" only of an afternoon.
         long day = level().getDayTime() % 24000;
         if (step == 0) line = day >= 6000 && day < 12000 && random.nextBoolean() ? "S_HELLO_01" : "S_HELLO_02";
-        else if (step == 1) line = pick("S_ASK_01", "S_ASK_02", "S_ASK_03", "S_KNOWS_01");
+        else if (step == 1) line = pick("S_ASK_01", "S_ASK_02", "S_ASK_03", "S_KNOWS_01", "S_KNOWS_02", "S_WATER");
         else if (step == 2 || step == 3 && random.nextBoolean()) line = saying();
         else line = null;
         if (line == null) {
@@ -182,18 +182,30 @@ public class Stranger extends PathfinderMob {
             return;
         }
         say(line);
+        // Asked for water: he waits for it, a little longer, for whoever has some.
+        if (line.equals("S_WATER")) askedWater = true;
         step++;
-        nextLine = 120 + random.nextInt(60);
+        nextLine = 120 + random.nextInt(60) + (askedWater ? 100 : 0);
     }
 
-    /** One of his sayings he has not said yet in this meeting. */
+    /** One of his sayings he has not said yet in this meeting: of those with his voice, once any are recorded. */
     String saying() {
+        java.util.List<String> all = new java.util.ArrayList<>(), heard = new java.util.ArrayList<>();
+        for (int i = 1; i <= 16; i++) {
+            String s = String.format("S_SAY_%02d", i);
+            all.add(s);
+            if (!com.jeladastudios.lostsignal.rescue.Lines.takes(s).isEmpty()) heard.add(s);
+        }
+        java.util.List<String> pool = heard.isEmpty() ? all : heard;
         for (int tries = 0; tries < 20; tries++) {
-            String s = String.format("S_SAY_%02d", 1 + random.nextInt(16));
+            String s = pool.get(random.nextInt(pool.size()));
             if (said.add(s)) return s;
         }
-        return "S_SAY_07";
+        return pool.get(0);
     }
+
+    /** Whether he has asked for water and not been given any. */
+    private boolean askedWater;
 
     String pick(String... lines) {
         return lines[random.nextInt(lines.length)];
@@ -255,6 +267,17 @@ public class Stranger extends PathfinderMob {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (level().isClientSide()) return InteractionResult.SUCCESS;
         if (masked() || mode == Mode.VISIT || leaving || !(player instanceof ServerPlayer p)) return InteractionResult.PASS;
+        // Water, as he asked: he takes the bottle, thanks them, and holds it. He never drinks.
+        net.minecraft.world.item.ItemStack held = p.getItemInHand(hand);
+        if (askedWater && held.is(net.minecraft.world.item.Items.POTION)
+                && net.minecraft.world.item.alchemy.PotionUtils.getPotion(held) == net.minecraft.world.item.alchemy.Potions.WATER) {
+            askedWater = false;
+            setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, held.copyWithCount(1));
+            if (!p.getAbilities().instabuild) held.shrink(1);
+            say("S_WATER_THANKS");
+            nextLine = 120 + random.nextInt(60);
+            return InteractionResult.CONSUME;
+        }
         // Spoken to, he talks: or, already talking, goes on to the next thing at once.
         if (mode != Mode.TALK) talk(p);
         else nextLine = 0;

@@ -311,7 +311,8 @@ public final class Missions extends SavedData {
                 if (day > 0 && day < 6000 && !mission.leaving) {
                     mission.leaving = true;
                     setDirty();
-                    Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_THANKS_01" : "H_ON_TRAIL", 0.15f);
+                    Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER,
+                            new String[]{"H_THANKS_01", "H_THANKS_02", "H_ON_TRAIL"}[level.random.nextInt(3)], 0.15f);
                     // From the lookout if they came in to it; from where they were found if met out on the mountain.
                     BlockPos from = "came_in".equals(mission.ending) ? mission.tower : h.blockPosition();
                     Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, from);
@@ -343,6 +344,11 @@ public final class Missions extends SavedData {
             setDirty();
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken {} (chance {})", mission.tower.toShortString(), mission.takeAt >= 0 ? "at " + mission.takeAt : "not", chance);
         }
+        // Late in the night, still out there and talking to the keeper: some nights their handheld runs low.
+        if (out && mission.answered && !mission.saidBattery && day >= 20500 && day < 22000) {
+            mission.saidBattery = true;
+            if (level.random.nextBoolean()) Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_BATTERY", 0.15f);
+        }
         // The clock set back since it was decided (a /time set): it comes a while from now, not days on.
         if (out && mission.takeAt > clock + 24_000) {
             mission.takeAt = clock + 1200;
@@ -368,12 +374,18 @@ public final class Missions extends SavedData {
             if (!mission.warned && clock >= mission.takeAt - 600) {
                 mission.warned = true;
                 setDirty();
-                // What they hear in the trees, and then their breath, the button still held.
-                String fear = level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING";
+                // What they hear in the trees, and then their breath, the button still held; and, someone on the
+                // other end, a plea. Told not to go with the man who came to them, it is their name they hear.
+                String fear = mission.offerAnswer == 1 ? "H_FEAR_VOICE"
+                        : new String[]{"H_FEAR_TREES", "H_FEAR_STANDING", "H_FEAR_FOLLOW", "H_FEAR_WHISTLE"}[level.random.nextInt(4)];
                 Vec3 eye = h.getEyePosition();
                 Lines.say(level, eye, Lines.Speaker.HIKER, fear, 0.15f);
-                com.jeladastudios.lostsignal.tower.Speech.after(level, com.jeladastudios.lostsignal.tower.Speech.length(fear) - 10,
-                        () -> Lines.say(level, eye, Lines.Speaker.HIKER, "X_BREATH_SCARED", 0.15f));
+                int at = com.jeladastudios.lostsignal.tower.Speech.length(fear) - 10;
+                com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> Lines.say(level, eye, Lines.Speaker.HIKER, "X_BREATH_SCARED", 0.15f));
+                if (mission.answered) {
+                    at += com.jeladastudios.lostsignal.tower.Speech.length("X_BREATH_SCARED") - 10;
+                    com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> Lines.say(level, eye, Lines.Speaker.HIKER, "H_FEAR_HURRY", 0.15f));
+                }
             }
             if (clock >= mission.takeAt) {
                 // As things stand now: answered since, or stopped walking in the dark, the odds are better, unless
@@ -534,6 +546,24 @@ public final class Missions extends SavedData {
     }
 
     /** The keeper answered: the hiker is in contact. */
+    /** Whether a hiker has not been answered yet: what the keeper says now is the first they hear. */
+    public static boolean firstContact(ServerLevel level, Hiker h) {
+        for (Mission mission : of(level).missions.values()) {
+            if (h.getUUID().equals(mission.hiker)) return mission.stage == Mission.Stage.CALLING;
+        }
+        return false;
+    }
+
+    /** A hiker making camp for the night: told to the keeper, if the keeper is listening. */
+    public static void camped(ServerLevel level, Hiker h) {
+        for (Mission mission : of(level).missions.values()) {
+            if (h.getUUID().equals(mission.hiker) && mission.stage == Mission.Stage.IN_CONTACT && !mission.saidCamp) {
+                mission.saidCamp = true;
+                Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_CAMP", 0.15f);
+            }
+        }
+    }
+
     public static void heard(ServerLevel level, Hiker h) {
         Missions m = of(level);
         for (Mission mission : m.missions.values()) {

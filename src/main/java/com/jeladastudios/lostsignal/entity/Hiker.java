@@ -201,7 +201,28 @@ public class Hiker extends PathfinderMob {
             state(State.RESTING);
         }
         com.jeladastudios.lostsignal.rescue.Lines.say(level, getEyePosition(), com.jeladastudios.lostsignal.rescue.Lines.Speaker.HIKER,
-                hurt >= 2 ? "H_HURT_02" : "H_HURT_01", 0.15f);
+                hurt >= 2 ? "H_HURT_02" : "H_HURT", 0.15f);
+    }
+
+    /** How many legs in a row found no way on toward where they were sent, and whether they have said why. */
+    private int stuck;
+    private boolean saidStuck;
+
+    /**
+     * No way on toward where they were sent, three tries running: they say what is in the way, once for this way: water
+     * running across it, or ground too steep to go down.
+     */
+    void blocked() {
+        if (saidStuck || !mission || !(level() instanceof net.minecraft.server.level.ServerLevel server)) return;
+        saidStuck = true;
+        boolean water = false;
+        for (int d = 3; d <= 16 && !water; d++) {
+            int x = (int) Math.floor(getX() + Math.cos(heading) * d), z = (int) Math.floor(getZ() + Math.sin(heading) * d);
+            BlockPos top = new BlockPos(x, level().getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1, z);
+            water = !level().getFluidState(top).isEmpty();
+        }
+        com.jeladastudios.lostsignal.rescue.Lines.say(server, getEyePosition(), com.jeladastudios.lostsignal.rescue.Lines.Speaker.HIKER,
+                water ? "H_WATER" : "H_STEEP", 0.15f);
     }
 
     /** When they set off home, in game ticks; -1 while they have not. */
@@ -250,6 +271,8 @@ public class Hiker extends PathfinderMob {
     public void follow(Guide what, BlockPos first) {
         guide = what;
         legs = 0;
+        stuck = 0;
+        saidStuck = false;
         goTo(first);
     }
 
@@ -344,13 +367,20 @@ public class Hiker extends PathfinderMob {
                             state(State.RESTING);
                         }
                     } else if (!moving && --pause <= 0) {
-                        if (!walkToward(goal)) pause = 40;
+                        if (walkToward(goal)) stuck = 0;
+                        else {
+                            pause = 40;
+                            if (++stuck == 3) blocked();
+                        }
                     }
                 }
                 case LOST -> {
                     if (night) {
                         getNavigation().stop();
                         makeCamp();
+                        if (level instanceof net.minecraft.server.level.ServerLevel server) {
+                            com.jeladastudios.lostsignal.mission.Missions.camped(server, Hiker.this);
+                        }
                     } else if (fatigue >= 1f) {
                         getNavigation().stop();
                         state(State.RESTING);

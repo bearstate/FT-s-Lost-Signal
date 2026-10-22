@@ -3,7 +3,8 @@
 The first release, a beta. Forge 1.20.1 (47.2 or newer), with FT's Geology 0.11.4, Feel the Nature 1.2.0, Simple Voice
 Chat 2.6 and the Simple Radio ham fork.
 
-The voices are still being recorded: until they are, what is said on the radio and face to face is shown as text.
+Every line is voiced: the District, the lost hikers (their breath and calls too), the keepers, the man on the radio who
+is not who he says, and the stranger, by day and through the door at night. Subtitles show the words as well.
 
 - **Lookouts with people in them**: empty, kept, abandoned in a hurry, or kept by the stranger; changing from dawn to
   dawn.
