@@ -20,6 +20,12 @@ public final class ClientSetup {
         event.registerSpriteSet(com.jeladastudios.lostsignal.signal.ModParticles.SMOKE.get(), FarSmoke.Provider::new);
     }
 
+    /** The view from under a bed, under everything else on the screen: the words of the radio and the chat over it. */
+    @SubscribeEvent
+    public static void overlays(net.minecraftforge.client.event.RegisterGuiOverlaysEvent event) {
+        event.registerBelowAll("under_bed", (gui, g, partialTick, w, h) -> ClientHiding.draw(g, w, h));
+    }
+
     @SubscribeEvent
     public static void layers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createLayer);

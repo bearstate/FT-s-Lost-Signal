@@ -56,6 +56,7 @@ public final class Hiding {
     public static void hide(ServerPlayer p, BlockPos bed, BlockState s) {
         Direction along = s.getValue(BedBlock.FACING);
         BlockPos spot = null;
+        Direction out = along;
         double floor = 0;
         // Beside either half of it.
         BlockPos other = bed.relative(BedBlock.getConnectedDirection(s));
@@ -67,6 +68,7 @@ public final class Hiding {
                 if ((shape.isEmpty() || shape.max(Direction.Axis.Y) <= 0.1875)
                         && p.level().getBlockState(q.above()).getCollisionShape(p.level(), q.above()).isEmpty()) {
                     spot = q;
+                    out = side;
                     floor = shape.isEmpty() ? 0 : shape.max(Direction.Axis.Y);
                     break;
                 }
@@ -78,10 +80,14 @@ public final class Hiding {
             p.displayClientMessage(Component.translatable("hide.fts_lostsignal.no_room"), true);
             return;
         }
-        Vec3 at = Vec3.atBottomCenterOf(spot).add(0, floor, 0);
+        // Tucked against the bed's side, looking out from under it into the room.
+        Vec3 at = Vec3.atBottomCenterOf(spot).add(0, floor, 0).add(out.getOpposite().getStepX() * 0.18, 0, out.getOpposite().getStepZ() * 0.18);
         p.setForcedPose(Pose.SWIMMING);
         p.teleportTo(at.x, at.y, at.z);
-        p.setYRot(along.getOpposite().toYRot());
+        p.setYRot(out.toYRot());
+        p.setYHeadRot(out.toYRot());
+        p.setXRot(-5f);
+        p.connection.teleport(at.x, at.y, at.z, out.toYRot(), -5f);
         HIDDEN.put(p.getUUID(), new Hidden(bed, at, p.level().getGameTime()));
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("HIDE in: {} by {}", p.getScoreboardName(), bed.toShortString());
         com.jeladastudios.lostsignal.net.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new com.jeladastudios.lostsignal.net.Net.Lie(true));

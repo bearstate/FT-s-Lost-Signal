@@ -25,7 +25,8 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   over the stairwell in its floor, and lanterns under it.
 - **Forest fires** seen far off, read off the fire finder, reported and crossed; nothing burns.
 - **Supply crates** at the foot of the trail.
-- **The stranger**: by day a man with things to say; by night the mask, the door, the window. Hiding under the bed.
+- **The stranger**: by day a man with things to say; by night the mask, the door, the window. Hiding under the bed,
+  looking out from under it at the room.
 - **The radio used against you**: calls from no one, and a player's own voice played back.
 - **What is left** where someone was taken, and their journal.
 - **The flowing sleep**.
