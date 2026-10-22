@@ -12,7 +12,10 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **The rescue frequency**: the District's day, calls to and from the lookouts round you, the rescue panel (`J`).
 - **Lost hikers**: guided in by radio, by the fire finder's bearings, by flares, smoke and the signal lamp. Found,
   they are talked to face to face: told to follow, to wait, or the way to the lookout; they say so when they cannot
-  follow where you went.
+  follow where you went. Come in, they go up the stair and in at the cab's door for the night, and down again in the
+  morning. A lamp waved at night is a bright swinging light seen from far off, the lantern in their hand; by day
+  they say you would never see it. The night's monsters hunt them as they hunt villagers and they run from them; one
+  killed is lost, the scream heard on the mountain, what is left of them where it happened (hikers.monsters).
 - **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
 - **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch
   over the stairwell in its floor, and lanterns under it.

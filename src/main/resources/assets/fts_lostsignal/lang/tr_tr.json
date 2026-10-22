@@ -65,6 +65,7 @@
   "radio.fts_lostsignal.line.H_FLARE_NONE": "Fişeğim kalmadı. O sonuncusuydu.",
   "radio.fts_lostsignal.line.H_FIRE": "Küçük bir ateş yaktım. Dumanı görebiliyor musun?",
   "radio.fts_lostsignal.line.H_LAMP": "Fenerim açık. Sallıyorum.",
+  "radio.fts_lostsignal.line.H_LAMP_DAY": "Güpegündüz mü? Oradan feneri asla göremezsin. Duman yapabilirim.",
   "radio.fts_lostsignal.line.H_CALL_01": "Alo? Bu kanalda kimse var mı? Tamam.",
   "radio.fts_lostsignal.line.H_CALL_02": "Merhaba, şey... Sanırım kayboldum. Bu frekansı bir ağaçtaki tabelada gördüm. Kimse var mı?",
   "radio.fts_lostsignal.line.H_CALL_03": "Alo?! Kimse yok mu? Lütfen, yardıma ihtiyacım var. Tamam.",

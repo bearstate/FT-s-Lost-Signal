@@ -319,6 +319,11 @@ public final class Towers extends SavedData {
         }
     }
 
+    /** The spots on a cab's floor with nothing on them, to stand on. */
+    public static java.util.List<BlockPos> room(ServerLevel level, BlockPos floor) {
+        return Dress.free(level, floor);
+    }
+
     /** Whether a keeper has company tonight: someone they let stay. */
     public static boolean company(ServerLevel level, BlockPos foot) {
         Tower t = of(level).towers.get(Tower.key(foot.getX(), foot.getZ()));

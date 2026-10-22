@@ -65,6 +65,7 @@
   "radio.fts_lostsignal.line.H_FLARE_NONE": "I'm out of flares. That was my last one.",
   "radio.fts_lostsignal.line.H_FIRE": "I made a little fire. Can you see the smoke?",
   "radio.fts_lostsignal.line.H_LAMP": "My lamp's on. I'm waving it.",
+  "radio.fts_lostsignal.line.H_LAMP_DAY": "In broad daylight? You'd never see a lamp from up there. I could make smoke.",
   "radio.fts_lostsignal.line.H_CALL_01": "Hello? Is anyone on this channel? Over.",
   "radio.fts_lostsignal.line.H_CALL_02": "Hi, um... I think I'm lost. I saw this frequency on a sign on a tree. Is anyone there?",
   "radio.fts_lostsignal.line.H_CALL_03": "Hello?! Anyone? Please, I need help. Over.",

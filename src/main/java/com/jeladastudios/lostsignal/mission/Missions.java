@@ -466,17 +466,47 @@ public final class Missions extends SavedData {
             com.jeladastudios.lostsignal.radio.Voice.sayAt(level, eye,
                     net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"), "X_SCREAM_FAR", 400, 1f);
         });
+        remains(level, mission, h);
+        h.discard();
+    }
+
+    /** What is left of a hiker where they were, and the night become one of looking for them. */
+    void remains(ServerLevel level, Mission mission, Hiker h) {
         String name = com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits());
         int journal = mission.answered ? com.jeladastudios.lostsignal.remains.Journal.ANSWERED : com.jeladastudios.lostsignal.remains.Journal.UNANSWERED;
         BlockPos fire = h.leaveCamp();
         var made = com.jeladastudios.lostsignal.remains.Scene.make(level, h.blockPosition(), fire, h.kit(), name, mission.tower, journal,
                 com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.BODIES) && level.random.nextFloat() < WITH_BODY, level.random);
-        h.discard();
         mission.stage = Mission.Stage.TAKEN;
         mission.takenAt = level.getDayTime();
         mission.scene = made.camp();
         setDirty();
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken at {}", mission.tower.toShortString(), made.camp().toShortString());
+    }
+
+    /** A hiker set on by something in the night: they cry out, aloud to anyone near, else on the radio. */
+    public static void attacked(ServerLevel level, Hiker h) {
+        for (Mission mission : of(level).missions.values()) {
+            if (!h.getUUID().equals(mission.hiker) || level.getGameTime() < mission.nextCry) continue;
+            mission.nextCry = level.getGameTime() + 600;
+            say(level, h, "H_FEAR_RUN");
+        }
+    }
+
+    /**
+     * A hiker killed out there, by the night's monsters or a fall: the last on the radio is a scream, heard on the
+     * mountain too; what is left of them stays where it happened, to be looked for as a taken one's is.
+     */
+    public static void killed(ServerLevel level, Hiker h) {
+        Missions m = of(level);
+        for (Mission mission : m.missions.values()) {
+            if (!h.getUUID().equals(mission.hiker) || mission.stage == Mission.Stage.TAKEN || mission.stage == Mission.Stage.OVER) continue;
+            Vec3 eye = h.getEyePosition();
+            Lines.say(level, eye, Lines.Speaker.HIKER, "X_SCREAM_CUT", 0.15f);
+            com.jeladastudios.lostsignal.radio.Voice.sayAt(level, eye,
+                    net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"), "X_SCREAM_FAR", 400, 1f);
+            m.remains(level, mission, h);
+        }
     }
 
     /** Where to look: told to the keepers at the lookout as the District's note, a compass point and a distance. */

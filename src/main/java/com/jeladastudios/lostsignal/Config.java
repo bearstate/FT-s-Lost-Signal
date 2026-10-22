@@ -18,7 +18,7 @@ public final class Config {
     public static final BooleanValue STRANGER, TALKS, FAKE_CALLS, ECHO, TAKES_KEEPERS, KEEPS_LOOKOUTS;
     public static final DoubleValue SIGHTINGS, VISITS, TAKES_HIKERS;
     public static final BooleanValue STAINS, BODIES;
-    public static final BooleanValue HIKERS, FALLS;
+    public static final BooleanValue HIKERS, FALLS, HUNTED;
     public static final DoubleValue HIKER_NIGHTS;
     public static final BooleanValue DISTRICT, SUPPLIES, FIRES;
     public static final DoubleValue FIRE_CHANCE;
@@ -65,6 +65,8 @@ public final class Config {
         HIKER_NIGHTS = b.comment("How often an evening at a lookout brings one (1 = as designed, 0 = never).")
                 .defineInRange("frequency", 1.0, 0.0, 2.5);
         FALLS = b.comment("Walking over steep ground, they may fall and be hurt.").define("falls", true);
+        HUNTED = b.comment("The night's monsters hunt them as they hunt villagers: zombies and skeletons, spiders in the dark. They",
+                "run from them; one killed is lost, and what is left of them stays where it happened.").define("monsters", true);
         b.pop();
 
         b.comment("The lookouts' day.").push("lookouts");

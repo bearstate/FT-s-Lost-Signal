@@ -209,18 +209,24 @@ public final class Signals {
         };
     }
 
-    /** A lamp waved by someone, for some seconds: a small warm light swinging at their shoulder. */
+    /**
+     * A lamp waved by someone, for some seconds: a warm light swung side to side over their head, about once a second,
+     * highest in the middle of the swing. Drawn three points a tick along the arc, so from far off it is a short bright
+     * streak going to and fro rather than a single point.
+     */
     public static void lamp(ServerLevel level, Entity holder, int seconds) {
         ACTIVE.add(new Signal(level) {
             @Override
             boolean tick() {
                 age++;
                 if (!holder.isAlive() || holder.level() != level) return false;
-                double swing = Math.sin(age * 0.35) * 0.6;
-                double yaw = Math.toRadians(holder.getYRot() + 90);
-                Vec3 at = holder.position().add(Math.cos(yaw) * 0.4 + Math.sin(yaw) * swing, 1.6 + Math.abs(swing) * 0.4,
-                        Math.sin(yaw) * 0.4 - Math.cos(yaw) * swing);
-                send(level, ModParticles.LAMP.get(), at, 1, 0, 0);
+                double yaw = Math.toRadians(holder.getYRot());
+                for (int k = 0; k < 3; k++) {
+                    double phase = (age + k / 3.0) * 0.3, side = Math.sin(phase) * 0.9;
+                    // Across their front: to their left and right as they face.
+                    Vec3 at = holder.position().add(Math.cos(yaw) * side, 2.0 + (1 - Math.abs(Math.sin(phase))) * 0.35, Math.sin(yaw) * side);
+                    send(level, ModParticles.LAMP.get(), at, 1, 0, 0);
+                }
                 return age < seconds * 20;
             }
 

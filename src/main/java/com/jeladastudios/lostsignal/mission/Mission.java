@@ -21,8 +21,8 @@ public final class Mission {
     public long started;
     /** When the hiker last called out unanswered. */
     public long lastCall;
-    /** When they may next call out aloud to someone near; not kept. */
-    public transient long nextShout;
+    /** When they may next call out aloud to someone near, and cry out at something on them; not kept. */
+    public transient long nextShout, nextCry;
     /** Whether they have told the keeper they are camping, and that their battery is low, this night; not kept. */
     public transient boolean saidCamp, saidBattery;
     /** How the night ended: "found", "came_in", "lost". */

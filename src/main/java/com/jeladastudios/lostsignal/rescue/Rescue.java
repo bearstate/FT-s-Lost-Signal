@@ -143,6 +143,8 @@ public final class Rescue {
                 yield "H_FIRE";
             }
             case LAMP -> {
+                // A lamp is not seen by day from a lookout miles off: they say so, and offer smoke.
+                if (level.isDay() && !level.isThundering()) yield "H_LAMP_DAY";
                 h.waveLamp();
                 yield "H_LAMP";
             }

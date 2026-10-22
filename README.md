@@ -62,7 +62,7 @@ In each world's `serverconfig/fts_lostsignal-server.toml` (change it with the wo
 | | `fakeCalls`, `echoVoices` | Calls from someone who is not who they say; a player's own voice played back. Off, nothing said is kept |
 | | `takesHikers`, `takesKeepers`, `keepsLookouts` | Whom he may take, and whether some lookouts are his |
 | `remains` | `stains`, `bodies` | Dark stains and drag marks; a body at some scenes (else the journal is found in the tent) |
-| `hikers` | `enabled`, `frequency`, `falls` | Lost hikers, how often, and whether they fall and are hurt |
+| `hikers` | `enabled`, `frequency`, `falls`, `monsters` | Lost hikers, how often, whether they fall and are hurt, and whether the night's monsters hunt them |
 | `lookouts` | `districtCalls`, `supplies`, `fires`, `fireFrequency` | The District's day, supply crates, fires |
 | `sleep` | `flowing` | The flowing night; turn it off if another mod handles sleep |
 

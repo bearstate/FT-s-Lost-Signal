@@ -2,6 +2,7 @@ package com.jeladastudios.lostsignal.entity;
 
 import com.jeladastudios.lostsignal.LostSignal;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -71,6 +72,8 @@ public class Hiker extends PathfinderMob {
         super(type, level);
         setPersistenceRequired();
         setMaxUpStep(1.0f);
+        // Through doors, as anyone goes: a lookout's cab is entered by its door.
+        if (getNavigation() instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation ground) ground.setCanOpenDoors(true);
     }
 
     public static AttributeSupplier.Builder attributes() {
@@ -90,9 +93,35 @@ public class Hiker extends PathfinderMob {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
-        goalSelector.addGoal(1, new Walk());
-        goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 16f));
-        goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+        // From the night's monsters they run, as anyone would; not on a broken ankle.
+        goalSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.AvoidEntityGoal<>(this, net.minecraft.world.entity.monster.Monster.class,
+                12f, 0.9, 1.15) {
+            @Override
+            public boolean canUse() {
+                return hurt < 2 && super.canUse();
+            }
+        });
+        goalSelector.addGoal(2, new Walk());
+        goalSelector.addGoal(3, new net.minecraft.world.entity.ai.goal.OpenDoorGoal(this, true));
+        goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 16f));
+        goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+    }
+
+    /** Hurt by something: a cry, and the night told of it; and if it was the last of them, the night over. */
+    @Override
+    public boolean hurt(net.minecraft.world.damagesource.DamageSource source, float amount) {
+        boolean hurtNow = super.hurt(source, amount);
+        if (hurtNow && isAlive() && level() instanceof net.minecraft.server.level.ServerLevel server
+                && source.getEntity() instanceof net.minecraft.world.entity.monster.Monster) {
+            com.jeladastudios.lostsignal.mission.Missions.attacked(server, this);
+        }
+        return hurtNow;
+    }
+
+    @Override
+    public void die(net.minecraft.world.damagesource.DamageSource source) {
+        super.die(source);
+        if (level() instanceof net.minecraft.server.level.ServerLevel server) com.jeladastudios.lostsignal.mission.Missions.killed(server, this);
     }
 
     public int kit() {
@@ -306,6 +335,67 @@ public class Hiker extends PathfinderMob {
         return false;
     }
 
+    /**
+     * At the lookout's foot: up its stair, along the walkway and in at the door, to a spot on the cab's floor. Only a
+     * lookout whose stair comes out on the walkway: one with a hatch over an old stairwell they cannot open, and they
+     * wait at the foot.
+     */
+    void indoors() {
+        if (!(level() instanceof net.minecraft.server.level.ServerLevel server) || goal == null) return;
+        BlockPos foot = com.jeladastudios.lostsignal.mission.Missions.standing(server, goal);
+        if (foot == null || getY() > foot.getY() + 15) return;
+        var door = com.jeladastudios.lostsignal.visit.Visit.doorOf(server, foot);
+        if (door == null) return;
+        Direction out = door.out();
+        if (!server.getBlockState(local(foot, out, 0, 20, -4)).isAir()
+                || !(server.getBlockState(local(foot, out, 1, 20, -4)).getBlock() instanceof net.minecraft.world.level.block.StairBlock)) return;
+        var room = com.jeladastudios.lostsignal.tower.Towers.room(server, foot.above(20));
+        if (room.isEmpty()) return;
+        lookout = foot;
+        way.clear();
+        for (int[] at : STAIR_UP) way.add(local(foot, out, at[0], at[1], at[2]));
+        way.add(room.get(getRandom().nextInt(room.size())));
+    }
+
+    /**
+     * Where to stand on the way up a lookout, as Feel the Nature lays it out (x out through the cab's door, z to its
+     * right): on two landings of the switchback, at the head of the stair on the walkway, round the corner, before the
+     * door. A walker's path up twenty blocks of switchback is too long to be found in one; in legs it is not.
+     */
+    static final int[][] STAIR_UP = {{2, 9, -1}, {-2, 18, -1}, {2, 21, -4}, {4, 21, -4}, {4, 21, 0}};
+
+    static BlockPos local(BlockPos foot, Direction out, int x, int y, int z) {
+        return foot.relative(out, x).above(y).relative(out.getClockWise(), z);
+    }
+
+    /** The places they are walking through, in order, on a lookout's stair; not kept. */
+    private final java.util.ArrayDeque<BlockPos> way = new java.util.ArrayDeque<>();
+    /** The lookout whose stair they went up, by its foot; not kept. */
+    private BlockPos lookout;
+    private int wayTries;
+
+    /** A leg of the way: to the next place on it, and on from there; given up if it cannot be walked. */
+    void onTheWay(boolean moving) {
+        BlockPos next = way.peek();
+        if (next == null) return;
+        if (distanceToSqr(Vec3.atBottomCenterOf(next)) < 2.5) {
+            way.poll();
+            wayTries = 0;
+            return;
+        }
+        if (moving) return;
+        var path = getNavigation().createPath(next, 0);
+        if (path != null && path.canReach()) {
+            getNavigation().moveTo(path, pace());
+            wayTries = 0;
+        } else if (++wayTries > 3) {
+            // Something in the way: given up, and tried again from wherever they are, a while later.
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("HIKER {} gave up the way at {} for {}", getId(), blockPosition().toShortString(), next.toShortString());
+            way.clear();
+            if (leaving < 0) lookout = null;
+        }
+    }
+
     /** When they set off home, in game ticks; -1 while they have not. */
     private long leaving = -1;
 
@@ -314,6 +404,15 @@ public class Hiker extends PathfinderMob {
         goal = away;
         leaving = level().getGameTime();
         state(State.RESCUED);
+        // Out of the cab first, the way they came up, if they are up in it.
+        way.clear();
+        if (lookout != null && getY() > lookout.getY() + 15 && level() instanceof net.minecraft.server.level.ServerLevel server) {
+            var door = com.jeladastudios.lostsignal.visit.Visit.doorOf(server, lookout);
+            if (door != null) {
+                for (int i = STAIR_UP.length - 1; i >= 0; i--) way.add(local(lookout, door.out(), STAIR_UP[i][0], STAIR_UP[i][1], STAIR_UP[i][2]));
+                way.add(local(lookout, door.out(), -2, 0, -1));
+            }
+        }
     }
 
     /** When their breath is next heard by someone walking with them, in ticks; not kept. */
@@ -333,6 +432,9 @@ public class Hiker extends PathfinderMob {
         if (level() instanceof net.minecraft.server.level.ServerLevel s) {
             mayFall(s);
             breathe(s);
+            lamp();
+            // Scrapes and bites mend, slowly, while nothing is at them.
+            if (tickCount % 200 == 0 && getHealth() < getMaxHealth() && tickCount - getLastHurtByMobTimestamp() > 200) heal(1f);
             // Out on a night that is over (loaded back after it ended) they are not out there any more.
             if (mission && tickCount > 400 && tickCount % 200 == 0 && !com.jeladastudios.lostsignal.mission.Missions.onNight(s, getUUID())) {
                 discard();
@@ -496,9 +598,15 @@ public class Hiker extends PathfinderMob {
                     }
                 }
                 case RESCUED -> {
-                    // To the lookout's foot, and wait there; in the morning, away down the mountain.
-                    if (goal != null && flatDistanceSqr(goal) > 36 && !moving && --pause <= 0) {
+                    // To the lookout, up its stair and in at the door, for the night; in the morning, away down the
+                    // mountain.
+                    if (!way.isEmpty()) {
+                        if (tickCount % 5 == 0) onTheWay(moving);
+                    } else if (goal != null && flatDistanceSqr(goal) > 36 && !moving && --pause <= 0) {
                         if (!walkToward(goal)) pause = 40;
+                    } else if (leaving < 0 && goal != null && lookout == null && !moving && --pause <= 0) {
+                        pause = 100;
+                        indoors();
                     }
                     if (leaving >= 0 && level instanceof net.minecraft.server.level.ServerLevel server && tickCount % 40 == 0) {
                         // Gone down out of sight: there, or long enough on the way, with no one near to see them go.
@@ -600,9 +708,27 @@ public class Hiker extends PathfinderMob {
         com.jeladastudios.lostsignal.signal.Signals.smoke(server, Vec3.atCenterOf(fire), 180);
     }
 
-    /** Their lamp held up and waved, for half a minute. */
+    /** Their lamp held up and waved, for half a minute: a lantern in their hand, the arm swinging it over their head. */
     public void waveLamp() {
-        if (level() instanceof net.minecraft.server.level.ServerLevel server) com.jeladastudios.lostsignal.signal.Signals.lamp(server, this, 30);
+        if (!(level() instanceof net.minecraft.server.level.ServerLevel server)) return;
+        com.jeladastudios.lostsignal.signal.Signals.lamp(server, this, LAMP_SECONDS);
+        lampUntil = tickCount + LAMP_SECONDS * 20;
+        setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.LANTERN));
+    }
+
+    static final int LAMP_SECONDS = 30;
+    /** Until when they wave it, in their ticks; not kept. */
+    private int lampUntil = -1;
+
+    /** The lamp in their hand swung, and put away when they are done. */
+    void lamp() {
+        if (lampUntil < 0) return;
+        if (tickCount < lampUntil) {
+            if (tickCount % 10 == 0) swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            return;
+        }
+        lampUntil = -1;
+        if (getMainHandItem().is(net.minecraft.world.item.Items.LANTERN)) setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
     }
 
     public int flares() {

@@ -16,6 +16,11 @@ import net.minecraft.core.particles.SimpleParticleType;
 public class SignalParticle extends TextureSheetParticle {
 
     SignalParticle(ClientLevel level, double x, double y, double z, double dx, double dy, double dz, SpriteSet sprites, float size, int life) {
+        this(level, x, y, z, dx, dy, dz, sprites, size, life, 36);
+    }
+
+    /** With how far off it starts to be drawn larger than it is, so as not to shrink below a point: {@code grows} blocks. */
+    SignalParticle(ClientLevel level, double x, double y, double z, double dx, double dy, double dz, SpriteSet sprites, float size, int life, double grows) {
         super(level, x, y, z, dx, dy, dz);
         pickSprite(sprites);
         xd = dx;
@@ -26,7 +31,7 @@ public class SignalParticle extends TextureSheetParticle {
         lifetime = life + random.nextInt(4);
         var camera = net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         double distance = Math.sqrt(camera.distanceToSqr(x, y, z));
-        quadSize = size * (float) Math.max(1.0, distance / 36.0);
+        quadSize = size * (float) Math.max(1.0, distance / grows);
     }
 
     @Override
@@ -89,7 +94,8 @@ public class SignalParticle extends TextureSheetParticle {
     public record Lamp(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double dx, double dy, double dz) {
-            return new SignalParticle(level, x, y, z, dx, dy, dz, sprites, 0.2f, 6);
+            // A lamp is a smaller light than a flare, but waved to be seen: kept a few pixels across however far off.
+            return new SignalParticle(level, x, y, z, dx, dy, dz, sprites, 0.25f, 9, 22);
         }
     }
 }
