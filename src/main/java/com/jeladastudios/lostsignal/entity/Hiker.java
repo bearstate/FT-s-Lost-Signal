@@ -36,7 +36,7 @@ import java.util.EnumSet;
  */
 public class Hiker extends PathfinderMob {
 
-    public enum State { LOST, GOING, RESTING, CAMPING, RESCUED }
+    public enum State { LOST, GOING, RESTING, CAMPING, RESCUED, FOLLOWING }
 
     private static final EntityDataAccessor<Integer> KIT = SynchedEntityData.defineId(Hiker.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(Hiker.class, EntityDataSerializers.INT);
@@ -46,7 +46,7 @@ public class Hiker extends PathfinderMob {
     /** How tired walking makes them, a tick, and how rested a tick of rest. */
     static final float TIRES = 1f / (20 * 240), RESTS = 1f / (20 * 40);
     /** Their walking pace, as a share of the attribute's: an unhurried walk over rough ground. */
-    static final double PACE = 0.55;
+    static final double PACE = 0.85;
 
     private float fatigue;
     private double heading = Double.NaN;
@@ -159,7 +159,74 @@ public class Hiker extends PathfinderMob {
         staying = false;
         guide = Guide.NONE;
         goal = lookout;
+        leader = null;
         state(State.RESCUED);
+    }
+
+    // === Met on the mountain ====================================================
+
+    /** Whom they walk behind, met on the mountain; null while they follow no one. */
+    private java.util.UUID leader;
+
+    /** Met by someone who knows the way: they go behind them, close, as far as the lookout. */
+    public void follow(net.minecraft.world.entity.player.Player p) {
+        staying = false;
+        guide = Guide.NONE;
+        goal = null;
+        leader = p.getUUID();
+        getNavigation().stop();
+        state(State.FOLLOWING);
+    }
+
+    /** Something said aloud, to whoever stands near: heard from them, not over the radio. */
+    public void sayAloud(String line) {
+        // Face to face they are someone, by name, as the talk with them is headed.
+        com.jeladastudios.lostsignal.radio.Voice.say(this, net.minecraft.network.chat.Component.literal(
+                com.jeladastudios.lostsignal.remains.Journal.name(getUUID().getLeastSignificantBits())), line, 24, 1f);
+    }
+
+    /** Spoken to face to face: the talk opens; and if they were lost, they are found. */
+    @Override
+    public net.minecraft.world.InteractionResult mobInteract(net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+        if (level().isClientSide()) return net.minecraft.world.InteractionResult.SUCCESS;
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer p) || leaving >= 0) return net.minecraft.world.InteractionResult.PASS;
+        com.jeladastudios.lostsignal.mission.Missions.met((net.minecraft.server.level.ServerLevel) level(), this, p);
+        com.jeladastudios.lostsignal.net.Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p),
+                new com.jeladastudios.lostsignal.net.Net.Meet(getId(), com.jeladastudios.lostsignal.remains.Journal.name(getUUID().getLeastSignificantBits()),
+                        tower != null));
+        return net.minecraft.world.InteractionResult.CONSUME;
+    }
+
+    /** What one may ask of them face to face, as the talk lists it. */
+    public enum Bid { FOLLOW, WAIT, HOW, LOOKOUT }
+
+    /** Asked face to face: they do it, and say so aloud. */
+    public void bid(net.minecraft.server.level.ServerPlayer p, Bid what) {
+        if (!(level() instanceof net.minecraft.server.level.ServerLevel server)) return;
+        String ok = getRandom().nextBoolean() ? "H_OK_01" : "H_OK_02";
+        switch (what) {
+            case FOLLOW -> {
+                if (hurt >= 2) {
+                    sayAloud("H_HURT_02");
+                    return;
+                }
+                follow(p);
+                sayAloud(ok);
+            }
+            case WAIT -> {
+                stay();
+                sayAloud("H_STAY");
+            }
+            case HOW -> sayAloud(com.jeladastudios.lostsignal.rescue.Rescue.answer(server, this, com.jeladastudios.lostsignal.rescue.Order.HOW, 0));
+            case LOOKOUT -> {
+                if (tower == null || hurt >= 2) {
+                    sayAloud(hurt >= 2 ? "H_HURT_02" : "H_WHICH_WAY");
+                    return;
+                }
+                rescued(tower);
+                sayAloud(ok);
+            }
+        }
     }
 
     // === Hurt ===================================================================
@@ -185,7 +252,7 @@ public class Hiker extends PathfinderMob {
 
     /** Their pace as they are: half, with a twisted ankle. */
     double pace() {
-        return hurt == 1 ? PACE * 0.5 : PACE;
+        return (hurt == 1 ? PACE * 0.45 : PACE) * (fatigue > 0.7f ? 0.75 : 1);
     }
 
     /** Walking over steep ground, now and then a fall: said on the radio to whoever is listening. */
@@ -223,6 +290,20 @@ public class Hiker extends PathfinderMob {
         }
         com.jeladastudios.lostsignal.rescue.Lines.say(server, getEyePosition(), com.jeladastudios.lostsignal.rescue.Lines.Speaker.HIKER,
                 water ? "H_WATER" : "H_STEEP", 0.15f);
+    }
+
+    /** How long they have stood not finding a way after whoever they follow, and when they may next say so; not kept. */
+    private int lagging, nextCannot;
+
+    /** Whether there is water on the ground between them and a place. */
+    boolean waterToward(net.minecraft.world.phys.Vec3 to) {
+        for (int i = 1; i <= 8; i++) {
+            double f = i / 9.0;
+            int x = (int) Math.floor(Mth.lerp(f, getX(), to.x)), z = (int) Math.floor(Mth.lerp(f, getZ(), to.z));
+            BlockPos top = new BlockPos(x, level().getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1, z);
+            if (!level().getFluidState(top).isEmpty()) return true;
+        }
+        return false;
     }
 
     /** When they set off home, in game ticks; -1 while they have not. */
@@ -388,6 +469,30 @@ public class Hiker extends PathfinderMob {
                         // A lost walker stops, looks round, and goes on.
                         pause = 40 + getRandom().nextInt(160);
                         wander();
+                    }
+                }
+                case FOLLOWING -> {
+                    var p = leader == null ? null : level.getPlayerByUUID(leader);
+                    if (p == null || p.isSpectator() || distanceTo(p) > 64) {
+                        // Left behind: they wait where they are, as they were told to before.
+                        leader = null;
+                        stay();
+                    } else if (tower != null && flatDistanceSqr(tower) < 12 * 12) {
+                        // The lookout reached: they wait at its foot for the morning.
+                        rescued(tower);
+                        sayAloud("H_THANKS_02");
+                    } else {
+                        double d = distanceTo(p);
+                        if (d > 3.5) {
+                            if (tickCount % (moving ? 10 : 5) == 0) getNavigation().moveTo(p, d > 12 ? pace() * 1.3 : pace() * 1.05);
+                            // No way after them on foot: over water, down a drop, up rock. Said aloud, now and then.
+                            if (d > 8 && !moving) {
+                                if (++lagging >= 100 && tickCount >= nextCannot) {
+                                    nextCannot = tickCount + 900;
+                                    sayAloud(waterToward(p.position()) ? "H_WATER" : p.getY() < getY() - 2 ? "H_STEEP" : "H_WHICH_WAY");
+                                }
+                            } else lagging = 0;
+                        } else if (moving) getNavigation().stop();
                     }
                 }
                 case RESCUED -> {
@@ -559,6 +664,7 @@ public class Hiker extends PathfinderMob {
         tag.putBoolean("Staying", staying);
         tag.putBoolean("Mission", mission);
         tag.putLong("Leaving", leaving);
+        if (leader != null) tag.putUUID("Leader", leader);
         tag.putInt("Hurt", hurt);
         if (!Double.isNaN(heading)) tag.putDouble("Heading", heading);
         if (goal != null) tag.put("Goal", NbtUtils.writeBlockPos(goal));
@@ -588,6 +694,7 @@ public class Hiker extends PathfinderMob {
         staying = tag.getBoolean("Staying");
         mission = tag.getBoolean("Mission");
         leaving = tag.contains("Leaving") ? tag.getLong("Leaving") : -1;
+        leader = tag.hasUUID("Leader") ? tag.getUUID("Leader") : null;
         hurt = tag.getInt("Hurt");
         heading = tag.contains("Heading") ? tag.getDouble("Heading") : Double.NaN;
         goal = tag.contains("Goal") ? NbtUtils.readBlockPos(tag.getCompound("Goal")) : null;

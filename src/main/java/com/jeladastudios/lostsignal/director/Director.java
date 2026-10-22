@@ -76,6 +76,11 @@ public final class Director {
     }
 
     /** The stranger already out for a player, if any. */
+    /** Whether he is about anywhere in the world now: there is only one of him. */
+    public static boolean anyAbout(ServerLevel level) {
+        return !level.getEntities(ModEntities.STRANGER.get(), e -> e.isAlive()).isEmpty();
+    }
+
     static Stranger strangerOf(ServerLevel level, ServerPlayer player) {
         for (Stranger s : level.getEntities(ModEntities.STRANGER.get(), e -> player.getUUID().equals(e.watching()))) return s;
         return null;
@@ -86,6 +91,7 @@ public final class Director {
      * Null where no such spot is found.
      */
     public static Stranger comeUp(ServerLevel level, ServerPlayer player) {
+        if (anyAbout(level)) return null;
         RandomSource random = level.random;
         Vec3 eye = player.getEyePosition();
         double behind = Math.toRadians(player.getYRot() + 270.0);
@@ -124,6 +130,7 @@ public final class Director {
 
     /** The same, or (for the test command) anywhere it can be seen, wood or no wood. */
     public static Stranger put(ServerLevel level, ServerPlayer player, boolean anywhere) {
+        if (anyAbout(level)) return null;
         RandomSource random = level.random;
         Vec3 eye = player.getEyePosition();
         double facing = Math.toRadians(player.getYRot() + 90.0);

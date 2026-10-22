@@ -91,6 +91,9 @@ public class Keeper extends PathfinderMob {
             discard();
             return;
         }
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON && tickCount % 20 == 0 && getY() < floor.getY()) {
+            com.jeladastudios.lostsignal.LostSignal.LOGGER.info("KEEPER below the cab at {} {} {}", (int) getX(), (int) getY(), (int) getZ());
+        }
         // About the cab: a few steps to somewhere else in it now and then, and a while there.
         if (!getNavigation().isInProgress() && --idle <= 0) {
             idle = 100 + random.nextInt(200);

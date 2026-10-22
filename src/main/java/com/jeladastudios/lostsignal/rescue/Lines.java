@@ -14,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
  * lines are named as in the voice script (SENARYO.md): {@code H_SEE_CREEK}, {@code D_NIGHT_RULES} and so on; a line
  * recorded in several takes is {@code H_OK_01_a}, {@code _b}, ..., one picked at random.
  */
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = com.jeladastudios.lostsignal.LostSignal.MODID)
 public final class Lines {
 
     private Lines() {}
@@ -35,6 +36,35 @@ public final class Lines {
      * Their voice lifted or lowered by a pitch; heard within some blocks of where it is said from.
      */
     public static void sayAs(ServerLevel level, Vec3 from, Component who, String line, float power, float pitch, double reach) {
+        // One thing at a time from anyone: said while they are still talking, it waits until they have finished.
+        long start = turn(level, "radio:" + who.getString(), line);
+        if (start > level.getGameTime()) {
+            com.jeladastudios.lostsignal.tower.Speech.after(level, (int) (start - level.getGameTime()),
+                    () -> air(level, from, who, line, power, pitch, reach));
+        } else air(level, from, who, line, power, pitch, reach);
+    }
+
+    /** When each speaker is done talking, in game ticks: a line said waits its turn. */
+    private static final java.util.Map<String, Long> BUSY = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * When a speaker may begin a line, now or once they have finished the one before; and the time taken, so the next
+     * waits for this one.
+     */
+    public static long turn(ServerLevel level, String speaker, String line) {
+        long now = level.getGameTime();
+        long start = Math.max(now, BUSY.getOrDefault(speaker, 0L));
+        BUSY.put(speaker, start + com.jeladastudios.lostsignal.tower.Speech.length(line));
+        if (BUSY.size() > 512) BUSY.entrySet().removeIf(e -> e.getValue() < now);
+        return start;
+    }
+
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        BUSY.clear();
+    }
+
+    private static void air(ServerLevel level, Vec3 from, Component who, String line, float power, float pitch, double reach) {
         String clip = take(line, level);
         if (clip != null) Broadcast.send(level, from, Broadcast.RESCUE, power, pitch, clip);
         Component text = Component.literal("[" + Broadcast.RESCUE + "] ").withStyle(ChatFormatting.DARK_GRAY)

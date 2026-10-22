@@ -17,7 +17,7 @@ public final class Net {
     private Net() {}
 
     /** Raised whenever a message's shape changes, so a client of an older version is told so at the door. */
-    private static final String VERSION = "2";
+    private static final String VERSION = "3";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(LostSignal.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
@@ -34,6 +34,8 @@ public final class Net {
         CHANNEL.registerMessage(5, Panel.class, Panel::write, Panel::read, Panel::handle, toServer);
         CHANNEL.registerMessage(6, Neighbours.class, Neighbours::write, Neighbours::read, Neighbours::handle, toClient);
         CHANNEL.registerMessage(7, Call.class, Call::write, Call::read, Call::handle, toServer);
+        CHANNEL.registerMessage(8, Meet.class, Meet::write, Meet::read, Meet::handle, toClient);
+        CHANNEL.registerMessage(9, Bid.class, Bid::write, Bid::read, Bid::handle, toServer);
     }
 
     /** When each player last sent each kind of message, by the wall clock, so none can be sent faster than it should. */
@@ -67,6 +69,53 @@ public final class Net {
             var c = ctx.get();
             c.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
                     () -> () -> com.jeladastudios.lostsignal.client.KeeperScreen.open(m)));
+            c.setPacketHandled(true);
+        }
+    }
+
+    /** A hiker spoken to face to face: the client opens the talk with them. */
+    public record Meet(int entity, String name, boolean lookoutKnown) {
+
+        static void write(Meet m, FriendlyByteBuf buf) {
+            buf.writeVarInt(m.entity);
+            buf.writeUtf(m.name, 32);
+            buf.writeBoolean(m.lookoutKnown);
+        }
+
+        static Meet read(FriendlyByteBuf buf) {
+            return new Meet(buf.readVarInt(), buf.readUtf(32), buf.readBoolean());
+        }
+
+        static void handle(Meet m, Supplier<NetworkEvent.Context> ctx) {
+            var c = ctx.get();
+            c.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                    () -> () -> com.jeladastudios.lostsignal.client.HikerScreen.open(m)));
+            c.setPacketHandled(true);
+        }
+    }
+
+    /** Something asked of a hiker face to face. */
+    public record Bid(int entity, int what) {
+
+        static void write(Bid m, FriendlyByteBuf buf) {
+            buf.writeVarInt(m.entity);
+            buf.writeVarInt(m.what);
+        }
+
+        static Bid read(FriendlyByteBuf buf) {
+            return new Bid(buf.readVarInt(), buf.readVarInt());
+        }
+
+        static void handle(Bid m, Supplier<NetworkEvent.Context> ctx) {
+            var c = ctx.get();
+            c.enqueueWork(() -> {
+                var p = c.getSender();
+                var bids = com.jeladastudios.lostsignal.entity.Hiker.Bid.values();
+                if (p == null || m.what < 0 || m.what >= bids.length || !allowed(p, "bid", 600)) return;
+                if (p.level().getEntity(m.entity) instanceof com.jeladastudios.lostsignal.entity.Hiker h && h.distanceTo(p) < 8) {
+                    h.bid(p, bids[m.what]);
+                }
+            });
             c.setPacketHandled(true);
         }
     }

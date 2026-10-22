@@ -282,11 +282,10 @@ public final class Missions extends SavedData {
                         break;
                     }
                 }
-                // Walked up to by a player who never got them on the radio: found all the same.
+                // Walked up to by a player who never got them on the radio: found all the same, and they go with them.
                 for (ServerPlayer p : level.players()) {
                     if (p.distanceTo(h) < 5 && !p.isSpectator()) {
-                        Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_SEE_YOU", 0.15f);
-                        found(level, mission, h, "found");
+                        meet(level, mission, h, p);
                         break;
                     }
                 }
@@ -294,13 +293,13 @@ public final class Missions extends SavedData {
             case IN_CONTACT -> {
                 // Come in to the lookout, or met on the mountain by a player.
                 if (h.position().distanceTo(Vec3.atCenterOf(mission.tower)) < 14) {
-                    Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_AT_TOWER", 0.15f);
+                    say(level, h, "H_AT_TOWER");
                     found(level, mission, h, "came_in");
+                    h.rescued(mission.tower);
                 } else {
                     for (ServerPlayer p : level.players()) {
                         if (p.distanceTo(h) < 5 && !p.isSpectator()) {
-                            Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_SEE_YOU", 0.15f);
-                            found(level, mission, h, "found");
+                            meet(level, mission, h, p);
                             break;
                         }
                     }
@@ -311,8 +310,7 @@ public final class Missions extends SavedData {
                 if (day > 0 && day < 6000 && !mission.leaving) {
                     mission.leaving = true;
                     setDirty();
-                    Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER,
-                            new String[]{"H_THANKS_01", "H_THANKS_02", "H_ON_TRAIL"}[level.random.nextInt(3)], 0.15f);
+                    say(level, h, new String[]{"H_THANKS_01", "H_ON_TRAIL"}[level.random.nextInt(2)]);
                     // From the lookout if they came in to it; from where they were found if met out on the mountain.
                     BlockPos from = "came_in".equals(mission.ending) ? mission.tower : h.blockPosition();
                     Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, from);
@@ -531,10 +529,33 @@ public final class Missions extends SavedData {
     void found(ServerLevel level, Mission mission, Hiker h, String how) {
         mission.stage = Mission.Stage.FOUND;
         mission.ending = how;
-        h.rescued(mission.tower);
         setDirty();
         Lines.say(level, Vec3.atCenterOf(mission.tower), Lines.Speaker.DISTRICT, "D_FOUND", 1f);
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {} {}", mission.tower.toShortString(), how);
+    }
+
+    /** Found out on the mountain by a player: they see them, say so aloud, and go with them. */
+    void meet(ServerLevel level, Mission mission, Hiker h, ServerPlayer p) {
+        h.sayAloud("H_SEE_YOU");
+        found(level, mission, h, "found");
+        h.follow(p);
+    }
+
+    /** A hiker spoken to face to face: found, if they were still lost. */
+    public static void met(ServerLevel level, Hiker h, ServerPlayer p) {
+        Missions m = of(level);
+        for (Mission mission : m.missions.values()) {
+            if (h.getUUID().equals(mission.hiker)
+                    && (mission.stage == Mission.Stage.CALLING || mission.stage == Mission.Stage.IN_CONTACT)) {
+                m.meet(level, mission, h, p);
+            }
+        }
+    }
+
+    /** A hiker's line: aloud, if anyone stands near them; else over the radio, to the keeper. */
+    static void say(ServerLevel level, Hiker h, String line) {
+        if (level.getNearestPlayer(h, 24) != null) h.sayAloud(line);
+        else Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, line, 0.15f);
     }
 
     void end(ServerLevel level, Mission mission, String how) {

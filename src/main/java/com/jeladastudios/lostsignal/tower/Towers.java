@@ -126,6 +126,7 @@ public final class Towers extends SavedData {
             }
             case "stranger" -> t.state = Tower.State.STRANGER;
             case "coal" -> t.need = Tower.Need.COAL;
+            case "refit" -> t.fitted = false;
             case "check" -> {
                 for (Tower other : around(level, t)) {
                     t.need = Tower.Need.CHECK;
@@ -154,7 +155,7 @@ public final class Towers extends SavedData {
             default -> {
             }
         }
-        if (!what.equals("coal") && !what.equals("check") && !what.equals("met") && !what.equals("silent") && !what.equals("supply") && !what.equals("cross")) t.dressed = false;
+        if (!what.equals("coal") && !what.equals("check") && !what.equals("met") && !what.equals("silent") && !what.equals("supply") && !what.equals("cross") && !what.equals("refit")) t.dressed = false;
         towers.setDirty();
     }
 

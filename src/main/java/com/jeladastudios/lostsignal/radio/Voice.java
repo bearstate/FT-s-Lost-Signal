@@ -26,6 +26,16 @@ public final class Voice {
      */
     public static void say(Entity speaker, Component who, String line, double reach, float pitch) {
         if (!(speaker.level() instanceof ServerLevel level)) return;
+        // One thing at a time: said while they are still talking, it waits until they have finished.
+        long start = Lines.turn(level, "voice:" + speaker.getUUID(), line);
+        if (start > level.getGameTime()) {
+            com.jeladastudios.lostsignal.tower.Speech.after(level, (int) (start - level.getGameTime()), () -> {
+                if (speaker.isAlive()) sayNow(level, speaker, who, line, reach, pitch);
+            });
+        } else sayNow(level, speaker, who, line, reach, pitch);
+    }
+
+    private static void sayNow(ServerLevel level, Entity speaker, Component who, String line, double reach, float pitch) {
         short[] pcm = recording(level, line, pitch);
         if (pcm != null) {
             var api = CommonRadioPlugin.serverApi;

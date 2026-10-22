@@ -268,5 +268,11 @@
   "fire.fts_lostsignal.crossed": "Gözcü %s dumanı %s° kerterizle kesiştiriyor. Merkez yerini belirledi.",
   "call.fts_lostsignal.report_smoke": "Duman bildir",
   "block.fts_lostsignal.supply_crate": "Malzeme Sandığı",
-  "supply.fts_lostsignal.where": "Sandık: kule ayağının yaklaşık %s blok %s tarafında, patikanın başladığı yerde."
+  "supply.fts_lostsignal.where": "Sandık: kule ayağının yaklaşık %s blok %s tarafında, patikanın başladığı yerde.",
+  "hiker.fts_lostsignal.title": "%s, dağda kaybolmuş",
+  "hiker.fts_lostsignal.bid.follow": "Beni takip et",
+  "hiker.fts_lostsignal.bid.wait": "Burada bekle",
+  "hiker.fts_lostsignal.bid.how": "Nasıl dayanıyorsun?",
+  "hiker.fts_lostsignal.bid.lookout": "Gözetleme kulesine git",
+  "hiker.fts_lostsignal.bye": "Ayrıl"
 }

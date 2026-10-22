@@ -185,7 +185,8 @@ public class Stranger extends PathfinderMob {
         // Asked for water: he waits for it, a little longer, for whoever has some.
         if (line.equals("S_WATER")) askedWater = true;
         step++;
-        nextLine = 120 + random.nextInt(60) + (askedWater ? 100 : 0);
+        // Time to say it, and a while after: he is in no hurry.
+        nextLine = com.jeladastudios.lostsignal.tower.Speech.length(line) + 160 + random.nextInt(140) + (askedWater ? 100 : 0);
     }
 
     /** One of his sayings he has not said yet in this meeting: of those with his voice, once any are recorded. */

@@ -51,6 +51,14 @@ final class Dress {
             towers.setDirty();
         }
         BlockPos floor = foot.above(20);
+        if (!t.fitted) {
+            var door = com.jeladastudios.lostsignal.visit.Visit.doorOf(level, foot);
+            if (door != null) {
+                fit(level, foot, door);
+                t.fitted = true;
+                towers.setDirty();
+            }
+        }
         if (!t.dressed) {
             dress(level, t, foot, floor);
             t.dressed = true;
@@ -101,6 +109,40 @@ final class Dress {
             }
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER {} dressed as {}", t.number, t.state);
+    }
+
+    /**
+     * A lookout built before its stair was carried out onto the walkway: its last flight still comes up through a hole
+     * in the cab's floor, and whatever climbs the stair in the night is in the room. A hatch over the hole, shut, which a
+     * hand opens from below and nothing else will; and the lanterns the new ones are built with hung under the tower.
+     * Its blocks as Feel the Nature lays them out, from the door: x the way out through it, z to its right.
+     */
+    static void fit(ServerLevel level, BlockPos foot, com.jeladastudios.lostsignal.visit.Visit.Door door) {
+        Direction east = door.out(), south = east.getClockWise();
+        // The old hole: three open cells along the north wall, the last step at their end.
+        boolean old = level.getBlockState(local(foot, east, 1, 20, -2)).getBlock() instanceof net.minecraft.world.level.block.StairBlock;
+        for (int x = -2; x <= 0 && old; x++) old = level.getBlockState(local(foot, east, x, 20, -2)).isAir();
+        if (old) {
+            // Up against the wall when they are opened, so the flight is clear.
+            BlockState hatch = Blocks.SPRUCE_TRAPDOOR.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.TrapDoorBlock.HALF, net.minecraft.world.level.block.state.properties.Half.TOP)
+                    .setValue(net.minecraft.world.level.block.TrapDoorBlock.FACING, south);
+            for (int x = -2; x <= 0; x++) level.setBlock(local(foot, east, x, 20, -2), hatch, 3);
+        }
+        BlockState hung = Blocks.LANTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true);
+        for (int[] l : LIGHTS) {
+            BlockPos p = local(foot, east, l[0], l[1], l[2]);
+            if (level.getBlockState(p).isAir() && hung.canSurvive(level, p)) level.setBlock(p, hung, 3);
+        }
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER at {} fitted{}", foot.toShortString(), old ? " with a hatch" : "");
+    }
+
+    /** Where Feel the Nature hangs the lanterns under a lookout: under two landings and under the cab's floor. */
+    static final int[][] LIGHTS = {{2, 1, 0}, {-2, 10, 0}, {1, 19, 2}};
+
+    /** A block of a lookout as it is laid out: x out through its door, z to the door's right as one goes out. */
+    static BlockPos local(BlockPos foot, Direction east, int x, int y, int z) {
+        return foot.relative(east, x).above(y).relative(east.getClockWise(), z);
     }
 
     /** The spots on the cab's floor with nothing on them. */
@@ -184,6 +226,7 @@ final class Dress {
         k.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360f, 0f);
         k.post(t, floor);
         level.addFreshEntity(k);
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("KEEPER {} put at {} (floor {})", t.keeper, at.toShortString(), floor.toShortString());
     }
 
     /** His lookout by night: the candles lit, the lamp burning; by day both out. */

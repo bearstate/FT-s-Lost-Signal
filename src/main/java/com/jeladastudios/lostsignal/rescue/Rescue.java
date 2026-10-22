@@ -87,7 +87,7 @@ public final class Rescue {
     static final float BREAKING = 0.08f;
 
     /** What the hiker does with an order, and the line they answer with. */
-    static String answer(ServerLevel level, Hiker h, Order order, int value) {
+    public static String answer(ServerLevel level, Hiker h, Order order, int value) {
         BlockPos at = h.blockPosition();
         // A broken ankle: told to go anywhere, they cannot.
         boolean goes = order == Order.BEARING || order == Order.FOLLOW_WATER || order == Order.FOLLOW_TRAIL || order == Order.FOLLOW_SIGN

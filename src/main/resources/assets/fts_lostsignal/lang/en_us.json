@@ -268,5 +268,11 @@
   "fire.fts_lostsignal.crossed": "Lookout %s crosses it on %s°. The District has a fix.",
   "call.fts_lostsignal.report_smoke": "Report smoke",
   "block.fts_lostsignal.supply_crate": "Supply Crate",
-  "supply.fts_lostsignal.where": "The crate: about %s blocks %s of the tower's foot, where the trail starts up."
+  "supply.fts_lostsignal.where": "The crate: about %s blocks %s of the tower's foot, where the trail starts up.",
+  "hiker.fts_lostsignal.title": "%s, lost on the mountain",
+  "hiker.fts_lostsignal.bid.follow": "Follow me",
+  "hiker.fts_lostsignal.bid.wait": "Wait here",
+  "hiker.fts_lostsignal.bid.how": "How are you holding up?",
+  "hiker.fts_lostsignal.bid.lookout": "Go to the lookout",
+  "hiker.fts_lostsignal.bye": "Leave"
 }

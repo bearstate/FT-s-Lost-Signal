@@ -10,7 +10,12 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   dawn.
 - **Keepers**: a name, a voice, a temper; talk to them, run their errands, earn their trust, stay the night.
 - **The rescue frequency**: the District's day, calls to and from the lookouts round you, the rescue panel (`J`).
-- **Lost hikers**: guided in by radio, by the fire finder's bearings, by flares, smoke and the signal lamp.
+- **Lost hikers**: guided in by radio, by the fire finder's bearings, by flares, smoke and the signal lamp. Found,
+  they are talked to face to face: told to follow, to wait, or the way to the lookout; they say so when they cannot
+  follow where you went.
+- **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
+- **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch
+  over the stairwell in its floor, and lanterns under it.
 - **Forest fires** seen far off, read off the fire finder, reported and crossed; nothing burns.
 - **Supply crates** at the foot of the trail.
 - **The stranger**: by day a man with things to say; by night the mask, the door, the window. Hiding under the bed.
