@@ -457,7 +457,7 @@ public final class Missions extends SavedData {
      */
     void take(ServerLevel level, Mission mission, Hiker h) {
         // One after another on the radio: the words, the running, the scream; the scream heard on the mountain too, by
-        // anyone out there within a few hundred blocks, from where they were.
+        // anyone out there within four hundred blocks (the keeper at the lookout too), from where they were.
         Vec3 eye = h.getEyePosition();
         Lines.say(level, eye, Lines.Speaker.HIKER, "H_FEAR_RUN", 0.15f);
         int at = com.jeladastudios.lostsignal.tower.Speech.length("H_FEAR_RUN") - 15;
@@ -466,7 +466,7 @@ public final class Missions extends SavedData {
         com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> {
             Lines.say(level, eye, Lines.Speaker.HIKER, "X_SCREAM_CUT", 0.15f);
             com.jeladastudios.lostsignal.radio.Voice.sayAt(level, eye,
-                    net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"), "X_SCREAM_FAR", 300, 1f);
+                    net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"), "X_SCREAM_FAR", 400, 1f);
         });
         String name = com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits());
         int journal = mission.answered ? com.jeladastudios.lostsignal.remains.Journal.ANSWERED : com.jeladastudios.lostsignal.remains.Journal.UNANSWERED;
