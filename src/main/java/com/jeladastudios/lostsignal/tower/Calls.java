@@ -42,7 +42,10 @@ public final class Calls {
     public static void panel(ServerPlayer p) {
         ServerLevel level = p.serverLevel();
         Tower home = home(level, p);
-        Runnable send = () -> Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Neighbours(neighbours(p)));
+        Runnable send = () -> {
+            String waiting = District.awaiting(level);
+            Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Neighbours(neighbours(p), waiting == null ? "" : waiting));
+        };
         if (home == null) send.run();
         else Towers.find(level, home, send);
     }
@@ -53,12 +56,20 @@ public final class Calls {
         ServerLevel level = p.serverLevel();
         Tower home = home(level, p);
         if (home == null) return list;
+        BlockPos station = Stations.near(level, p.blockPosition(), 6);
         for (Tower t : Towers.around(level, home)) {
             if (list.size() >= LISTED) break;
             int dx = t.x - home.x, dz = t.z - home.z;
             int bearing = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(dx, -dz))), 360);
-            list.add(new Net.Neighbour(t.key(), t.number, bearing, (int) Math.round(Math.hypot(dx, dz) / 10.0) * 10));
+            int signal = -1;
+            if (station != null) {
+                var r = com.jeladastudios.lostsignal.radio.Broadcast.reception(level, t.cab(), 1f, station);
+                if (r.heard()) signal = (int) Math.min(9, Math.round(r.sUnits()));
+            }
+            list.add(new Net.Neighbour(t.key(), t.number, bearing, (int) Math.round(Math.hypot(dx, dz) / 10.0) * 10, signal));
         }
+        // Those the set hears first, strongest first; the ones behind the hills after them.
+        list.sort(java.util.Comparator.comparingInt((Net.Neighbour n) -> -n.signal()));
         return list;
     }
 
@@ -77,7 +88,8 @@ public final class Calls {
             return;
         }
         if (kind == Net.Call.DISTRICT) {
-            district(level, p, home);
+            if (key == 1) answer(level, p, home, station);
+            else district(level, p, home);
             return;
         }
         // Only a lookout on the panel's list: within reach of the player's own.
@@ -87,6 +99,11 @@ public final class Calls {
         if (found == null) return;
         Tower t = found;
         p.displayClientMessage(Component.translatable("call.fts_lostsignal.calling", t.number), true);
+        // Behind the hills from here: the call does not get there, and nothing comes back but the hiss.
+        if (!com.jeladastudios.lostsignal.radio.Broadcast.reception(level, t.cab(), 1f, station).heard()) {
+            Speech.after(level, 80, () -> p.displayClientMessage(Component.translatable("call.fts_lostsignal.no_answer", t.number), true));
+            return;
+        }
         switch (t.state) {
             case KEPT -> keeper(level, p, t);
             case STRANGER -> {
@@ -127,6 +144,38 @@ public final class Calls {
         if (t.metStranger >= 0 && level.getGameTime() - t.metStranger < Talk.ON_MIND) return true;
         for (Tower other : Towers.around(level, t)) if (other.state == Tower.State.STRANGER) return true;
         return false;
+    }
+
+    /**
+     * The District's own call answered from the panel: the radio check, the end of day check, the weather (read off the
+     * cab's instruments); what the keeper says shown as they say it, and the District's word back.
+     */
+    static void answer(ServerLevel level, ServerPlayer p, Tower home, BlockPos station) {
+        String waiting = District.awaiting(level);
+        if (waiting == null) {
+            district(level, p, home);
+            return;
+        }
+        String number = home == null ? "?" : String.valueOf(home.number);
+        Component said = waiting.equals("D_WEATHER_01")
+                ? Component.translatable("district.fts_lostsignal.said." + waiting, number, WeatherReport.of(level, station))
+                : Component.translatable("district.fts_lostsignal.said." + waiting, number);
+        Component who = home == null ? p.getName() : lookout(home, p.getName().getString());
+        Component line = Component.literal("[" + com.jeladastudios.lostsignal.radio.Broadcast.RESCUE + "] ").withStyle(ChatFormatting.DARK_GRAY)
+                .append(who.copy().withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
+                .append(said.copy().withStyle(ChatFormatting.WHITE));
+        // Heard by whoever else is at a set within a lookout's reach of the keeper, and the keeper themselves.
+        for (ServerPlayer other : level.players()) {
+            if (other == p || other.position().distanceTo(p.position()) <= REACH && Stations.poweredNear(level, other.blockPosition(), 8) != null) {
+                other.sendSystemMessage(line);
+            }
+        }
+        String reply = District.reply(level);
+        if (reply != null) {
+            Vec3 from = p.position();
+            Speech.after(level, 60, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, reply, 1f));
+        }
     }
 
     /** The District answering, and telling what it has to tell about the lookouts round. */

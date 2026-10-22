@@ -40,24 +40,35 @@ public class RescueScreen extends Screen {
         Net.CHANNEL.sendToServer(new Net.Panel());
     }
 
-    /** The lookouts round the player's, as the server last told them. */
+    /** The lookouts round the player's, as the server last told them; and the District's call waiting for an answer. */
     private static java.util.List<Net.Neighbour> round = java.util.List.of();
+    private static String waiting = "";
 
-    public static void neighbours(java.util.List<Net.Neighbour> list) {
+    public static void neighbours(java.util.List<Net.Neighbour> list, String district) {
         round = list;
+        waiting = district;
         if (net.minecraft.client.Minecraft.getInstance().screen instanceof RescueScreen s) s.rebuildWidgets();
     }
 
-    /** The calls: the District, and the lookouts round, each with its bearing and distance. */
+    /**
+     * The calls: the District (or, while it waits for one, the answer to its own call), and the lookouts round, each
+     * with its bearing, distance and how strongly the set hears it.
+     */
     private void calls(int left, int y, int width, int h, int gap) {
-        Component district = Component.translatable("call.fts_lostsignal.district"),
+        boolean answering = !waiting.isEmpty();
+        Component district = answering ? Component.translatable("district.fts_lostsignal.reply." + waiting).withStyle(net.minecraft.ChatFormatting.YELLOW)
+                : Component.translatable("call.fts_lostsignal.district"),
                 smoke = Component.translatable("call.fts_lostsignal.report_smoke");
         // The District and the smoke as wide as their words; with no lookouts round, the row between them.
         int wd = font.width(district) + 16, ws = font.width(smoke) + 16;
         if (round.isEmpty()) wd = ws = (width - gap) / 2;
         int x = left;
-        addRenderableWidget(Button.builder(district,
-                b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.DISTRICT, 0))).bounds(x, y, wd, h).build());
+        addRenderableWidget(Button.builder(district, b -> {
+            Net.CHANNEL.sendToServer(new Net.Call(Net.Call.DISTRICT, answering ? 1 : 0));
+            // Answered: the District's own button again.
+            waiting = "";
+            rebuildWidgets();
+        }).bounds(x, y, wd, h).build());
         // A fire called in, by the last bearing taken on it.
         x += wd + gap;
         addRenderableWidget(Button.builder(smoke,
@@ -68,10 +79,14 @@ public class RescueScreen extends Screen {
         int n = round.size(), w = (left + width - x - (n - 1) * gap) / n;
         for (Net.Neighbour nb : round) {
             String point = com.jeladastudios.lostsignal.finder.FireFinder.point(nb.bearing());
+            // Its S-meter reading on the set; one it does not hear at all faded, after the rest.
+            Component signal = nb.signal() < 0 ? Component.translatable("call.fts_lostsignal.no_signal")
+                    : Component.translatable("call.fts_lostsignal.signal", nb.signal());
             Component full = Component.translatable("call.fts_lostsignal.button", nb.number(),
-                    Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance());
+                    Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()).append(" · ").append(signal);
             Component label = font.width(full) <= w - 8 ? full : Component.translatable("call.fts_lostsignal.button_short",
-                    nb.number(), Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance());
+                    nb.number(), Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()).append(" · ").append(signal);
+            if (nb.signal() < 0) label = label.copy().withStyle(net.minecraft.ChatFormatting.DARK_GRAY);
             addRenderableWidget(Button.builder(label, b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.LOOKOUT, nb.key())))
                     .tooltip(net.minecraft.client.gui.components.Tooltip.create(full)).bounds(x, y, w, h).build());
             x += w + gap;

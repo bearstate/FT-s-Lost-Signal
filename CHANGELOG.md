@@ -10,6 +10,10 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   dawn.
 - **Keepers**: a name, a voice, a temper; talk to them, run their errands, earn their trust, stay the night.
 - **The rescue frequency**: the District's day, calls to and from the lookouts round you, the rescue panel (`J`).
+  The District's own calls are answered from the panel: the radio check, the end of day check, and the weather, sent
+  as the cab's instruments read it (FT's Geology's weather terminal); unanswered, it asks once more. What comes over
+  the air is shown only where it reaches your set, by the radio's own propagation: behind the hills a voice is static,
+  or nothing; the panel lists the lookouts round with their S-meter readings, the ones out of reach last.
 - **Lost hikers**: guided in by radio, by the fire finder's bearings, by flares, smoke and the signal lamp. Found,
   they are talked to face to face: told to follow, to wait, or the way to the lookout; they say so when they cannot
   follow where you went. Come in, they go up the stair and in at the cab's door for the night, and down again in the

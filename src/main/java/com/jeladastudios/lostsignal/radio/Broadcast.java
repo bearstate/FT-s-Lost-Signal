@@ -117,6 +117,42 @@ public final class Broadcast {
         return valid;
     }
 
+    /**
+     * What a station's set makes of a voice sent from a place at a power: how far above the noise it comes in, in dB
+     * (below 0 it is lost in the hiss), and its S-meter reading; by the radio's own propagation (the hills between, the
+     * set's antenna, the distance), as a player's voice from there would be. Not heard at all by a set tuned elsewhere.
+     */
+    public record Reception(double marginDb, double sUnits) {
+        public static final Reception NONE = new Reception(Double.NEGATIVE_INFINITY, 0);
+        /** Where the radio cannot be asked: as if heard plainly. */
+        static final Reception CLEAR = new Reception(30, 9);
+
+        public boolean heard() {
+            return marginDb >= 0;
+        }
+    }
+
+    public static Reception reception(ServerLevel level, Vec3 from, float power, net.minecraft.core.BlockPos station) {
+        if (CommonRadioPlugin.serverApi == null) return Reception.CLEAR;
+        try {
+            if (!(level.getBlockEntity(station) instanceof com.codinglitch.simpleradio.ham.block.StationBlockEntity set)) return Reception.CLEAR;
+            var receiver = set.getReceiver();
+            if (receiver == null || receiver.frequency == null || !RESCUE.equals(receiver.frequency.getFrequency())) return Reception.NONE;
+            RadioTransmitter tx = new RadioTransmitter(receiver.frequency,
+                    WorldlyPosition.of(new Vector3f((float) from.x, (float) from.y, (float) from.z), level), UUID.randomUUID());
+            tx.frequencingType(SimpleRadioFrequencing.STATION);
+            tx.powerMultiplier = power;
+            var link = com.codinglitch.simpleradio.radio.propagation.RadioLink.compute(tx, receiver, receiver.frequency);
+            double cost = link.effectiveDistance() * tx.getFrequencingType().transmissionDiminishment;
+            double budget = tx.getPowerTowards(receiver) + receiver.getPower(tx.getLocation());
+            double margin = com.codinglitch.simpleradio.radio.propagation.RadioLink.marginDb(budget, cost);
+            return new Reception(margin, com.codinglitch.simpleradio.radio.propagation.RadioLink.sUnits(margin));
+        } catch (LinkageError e) {
+            // A fork older than this asks for: no propagation to go by.
+            return Reception.CLEAR;
+        }
+    }
+
     /** Cut off where it is, as a voice that stops mid-word. */
     public void stop() {
         pending.clear();

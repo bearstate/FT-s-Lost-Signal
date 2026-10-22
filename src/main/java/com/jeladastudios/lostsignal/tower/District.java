@@ -38,15 +38,25 @@ public final class District {
             "D_EVENING_01", "D_EVENING_02");
     static final long REPLY_WITHIN = 20 * 60 * 4;
 
+    /** Not answered in this long, the District asks once more. */
+    static final long ASKS_AGAIN = 20 * 60 * 2;
+
     private static final Map<String, Long> SAID = new HashMap<>();
     private static String waiting;
     private static long waitingSince;
+    private static boolean askedAgain;
 
     @SubscribeEvent
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
         if (level.getGameTime() % 20 != 0 || level.players().isEmpty() || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.DISTRICT)) return;
         long day = level.getDayTime() / 24000, time = level.getDayTime() % 24000;
+        // Nobody came back to it: asked again, once.
+        if (waiting != null && !askedAgain && level.getGameTime() - waitingSince > ASKS_AGAIN) {
+            askedAgain = true;
+            waitingSince = level.getGameTime();
+            Lines.say(level, Vec3.atCenterOf(level.getSharedSpawnPos()), Lines.Speaker.DISTRICT, waiting, 1f);
+        }
         for (Slot s : DAY) {
             // Within a while of its time, once that day: a sleeper's night goes by too fast for a narrow window.
             if (time < s.time() || time > s.time() + 1500 || SAID.getOrDefault(s.line(), -1L) == day) continue;
@@ -58,9 +68,15 @@ public final class District {
             Lines.say(level, from, Lines.Speaker.DISTRICT, s.line(), 1f);
             waiting = REPLY.containsKey(s.line()) ? s.line() : null;
             waitingSince = level.getGameTime();
+            askedAgain = false;
             // One call at a time.
             break;
         }
+    }
+
+    /** The District's own call still waiting for an answer, for the panel to answer it by: its line, or null. */
+    public static String awaiting(ServerLevel level) {
+        return waiting == null || level.getGameTime() - waitingSince > REPLY_WITHIN ? null : waiting;
     }
 
     /** The District's answer to a call back after one of its own, if one is waited on; taken, so it is said once. */

@@ -3,6 +3,7 @@ package com.jeladastudios.lostsignal.rescue;
 import com.jeladastudios.lostsignal.radio.Broadcast;
 import com.jeladastudios.lostsignal.radio.Clips;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -71,14 +72,31 @@ public final class Lines {
                 .append(who.copy().withStyle(ChatFormatting.GRAY))
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(Component.translatable("radio.fts_lostsignal.line." + line).withStyle(ChatFormatting.WHITE));
-        // Heard by whoever is at a powered station in reach: a dead set hears nothing. A sleeper there is woken.
+        // Heard by whoever is at a powered station in reach: a dead set hears nothing. Its words only where the voice gets
+        // through to the set (the hills between, the distance, by the radio's own reckoning), a hiss with something in it
+        // where it nearly does; the District, on its repeaters, everywhere. A sleeper there is woken.
         for (ServerPlayer p : level.players()) {
             if (p.position().distanceTo(from) > reach) continue;
-            if (Stations.poweredNear(level, p.blockPosition(), AT) == null) continue;
+            BlockPos set = Stations.poweredNear(level, p.blockPosition(), AT);
+            if (set == null) continue;
+            Component heard = text;
+            if (reach < Double.MAX_VALUE) {
+                var r = Broadcast.reception(level, from, power, set);
+                if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+                    com.jeladastudios.lostsignal.LostSignal.LOGGER.info("HEARD {} from {} m away: {} dB, S{}", line,
+                            (int) from.distanceTo(Vec3.atCenterOf(set)), String.format(java.util.Locale.ROOT, "%.1f", r.marginDb()), String.format(java.util.Locale.ROOT, "%.1f", r.sUnits()));
+                }
+                if (r.marginDb() < -NEARLY) continue;
+                if (!r.heard()) heard = Component.literal("[" + Broadcast.RESCUE + "] ").withStyle(ChatFormatting.DARK_GRAY)
+                        .append(Component.translatable("rescue.fts_lostsignal.static").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+            }
             if (p.isSleeping()) com.jeladastudios.lostsignal.sleep.FlowingSleep.wake(level, p.position(), 1, "radio");
-            p.sendSystemMessage(text);
+            p.sendSystemMessage(heard);
         }
     }
+
+    /** How far under the noise a voice may be and still be heard to be there, in the hiss: a few dB. */
+    static final double NEARLY = 6;
 
     /** One of a line's recorded takes, or the line itself where it was recorded once, or null where not yet. */
     public static String take(String line, ServerLevel level) {

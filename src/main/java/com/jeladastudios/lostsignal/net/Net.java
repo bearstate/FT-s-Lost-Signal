@@ -17,7 +17,7 @@ public final class Net {
     private Net() {}
 
     /** Raised whenever a message's shape changes, so a client of an older version is told so at the door. */
-    private static final String VERSION = "3";
+    private static final String VERSION = "4";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(LostSignal.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
@@ -165,10 +165,14 @@ public final class Net {
         }
     }
 
-    /** A lookout round the player's, as the panel lists it. */
-    public record Neighbour(long key, int number, int bearing, int distance) {}
+    /**
+     * A lookout round the player's, as the panel lists it: and how strongly the player's set hears it, in S-units, -1
+     * where it does not at all.
+     */
+    public record Neighbour(long key, int number, int bearing, int distance, int signal) {}
 
-    public record Neighbours(java.util.List<Neighbour> list) {
+    /** The lookouts round, and the District's own call still waiting for an answer (its line; empty where none). */
+    public record Neighbours(java.util.List<Neighbour> list, String district) {
 
         static void write(Neighbours m, FriendlyByteBuf buf) {
             buf.writeVarInt(m.list.size());
@@ -177,20 +181,22 @@ public final class Net {
                 buf.writeVarInt(n.number());
                 buf.writeVarInt(n.bearing());
                 buf.writeVarInt(n.distance());
+                buf.writeVarInt(n.signal());
             }
+            buf.writeUtf(m.district, 32);
         }
 
         static Neighbours read(FriendlyByteBuf buf) {
             int n = Math.min(buf.readVarInt(), 8);
             java.util.List<Neighbour> list = new java.util.ArrayList<>();
-            for (int i = 0; i < n; i++) list.add(new Neighbour(buf.readLong(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
-            return new Neighbours(list);
+            for (int i = 0; i < n; i++) list.add(new Neighbour(buf.readLong(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
+            return new Neighbours(list, buf.readUtf(32));
         }
 
         static void handle(Neighbours m, Supplier<NetworkEvent.Context> ctx) {
             var c = ctx.get();
             c.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
-                    () -> () -> com.jeladastudios.lostsignal.client.RescueScreen.neighbours(m.list)));
+                    () -> () -> com.jeladastudios.lostsignal.client.RescueScreen.neighbours(m.list, m.district)));
             c.setPacketHandled(true);
         }
     }

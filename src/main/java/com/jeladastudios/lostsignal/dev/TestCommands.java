@@ -146,6 +146,15 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
                     return 1;
                 })))
+                .then(Commands.literal("answer").executes(c -> {
+                    // The District's own call answered, as from the panel.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    String waiting = com.jeladastudios.lostsignal.tower.District.awaiting(p.serverLevel());
+                    com.jeladastudios.lostsignal.tower.Calls.call(p, com.jeladastudios.lostsignal.net.Net.Call.DISTRICT, 1);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST answer " + waiting), false);
+                    return 1;
+                }))
                 .then(Commands.literal("fire").executes(c -> {
                     // A fire started a few hundred blocks from the lookout the player is at.
                     ServerPlayer p = c.getSource().getPlayer();
