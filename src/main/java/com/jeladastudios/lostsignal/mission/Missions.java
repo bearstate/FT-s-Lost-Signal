@@ -40,6 +40,8 @@ public final class Missions extends SavedData {
     static final long REST = 36_000;
     /** How often a hiker no one has answered calls again, in ticks. */
     static final long CALL_AGAIN = 1_800;
+    /** How far off someone on the mountain hears a lost hiker calling out, in blocks, and how often they do, in ticks. */
+    static final int SHOUT_HEARD = 96, SHOUT_AGAIN = 20 * 25;
     /** The chance, once an evening at a kept lookout, that someone is lost. */
     static final float CHANCE = 0.4f;
     /**
@@ -270,6 +272,16 @@ public final class Missions extends SavedData {
                     String[] calls = {"H_CALL_01", "H_CALL_02", "H_CALL_03", "H_CALL_04"};
                     Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, calls[level.random.nextInt(calls.length)], 0.15f);
                 }
+                // Someone out on the mountain within earshot hears them calling out too, not only on the radio.
+                if (now >= mission.nextShout) {
+                    for (ServerPlayer p : level.players()) {
+                        if (p.isSpectator() || p.distanceTo(h) > SHOUT_HEARD) continue;
+                        mission.nextShout = now + SHOUT_AGAIN + level.random.nextInt(SHOUT_AGAIN);
+                        com.jeladastudios.lostsignal.radio.Voice.say(h, net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.hiker"),
+                                level.random.nextBoolean() ? "X_CALL_HELLO" : "X_CALL_HELP", SHOUT_HEARD + 32, 1f);
+                        break;
+                    }
+                }
                 // Walked up to by a player who never got them on the radio: found all the same.
                 for (ServerPlayer p : level.players()) {
                     if (p.distanceTo(h) < 5 && !p.isSpectator()) {
@@ -346,14 +358,22 @@ public final class Missions extends SavedData {
                 mission.takeAt = Math.max(mission.takeAt, clock + OFFER_WAITS);
                 setDirty();
                 Vec3 eye = h.getEyePosition();
-                Lines.say(level, eye, Lines.Speaker.HIKER, "H_SOMEONE", 0.15f);
-                com.jeladastudios.lostsignal.tower.Speech.after(level, 40 + com.jeladastudios.lostsignal.tower.Speech.length("H_SOMEONE"),
-                        () -> Lines.say(level, eye, Lines.Speaker.HIKER, "H_HE_SAYS", 0.15f));
+                // A breath caught; then, low, what they see; then what he says.
+                Lines.say(level, eye, Lines.Speaker.HIKER, "X_GASP", 0.15f);
+                int at = com.jeladastudios.lostsignal.tower.Speech.length("X_GASP");
+                com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> Lines.say(level, eye, Lines.Speaker.HIKER, "H_SOMEONE", 0.15f));
+                at += 20 + com.jeladastudios.lostsignal.tower.Speech.length("H_SOMEONE");
+                com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> Lines.say(level, eye, Lines.Speaker.HIKER, "H_HE_SAYS", 0.15f));
             }
             if (!mission.warned && clock >= mission.takeAt - 600) {
                 mission.warned = true;
                 setDirty();
-                Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING", 0.15f);
+                // What they hear in the trees, and then their breath, the button still held.
+                String fear = level.random.nextBoolean() ? "H_FEAR_TREES" : "H_FEAR_STANDING";
+                Vec3 eye = h.getEyePosition();
+                Lines.say(level, eye, Lines.Speaker.HIKER, fear, 0.15f);
+                com.jeladastudios.lostsignal.tower.Speech.after(level, com.jeladastudios.lostsignal.tower.Speech.length(fear) - 10,
+                        () -> Lines.say(level, eye, Lines.Speaker.HIKER, "X_BREATH_SCARED", 0.15f));
             }
             if (clock >= mission.takeAt) {
                 // As things stand now: answered since, or stopped walking in the dark, the odds are better, unless
@@ -424,13 +444,20 @@ public final class Missions extends SavedData {
      * find what is left.
      */
     void take(ServerLevel level, Mission mission, Hiker h) {
-        Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "H_FEAR_RUN", 0.15f);
-        Lines.say(level, h.getEyePosition(), Lines.Speaker.HIKER, "X_SCREAM_CUT", 0.15f);
+        // One after another on the radio: the words, the running, the scream; the scream heard on the mountain too, by
+        // anyone out there within a few hundred blocks, from where they were.
+        Vec3 eye = h.getEyePosition();
+        Lines.say(level, eye, Lines.Speaker.HIKER, "H_FEAR_RUN", 0.15f);
+        int at = com.jeladastudios.lostsignal.tower.Speech.length("H_FEAR_RUN") - 15;
+        com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> Lines.say(level, eye, Lines.Speaker.HIKER, "X_BREATH_RUN", 0.15f));
+        at += com.jeladastudios.lostsignal.tower.Speech.length("X_BREATH_RUN") - 20;
+        com.jeladastudios.lostsignal.tower.Speech.after(level, at, () -> {
+            Lines.say(level, eye, Lines.Speaker.HIKER, "X_SCREAM_CUT", 0.15f);
+            com.jeladastudios.lostsignal.radio.Voice.sayAt(level, eye,
+                    net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"), "X_SCREAM_FAR", 300, 1f);
+        });
         String name = com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits());
         int journal = mission.answered ? com.jeladastudios.lostsignal.remains.Journal.ANSWERED : com.jeladastudios.lostsignal.remains.Journal.UNANSWERED;
-        // Heard on the mountain too, not only on the radio, by anyone out there within a few hundred blocks.
-        com.jeladastudios.lostsignal.radio.Voice.say(h, net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"),
-                "X_SCREAM_FAR", 300, 1f);
         BlockPos fire = h.leaveCamp();
         var made = com.jeladastudios.lostsignal.remains.Scene.make(level, h.blockPosition(), fire, h.kit(), name, mission.tower, journal,
                 com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.BODIES) && level.random.nextFloat() < WITH_BODY, level.random);

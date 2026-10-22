@@ -21,6 +21,8 @@ public final class Mission {
     public long started;
     /** When the hiker last called out unanswered. */
     public long lastCall;
+    /** When they may next call out aloud to someone near; not kept. */
+    public transient long nextShout;
     /** How the night ended: "found", "came_in", "lost". */
     public String ending = "";
     /** Where the hiker was last seen loaded, to keep their ground loaded from. */

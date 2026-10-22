@@ -26,26 +26,64 @@ public final class Voice {
      */
     public static void say(Entity speaker, Component who, String line, double reach, float pitch) {
         if (!(speaker.level() instanceof ServerLevel level)) return;
-        String take = Lines.take(line, level);
-        if (take != null && CommonRadioPlugin.serverApi != null) {
-            List<short[]> frames = Clips.frames(take);
-            if (!frames.isEmpty()) {
-                short[] pcm = new short[frames.size() * Clips.FRAME];
-                for (int i = 0; i < frames.size(); i++) System.arraycopy(frames.get(i), 0, pcm, i * Clips.FRAME, Clips.FRAME);
-                if (pitch != 1f) pcm = pitched(pcm, pitch);
-                var api = CommonRadioPlugin.serverApi;
-                var channel = api.createEntityAudioChannel(UUID.randomUUID(), api.fromEntity(speaker));
-                if (channel != null) {
-                    channel.setDistance((float) reach);
-                    api.createAudioPlayer(channel, api.createEncoder(), pcm).startPlaying();
-                }
+        short[] pcm = recording(level, line, pitch);
+        if (pcm != null) {
+            var api = CommonRadioPlugin.serverApi;
+            var channel = api.createEntityAudioChannel(UUID.randomUUID(), api.fromEntity(speaker));
+            if (channel != null) {
+                channel.setDistance((float) reach);
+                api.createAudioPlayer(channel, api.createEncoder(), pcm).startPlaying();
             }
         }
+        subtitle(level, speaker.position(), who, line, reach);
+    }
+
+    /**
+     * A sound someone makes, heard from where they are and following them, with no words to show: breath as they walk
+     * past. Nothing where it is not recorded.
+     */
+    public static void sound(Entity speaker, String line, double reach) {
+        if (!(speaker.level() instanceof ServerLevel level)) return;
+        short[] pcm = recording(level, line, 1f);
+        if (pcm == null) return;
+        var api = CommonRadioPlugin.serverApi;
+        var channel = api.createEntityAudioChannel(UUID.randomUUID(), api.fromEntity(speaker));
+        if (channel == null) return;
+        channel.setDistance((float) reach);
+        api.createAudioPlayer(channel, api.createEncoder(), pcm).startPlaying();
+    }
+
+    /** A line said from a place rather than by someone there: whoever said it may be gone by the time it ends. */
+    public static void sayAt(ServerLevel level, net.minecraft.world.phys.Vec3 at, Component who, String line, double reach, float pitch) {
+        short[] pcm = recording(level, line, pitch);
+        if (pcm != null) {
+            var api = CommonRadioPlugin.serverApi;
+            var channel = api.createLocationalAudioChannel(UUID.randomUUID(), api.fromServerLevel(level), api.createPosition(at.x, at.y, at.z));
+            if (channel != null) {
+                channel.setDistance((float) reach);
+                api.createAudioPlayer(channel, api.createEncoder(), pcm).startPlaying();
+            }
+        }
+        subtitle(level, at, who, line, reach);
+    }
+
+    /** One of a line's takes as a voice says it, at a pitch; null where it is not recorded or the voice is not up. */
+    private static short[] recording(ServerLevel level, String line, float pitch) {
+        String take = Lines.take(line, level);
+        if (take == null || CommonRadioPlugin.serverApi == null) return null;
+        List<short[]> frames = Clips.frames(take);
+        if (frames.isEmpty()) return null;
+        short[] pcm = new short[frames.size() * Clips.FRAME];
+        for (int i = 0; i < frames.size(); i++) System.arraycopy(frames.get(i), 0, pcm, i * Clips.FRAME, Clips.FRAME);
+        return pitch != 1f ? pitched(pcm, pitch) : pcm;
+    }
+
+    private static void subtitle(ServerLevel level, net.minecraft.world.phys.Vec3 at, Component who, String line, double reach) {
         Component text = who.copy().withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
                 .append(Component.translatable("radio.fts_lostsignal.line." + line).withStyle(ChatFormatting.WHITE));
         for (ServerPlayer p : level.players()) {
-            if (p.distanceTo(speaker) <= reach) p.sendSystemMessage(text);
+            if (p.position().distanceTo(at) <= reach) p.sendSystemMessage(text);
         }
     }
 

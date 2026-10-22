@@ -214,11 +214,23 @@ public class Hiker extends PathfinderMob {
         state(State.RESCUED);
     }
 
+    /** When their breath is next heard by someone walking with them, in ticks; not kept. */
+    private int nextBreath;
+
+    /** Walking, with someone a few steps off: their breath, heard from where they are, now and then. */
+    void breathe(net.minecraft.server.level.ServerLevel level) {
+        if (tickCount < nextBreath || tickCount % 20 != 0 || state() != State.GOING) return;
+        if (level.getNearestPlayer(this, 10) == null) return;
+        nextBreath = tickCount + 20 * (16 + getRandom().nextInt(10));
+        com.jeladastudios.lostsignal.radio.Voice.sound(this, "X_BREATH_WALK", 14);
+    }
+
     @Override
     public void tick() {
         super.tick();
         if (level() instanceof net.minecraft.server.level.ServerLevel s) {
             mayFall(s);
+            breathe(s);
             // Out on a night that is over (loaded back after it ended) they are not out there any more.
             if (mission && tickCount > 400 && tickCount % 200 == 0 && !com.jeladastudios.lostsignal.mission.Missions.onNight(s, getUUID())) {
                 discard();
