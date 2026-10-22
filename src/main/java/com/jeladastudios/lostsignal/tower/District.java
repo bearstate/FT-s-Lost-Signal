@@ -35,7 +35,7 @@ public final class District {
 
     /** What a call back answers to, in the few minutes after the District called. */
     static final Map<String, String> REPLY = Map.of("D_MORNING_01", "D_MORNING_02", "D_WEATHER_01", "D_WEATHER_02",
-            "D_EVENING_01", "D_EVENING_02");
+            "D_EVENING_01", "D_EVENING_02", "D_QUAKE", "D_QUAKE_02");
     static final long REPLY_WITHIN = 20 * 60 * 4;
 
     /** Not answered in this long, the District asks once more. */
@@ -71,6 +71,17 @@ public final class District {
             askedAgain = false;
             // One call at a time.
             break;
+        }
+    }
+
+    /** A call of the District's out of its day (after a quake, say): heard everywhere, and waiting for its answer. */
+    public static void call(ServerLevel level, String line) {
+        if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.DISTRICT)) return;
+        Lines.say(level, Vec3.atCenterOf(level.getSharedSpawnPos()), Lines.Speaker.DISTRICT, line, 1f);
+        if (REPLY.containsKey(line)) {
+            waiting = line;
+            waitingSince = level.getGameTime();
+            askedAgain = false;
         }
     }
 

@@ -34,6 +34,8 @@ public final class LostSignal {
         com.jeladastudios.lostsignal.signal.ModParticles.PARTICLES.register(bus);
         com.jeladastudios.lostsignal.net.Net.register();
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.SERVER, Config.SPEC);
+        // FT's Geology's earthquakes, where it tells of them: the District asks after the lookouts.
+        com.jeladastudios.lostsignal.tower.Quakes.listen();
         bus.addListener((net.minecraftforge.event.BuildCreativeModeTabContentsEvent e) -> {
             if (e.getTabKey() == net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS) {
                 e.accept(com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get());

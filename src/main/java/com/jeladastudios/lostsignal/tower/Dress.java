@@ -51,6 +51,11 @@ final class Dress {
             towers.setDirty();
         }
         BlockPos floor = foot.above(20);
+        // Kept off by FT's Geology's earthquakes, where it can be: once, whenever it was built.
+        if (!t.sheltered && Quakes.protect(level, foot)) {
+            t.sheltered = true;
+            towers.setDirty();
+        }
         if (!t.fitted) {
             var door = com.jeladastudios.lostsignal.visit.Visit.doorOf(level, foot);
             if (door != null) {

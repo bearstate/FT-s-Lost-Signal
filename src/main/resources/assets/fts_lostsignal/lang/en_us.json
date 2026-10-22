@@ -334,5 +334,9 @@
   "journal.fts_lostsignal.night.no_order": "Nobody has told me anything. I'm staying by the fire.",
   "journal.fts_lostsignal.night.whistle": "\n\nSomeone whistled out in the dark. Three short ones. Not a bird.",
   "rescue.fts_lostsignal.handheld": "On your handheld: five watts, not far, and not through a mountain.",
-  "rescue.fts_lostsignal.pmr": "A PMR walkie-talkie can't be set to 145.500. It takes a ham transceiver."
+  "rescue.fts_lostsignal.pmr": "A PMR walkie-talkie can't be set to 145.500. It takes a ham transceiver.",
+  "radio.fts_lostsignal.line.D_QUAKE": "Lookout, District. We had a quake reported in your area. Everyone all right up there? Any damage to the tower? Over.",
+  "radio.fts_lostsignal.line.D_QUAKE_02": "Copy. Glad you're in one piece. We'll get someone up to look at those legs when we can. District out.",
+  "district.fts_lostsignal.reply.D_QUAKE": "Answer: still standing",
+  "district.fts_lostsignal.said.D_QUAKE": "District, Lookout %s. Shook hard, but we're standing. Over."
 }

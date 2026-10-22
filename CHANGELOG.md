@@ -26,7 +26,8 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   killed is lost, the scream heard on the mountain, what is left of them where it happened (hikers.monsters).
 - **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
 - **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch
-  over the stairwell in its floor, and lanterns under it.
+  over the stairwell in its floor, and lanterns under it; and every lookout is kept off by FT's Geology's earthquakes
+  where its API 5 offers it. After a quake felt round the lookouts the District asks after them, answered from the panel.
 - **Forest fires** in forest country, seen far off: smoke from a few places across it, dark off the burning and
   greying as it rises, leaning and drifting on FT's Geology's wind, an orange glow under it at night, flames close to
   that burn nothing. Read off the fire finder, reported and crossed. Fire really burning round a lookout (lightning,

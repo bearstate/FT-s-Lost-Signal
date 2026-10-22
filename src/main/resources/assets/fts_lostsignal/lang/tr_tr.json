@@ -334,5 +334,9 @@
   "journal.fts_lostsignal.night.no_order": "Kimse bana bir şey söylemedi. Ateşin başında kalıyorum.",
   "journal.fts_lostsignal.night.whistle": "\n\nKaranlıkta biri ıslık çaldı. Üç kısa. Kuş değildi.",
   "rescue.fts_lostsignal.handheld": "El telsizindesin: beş vat, uzağa gitmez, dağın içinden de geçmez.",
-  "rescue.fts_lostsignal.pmr": "PMR el telsizi 145.500'e ayarlanamaz. Bunun için amatör Alıcı-Verici gerekir."
+  "rescue.fts_lostsignal.pmr": "PMR el telsizi 145.500'e ayarlanamaz. Bunun için amatör Alıcı-Verici gerekir.",
+  "radio.fts_lostsignal.line.D_QUAKE": "Gözcü, burası Merkez. Bölgenizde deprem bildirildi. Orada herkes iyi mi? Kulede hasar var mı? Tamam.",
+  "radio.fts_lostsignal.line.D_QUAKE_02": "Anlaşıldı. Sağ salim olmana sevindim. Fırsat bulunca birini gönderip ayaklara baktıracağız. Merkez tamam.",
+  "district.fts_lostsignal.reply.D_QUAKE": "Cevap: hâlâ ayaktayız",
+  "district.fts_lostsignal.said.D_QUAKE": "Merkez, burası Gözcü %s. Fena sallandı ama ayaktayız. Tamam."
 }

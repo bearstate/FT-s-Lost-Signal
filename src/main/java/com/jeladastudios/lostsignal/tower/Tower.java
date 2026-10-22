@@ -56,6 +56,8 @@ public final class Tower {
     public boolean dressed;
     /** Whether a lookout built before its stair came up outside the cab has had its hatch and lanterns put in. */
     public boolean fitted;
+    /** Whether FT's Geology has been asked to keep its earthquakes off it. */
+    public boolean sheltered;
     /** The lookouts round it, by their feet, once worked out (see Towers.find); null until then. */
     public java.util.List<BlockPos> near;
 
@@ -113,6 +115,7 @@ public final class Tower {
         t.putInt("Anger", anger);
         t.putBoolean("Dressed", dressed);
         t.putBoolean("Fitted", fitted);
+        t.putBoolean("Sheltered", sheltered);
         t.putBoolean("RemainsPending", remainsPending);
         t.putBoolean("SupplyPending", supplyPending);
         t.putLong("LastSupply", lastSupply);
@@ -140,6 +143,7 @@ public final class Tower {
         tower.anger = t.getInt("Anger");
         tower.dressed = t.getBoolean("Dressed");
         tower.fitted = t.getBoolean("Fitted");
+        tower.sheltered = t.getBoolean("Sheltered");
         tower.remainsPending = t.getBoolean("RemainsPending");
         tower.supplyPending = t.getBoolean("SupplyPending");
         tower.lastSupply = t.getLong("LastSupply");
