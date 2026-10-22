@@ -34,8 +34,12 @@ public class RescueScreen extends Screen {
         return last != null && level != null && level.getGameTime() - lastAt < KEEPS ? last : null;
     }
 
-    public RescueScreen() {
+    /** Whether it is worked from a handheld, not a station: said under the title, how far five watts go. */
+    private final boolean handheld;
+
+    public RescueScreen(boolean handheld) {
         super(Component.translatable("rescue.fts_lostsignal.title"));
+        this.handheld = handheld;
         // Which lookouts are round, for the calls: asked of the server as the panel opens.
         Net.CHANNEL.sendToServer(new Net.Panel());
     }
@@ -136,6 +140,7 @@ public class RescueScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g);
         g.drawCenteredString(font, title, width / 2, height / 2 - 96, 0xFFFFFF);
+        if (handheld) g.drawCenteredString(font, Component.translatable("rescue.fts_lostsignal.handheld"), width / 2, height / 2 - 84, 0xA0A0A0);
         for (Object[] hd : headings) g.drawString(font, Component.translatable((String) hd[0]), (int) hd[1], (int) hd[2], 0xA0A0A0);
         Net.Reading r = fresh();
         if (r != null) {

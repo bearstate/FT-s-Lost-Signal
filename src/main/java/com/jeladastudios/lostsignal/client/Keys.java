@@ -41,7 +41,10 @@ public final class Keys {
             Minecraft mc = Minecraft.getInstance();
             while (PANEL.consumeClick()) {
                 if (mc.player == null || mc.level == null || mc.screen != null) continue;
-                if (nearStation(mc)) mc.setScreen(new RescueScreen());
+                if (nearStation(mc)) mc.setScreen(new RescueScreen(false));
+                // Away from a station: a handheld on the frequency, as far as it carries.
+                else if (!com.jeladastudios.lostsignal.rescue.Handheld.tuned(mc.player).isEmpty()) mc.setScreen(new RescueScreen(true));
+                else if (com.jeladastudios.lostsignal.rescue.Handheld.onlyPmr(mc.player)) mc.player.displayClientMessage(Component.translatable("rescue.fts_lostsignal.pmr"), true);
                 else mc.player.displayClientMessage(Component.translatable("rescue.fts_lostsignal.no_station"), true);
             }
         }

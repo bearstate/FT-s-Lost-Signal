@@ -132,12 +132,48 @@ public final class Broadcast {
         }
     }
 
+    /**
+     * What a player hears of it on the set they have: a powered station at hand, else a handheld on the rescue frequency;
+     * null where they have neither.
+     */
+    public static Reception heardBy(ServerLevel level, Vec3 from, float power, net.minecraft.server.level.ServerPlayer p) {
+        var station = com.jeladastudios.lostsignal.rescue.Stations.poweredNear(level, p.blockPosition(), 8);
+        if (station != null) return reception(level, from, power, station);
+        if (!com.jeladastudios.lostsignal.rescue.Handheld.tuned(p).isEmpty()) return handheld(level, from, power, p);
+        return null;
+    }
+
+    /** What a handheld on the rescue frequency, at a player's ear, makes of a voice sent from a place. */
+    public static Reception handheld(ServerLevel level, Vec3 from, float power, net.minecraft.server.level.ServerPlayer p) {
+        if (CommonRadioPlugin.serverApi == null) return Reception.CLEAR;
+        try {
+            var frequency = RadioManager.getInstance().frequencies().getOrCreate(RESCUE, Frequency.Modulation.FREQUENCY);
+            Vec3 ear = p.getEyePosition();
+            var rx = new com.codinglitch.simpleradio.radio.RadioReceiver(frequency,
+                    WorldlyPosition.of(new Vector3f((float) ear.x, (float) ear.y, (float) ear.z), level), UUID.randomUUID());
+            rx.frequencingType(SimpleRadioFrequencing.TRANSCEIVER);
+            return reception(level, from, power, rx);
+        } catch (LinkageError e) {
+            return Reception.CLEAR;
+        }
+    }
+
     public static Reception reception(ServerLevel level, Vec3 from, float power, net.minecraft.core.BlockPos station) {
         if (CommonRadioPlugin.serverApi == null) return Reception.CLEAR;
         try {
             if (!(level.getBlockEntity(station) instanceof com.codinglitch.simpleradio.ham.block.StationBlockEntity set)) return Reception.CLEAR;
             var receiver = set.getReceiver();
             if (receiver == null || receiver.frequency == null || !RESCUE.equals(receiver.frequency.getFrequency())) return Reception.NONE;
+            return reception(level, from, power, receiver);
+        } catch (LinkageError e) {
+            // A fork older than this asks for: no propagation to go by.
+            return Reception.CLEAR;
+        }
+    }
+
+    /** The reckoning itself, for any receiver: the path from a place to it, the power sent, its own sensitivity. */
+    static Reception reception(ServerLevel level, Vec3 from, float power, com.codinglitch.simpleradio.radio.RadioReceiver receiver) {
+        try {
             RadioTransmitter tx = new RadioTransmitter(receiver.frequency,
                     WorldlyPosition.of(new Vector3f((float) from.x, (float) from.y, (float) from.z), level), UUID.randomUUID());
             tx.frequencingType(SimpleRadioFrequencing.STATION);

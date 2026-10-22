@@ -15,7 +15,9 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   The District's own calls are answered from the panel: the radio check, the end of day check, and the weather, sent
   as the cab's instruments read it (FT's Geology's weather terminal); unanswered, it asks once more. What comes over
   the air is shown only where it reaches your set, by the radio's own propagation: behind the hills a voice is static,
-  or nothing; the panel lists the lookouts round with their S-meter readings, the ones out of reach last.
+  or nothing; the panel lists the lookouts round with their S-meter readings, the ones out of reach last. Away from
+  the station, a handheld transceiver on 145.500 (in a hand or on the hotbar) opens the panel too, as far as its five
+  watts carry; a PMR walkie-talkie cannot be set there, and you are told so.
 - **Lost hikers**: guided in by radio, by the fire finder's bearings, by flares, smoke and the signal lamp. Found,
   they are talked to face to face: told to follow, to wait, or the way to the lookout; they say so when they cannot
   follow where you went. Come in, they go up the stair and in at the cab's door for the night, and down again in the

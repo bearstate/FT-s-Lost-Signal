@@ -332,5 +332,7 @@
   "journal.fts_lostsignal.night.no_place": "Kimseye nerede olduğumu söyleyemedim. Nerede olduğumu bilmiyorum.",
   "journal.fts_lostsignal.night.order": "Bana söyledikleri son şey: \"%s.\" Onu yapıyorum.",
   "journal.fts_lostsignal.night.no_order": "Kimse bana bir şey söylemedi. Ateşin başında kalıyorum.",
-  "journal.fts_lostsignal.night.whistle": "\n\nKaranlıkta biri ıslık çaldı. Üç kısa. Kuş değildi."
+  "journal.fts_lostsignal.night.whistle": "\n\nKaranlıkta biri ıslık çaldı. Üç kısa. Kuş değildi.",
+  "rescue.fts_lostsignal.handheld": "El telsizindesin: beş vat, uzağa gitmez, dağın içinden de geçmez.",
+  "rescue.fts_lostsignal.pmr": "PMR el telsizi 145.500'e ayarlanamaz. Bunun için amatör Alıcı-Verici gerekir."
 }

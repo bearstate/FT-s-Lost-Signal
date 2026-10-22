@@ -77,14 +77,14 @@ public final class Lines {
         // where it nearly does; the District, on its repeaters, everywhere. A sleeper there is woken.
         for (ServerPlayer p : level.players()) {
             if (p.position().distanceTo(from) > reach) continue;
-            BlockPos set = Stations.poweredNear(level, p.blockPosition(), AT);
-            if (set == null) continue;
+            // At a station, or carrying a handheld on the frequency.
+            var r = Broadcast.heardBy(level, from, power, p);
+            if (r == null) continue;
             Component heard = text;
             if (reach < Double.MAX_VALUE) {
-                var r = Broadcast.reception(level, from, power, set);
                 if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
                     com.jeladastudios.lostsignal.LostSignal.LOGGER.info("HEARD {} from {} m away: {} dB, S{}", line,
-                            (int) from.distanceTo(Vec3.atCenterOf(set)), String.format(java.util.Locale.ROOT, "%.1f", r.marginDb()), String.format(java.util.Locale.ROOT, "%.1f", r.sUnits()));
+                            (int) from.distanceTo(p.position()), String.format(java.util.Locale.ROOT, "%.1f", r.marginDb()), String.format(java.util.Locale.ROOT, "%.1f", r.sUnits()));
                 }
                 if (r.marginDb() < -NEARLY) continue;
                 if (!r.heard()) heard = Component.literal("[" + Broadcast.RESCUE + "] ").withStyle(ChatFormatting.DARK_GRAY)

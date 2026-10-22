@@ -41,12 +41,10 @@ public final class Rescue {
     public static void said(ServerPlayer keeper, Order order, int value) {
         ServerLevel level = keeper.serverLevel();
         BlockPos station = Stations.near(level, keeper.blockPosition(), AT_STATION);
-        if (station == null) {
-            keeper.displayClientMessage(net.minecraft.network.chat.Component.translatable("rescue.fts_lostsignal.no_station"), true);
-            return;
-        }
-        if (!Stations.powered(level, station)) {
-            keeper.displayClientMessage(net.minecraft.network.chat.Component.translatable("rescue.fts_lostsignal.no_power"), true);
+        // A powered station at hand, or a handheld on the frequency.
+        boolean onAir = station != null && Stations.powered(level, station) || !Handheld.tuned(keeper).isEmpty();
+        if (!onAir) {
+            keeper.displayClientMessage(net.minecraft.network.chat.Component.translatable(station == null ? "rescue.fts_lostsignal.no_station" : "rescue.fts_lostsignal.no_power"), true);
             return;
         }
         Hiker h = inContact(level, keeper.position());
@@ -233,20 +231,24 @@ public final class Rescue {
     /** The lost hiker on the air nearest a place, if any is within a handheld's reach. */
     static Hiker inContact(ServerLevel level, Vec3 from) {
         // The hiker of the night at the lookout the keeper is at, if there is one: not another lookout's.
+        boolean atLookout = false;
         for (ServerPlayer p : level.players()) {
             if (p.position().distanceToSqr(from) > 1) continue;
             BlockPos tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
+            atLookout |= tower != null;
             var mission = tower == null ? null : com.jeladastudios.lostsignal.mission.Missions.at(level, tower);
             if (mission != null && mission.hiker != null) {
                 return level.getEntity(mission.hiker) instanceof Hiker h && h.state() != Hiker.State.RESCUED
                         && h.position().distanceToSqr(from) < IN_CONTACT * IN_CONTACT ? h : null;
             }
         }
-        // Else the nearest hiker who is no lookout's (one put out by hand).
+        // Else the nearest hiker who is no lookout's (one put out by hand); or, a keeper out on the mountain with a
+        // handheld, the nearest of any.
+        boolean afield = !atLookout;
         Hiker best = null;
         double nearest = IN_CONTACT * IN_CONTACT;
         for (Hiker h : level.getEntities(ModEntities.HIKER.get(), h -> h.state() != Hiker.State.RESCUED
-                && !com.jeladastudios.lostsignal.mission.Missions.onNight(level, h.getUUID()))) {
+                && (afield || !com.jeladastudios.lostsignal.mission.Missions.onNight(level, h.getUUID())))) {
             double d = h.position().distanceToSqr(from);
             if (d < nearest) {
                 nearest = d;

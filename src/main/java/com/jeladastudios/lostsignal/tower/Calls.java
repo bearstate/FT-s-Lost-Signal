@@ -56,16 +56,14 @@ public final class Calls {
         ServerLevel level = p.serverLevel();
         Tower home = home(level, p);
         if (home == null) return list;
-        BlockPos station = Stations.near(level, p.blockPosition(), 6);
         for (Tower t : Towers.around(level, home)) {
             if (list.size() >= LISTED) break;
             int dx = t.x - home.x, dz = t.z - home.z;
             int bearing = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(dx, -dz))), 360);
             int signal = -1;
-            if (station != null) {
-                var r = com.jeladastudios.lostsignal.radio.Broadcast.reception(level, t.cab(), 1f, station);
-                if (r.heard()) signal = (int) Math.min(9, Math.round(r.sUnits()));
-            }
+            // On the set the player has: the station's, or the handheld's.
+            var r = com.jeladastudios.lostsignal.radio.Broadcast.heardBy(level, t.cab(), 1f, p);
+            if (r != null && r.heard()) signal = (int) Math.min(9, Math.round(r.sUnits()));
             list.add(new Net.Neighbour(t.key(), t.number, bearing, (int) Math.round(Math.hypot(dx, dz) / 10.0) * 10, signal));
         }
         // Those the set hears first, strongest first; the ones behind the hills after them.
@@ -78,8 +76,12 @@ public final class Calls {
         ServerLevel level = p.serverLevel();
         BlockPos station = Stations.near(level, p.blockPosition(), 6);
         if (station == null || !Stations.powered(level, station)) {
-            p.displayClientMessage(Component.translatable(station == null ? "rescue.fts_lostsignal.no_station" : "rescue.fts_lostsignal.no_power"), true);
-            return;
+            // Away from the station's set, or it is dead: a handheld on the frequency will do, as far as it carries.
+            if (com.jeladastudios.lostsignal.rescue.Handheld.tuned(p).isEmpty()) {
+                p.displayClientMessage(Component.translatable(station == null ? "rescue.fts_lostsignal.no_station" : "rescue.fts_lostsignal.no_power"), true);
+                return;
+            }
+            station = null;
         }
         Tower home = home(level, p);
         // A fire called in, by the bearing just taken on it.
@@ -100,7 +102,8 @@ public final class Calls {
         Tower t = found;
         p.displayClientMessage(Component.translatable("call.fts_lostsignal.calling", t.number), true);
         // Behind the hills from here: the call does not get there, and nothing comes back but the hiss.
-        if (!com.jeladastudios.lostsignal.radio.Broadcast.reception(level, t.cab(), 1f, station).heard()) {
+        var heard = com.jeladastudios.lostsignal.radio.Broadcast.heardBy(level, t.cab(), 1f, p);
+        if (heard == null || !heard.heard()) {
             Speech.after(level, 80, () -> p.displayClientMessage(Component.translatable("call.fts_lostsignal.no_answer", t.number), true));
             return;
         }
@@ -158,7 +161,7 @@ public final class Calls {
         }
         String number = home == null ? "?" : String.valueOf(home.number);
         Component said = waiting.equals("D_WEATHER_01")
-                ? Component.translatable("district.fts_lostsignal.said." + waiting, number, WeatherReport.of(level, station))
+                ? Component.translatable("district.fts_lostsignal.said." + waiting, number, WeatherReport.of(level, station != null ? station : p.blockPosition()))
                 : Component.translatable("district.fts_lostsignal.said." + waiting, number);
         Component who = home == null ? p.getName() : lookout(home, p.getName().getString());
         Component line = Component.literal("[" + com.jeladastudios.lostsignal.radio.Broadcast.RESCUE + "] ").withStyle(ChatFormatting.DARK_GRAY)

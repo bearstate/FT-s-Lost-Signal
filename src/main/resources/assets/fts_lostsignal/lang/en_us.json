@@ -332,5 +332,7 @@
   "journal.fts_lostsignal.night.no_place": "I couldn't tell anyone where I am. I don't know where I am.",
   "journal.fts_lostsignal.night.order": "The last thing they told me: \"%s.\" That's what I'm doing.",
   "journal.fts_lostsignal.night.no_order": "Nobody has told me anything. I'm staying by the fire.",
-  "journal.fts_lostsignal.night.whistle": "\n\nSomeone whistled out in the dark. Three short ones. Not a bird."
+  "journal.fts_lostsignal.night.whistle": "\n\nSomeone whistled out in the dark. Three short ones. Not a bird.",
+  "rescue.fts_lostsignal.handheld": "On your handheld: five watts, not far, and not through a mountain.",
+  "rescue.fts_lostsignal.pmr": "A PMR walkie-talkie can't be set to 145.500. It takes a ham transceiver."
 }
