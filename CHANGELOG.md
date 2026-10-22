@@ -35,7 +35,8 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   Masked, he can be fought, and does not run; driven off, he does not fall but goes back into the dark, and comes again
   sooner and worse. Hiding under the bed, looking out from under it at the room.
 - **The radio used against you**: calls from no one, and a player's own voice played back.
-- **What is left** where someone was taken, and their journal.
+- **What is left** where someone was taken, and their journal: each written its own way, with a page for their last
+  night (the weather, where they said they were, the last thing the lookout told them, the whistling if they heard it).
 - **The flowing sleep**.
 - **A world's settings** for every fright, in `serverconfig/fts_lostsignal-server.toml`.
 - English and Turkish.

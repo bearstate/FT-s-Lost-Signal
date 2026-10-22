@@ -43,6 +43,8 @@ public class Remains extends Entity {
     private long since, foundAt = -1;
     /** The journal's pages: what they wrote, as they wrote it. */
     private int journal;
+    /** Their last night, for their journal's page of it; null where not known. */
+    private Journal.Night night;
 
     public Remains(EntityType<? extends Remains> type, Level level) {
         super(type, level);
@@ -63,7 +65,8 @@ public class Remains extends Entity {
     }
 
     /** Set out once, by the scene. */
-    void set(int kit, boolean body, String name, BlockPos fire, BlockPos tower, int journal) {
+    void set(int kit, boolean body, String name, BlockPos fire, BlockPos tower, int journal, Journal.Night night) {
+        this.night = night;
         entityData.set(KIT, kit);
         entityData.set(BODY, body);
         this.name = name;
@@ -97,7 +100,7 @@ public class Remains extends Entity {
         if (level().isClientSide()) return InteractionResult.SUCCESS;
         if (foundAt < 0 && player instanceof ServerPlayer p) {
             foundAt = level().getGameTime();
-            var book = Journal.of(name, journal);
+            var book = Journal.of(name, journal, night);
             if (!p.getInventory().add(book)) p.drop(book, false);
             p.displayClientMessage(net.minecraft.network.chat.Component.translatable("remains.fts_lostsignal.found", name), true);
             if (tower != null) com.jeladastudios.lostsignal.mission.Missions.bodyFound((ServerLevel) level(), tower);
@@ -137,6 +140,7 @@ public class Remains extends Entity {
         tag.putLong("Since", since);
         tag.putLong("FoundAt", foundAt);
         tag.putInt("Journal", journal);
+        if (night != null) tag.put("Night", night.save());
     }
 
     @Override
@@ -149,5 +153,6 @@ public class Remains extends Entity {
         since = tag.getLong("Since");
         foundAt = tag.getLong("FoundAt");
         journal = tag.getInt("Journal");
+        night = Journal.Night.load(tag.getCompound("Night"));
     }
 }

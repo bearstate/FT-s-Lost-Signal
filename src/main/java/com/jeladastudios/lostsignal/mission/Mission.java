@@ -52,6 +52,9 @@ public final class Mission {
     public boolean told;
     /** Found, and gone home in the morning. */
     public boolean leaving;
+    /** What they last said they could see, the last thing they were told to do, whether they heard the whistling. */
+    public String lastSeen = "", lastOrder = "";
+    public boolean heardWhistle;
 
     public Mission(BlockPos tower) {
         this.tower = tower;
@@ -79,6 +82,9 @@ public final class Mission {
         if (scene != null) tag.put("Scene", NbtUtils.writeBlockPos(scene));
         tag.putBoolean("Told", told);
         tag.putBoolean("Leaving", leaving);
+        tag.putString("LastSeen", lastSeen);
+        tag.putString("LastOrder", lastOrder);
+        tag.putBoolean("HeardWhistle", heardWhistle);
         return tag;
     }
 
@@ -107,6 +113,9 @@ public final class Mission {
         if (tag.contains("Scene")) m.scene = NbtUtils.readBlockPos(tag.getCompound("Scene"));
         m.told = tag.getBoolean("Told");
         m.leaving = tag.getBoolean("Leaving");
+        m.lastSeen = tag.getString("LastSeen");
+        m.lastOrder = tag.getString("LastOrder");
+        m.heardWhistle = tag.getBoolean("HeardWhistle");
         return m;
     }
 }

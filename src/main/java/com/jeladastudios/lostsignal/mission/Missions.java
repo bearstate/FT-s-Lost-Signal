@@ -376,6 +376,7 @@ public final class Missions extends SavedData {
                 // other end, a plea. Told not to go with the man who came to them, it is their name they hear.
                 String fear = mission.offerAnswer == 1 ? "H_FEAR_VOICE"
                         : new String[]{"H_FEAR_TREES", "H_FEAR_STANDING", "H_FEAR_FOLLOW", "H_FEAR_WHISTLE"}[level.random.nextInt(4)];
+                if (fear.equals("H_FEAR_WHISTLE")) mission.heardWhistle = true;
                 Vec3 eye = h.getEyePosition();
                 Lines.say(level, eye, Lines.Speaker.HIKER, fear, 0.15f);
                 int at = com.jeladastudios.lostsignal.tower.Speech.length(fear) - 10;
@@ -475,14 +476,38 @@ public final class Missions extends SavedData {
         String name = com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits());
         int journal = mission.answered ? com.jeladastudios.lostsignal.remains.Journal.ANSWERED : com.jeladastudios.lostsignal.remains.Journal.UNANSWERED;
         BlockPos fire = h.leaveCamp();
-        var made = com.jeladastudios.lostsignal.remains.Scene.make(level, h.blockPosition(), fire, h.kit(), name, mission.tower, journal,
-                com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.BODIES) && level.random.nextFloat() < WITH_BODY, level.random);
+        // That night as they wrote it up: the weather where they were, what they said they saw, what they were told.
+        BlockPos where = h.blockPosition();
+        String weather = level.isThundering() ? "thunder" : !level.isRainingAt(where.above(2)) && !level.isRaining() ? "clear"
+                : level.getBiome(where).value().coldEnoughToSnow(where) ? "snow" : "rain";
+        var night = new com.jeladastudios.lostsignal.remains.Journal.Night(weather, mission.lastSeen, mission.lastOrder, mission.heardWhistle);
+        var made = com.jeladastudios.lostsignal.remains.Scene.make(level, where, fire, h.kit(), name, mission.tower, journal,
+                com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.BODIES) && level.random.nextFloat() < WITH_BODY, level.random, night);
         mission.stage = Mission.Stage.TAKEN;
         mission.takenAt = level.getDayTime();
         mission.scene = made.camp();
         setDirty();
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION at {}: taken at {}", mission.tower.toShortString(), made.camp().toShortString());
     }
+
+    /**
+     * What a hiker was told on the radio, and what they answered: the last thing they were told to do, and the last
+     * place they said they were, kept for the night's page of their journal.
+     */
+    public static void noted(ServerLevel level, Hiker h, com.jeladastudios.lostsignal.rescue.Order order, String answer) {
+        Missions m = of(level);
+        for (Mission mission : m.missions.values()) {
+            if (!h.getUUID().equals(mission.hiker)) continue;
+            // Only what they said they would do: not what they could not ("I can't hear any water").
+            if (!order.question && answer != null && TAKEN_ON.contains(answer)) mission.lastOrder = order.name().toLowerCase(java.util.Locale.ROOT);
+            if (answer != null && answer.startsWith("H_SEE_") && !answer.equals("H_SEE_NOTHING")) mission.lastSeen = answer;
+            m.setDirty();
+        }
+    }
+
+    /** A hiker's answers that take an order on: going, staying, signalling. */
+    static final java.util.Set<String> TAKEN_ON = java.util.Set.of("H_OK_01", "H_OK_02", "H_FOLLOW_CREEK", "H_FOLLOW_TRAIL",
+            "H_FOLLOW_SIGN", "H_STAY", "H_FLARE", "H_FIRE", "H_LAMP");
 
     /** A hiker set on by something in the night: they cry out, aloud to anyone near, else on the radio. */
     public static void attacked(ServerLevel level, Hiker h) {

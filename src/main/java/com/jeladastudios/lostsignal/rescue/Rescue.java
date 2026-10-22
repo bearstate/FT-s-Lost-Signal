@@ -80,6 +80,7 @@ public final class Rescue {
         }
         PENDING.add(new Pending(level, h, line, at));
         com.jeladastudios.lostsignal.mission.Missions.heard(level, h);
+        com.jeladastudios.lostsignal.mission.Missions.noted(level, h, order, line);
     }
 
     /** Beyond how far, in blocks, a keeper's words may break up on a hiker's handheld, and how often then. */

@@ -43,6 +43,12 @@ public final class Scene {
      */
     public static Made make(ServerLevel level, BlockPos at, BlockPos fire, int kit, String name, BlockPos tower, int journal,
                             boolean withBody, RandomSource random) {
+        return make(level, at, fire, kit, name, tower, journal, withBody, random, null);
+    }
+
+    /** The same, with their last night for the journal's page of it. */
+    public static Made make(ServerLevel level, BlockPos at, BlockPos fire, int kit, String name, BlockPos tower, int journal,
+                            boolean withBody, RandomSource random, Journal.Night night) {
         BlockPos camp = ground(level, at.getX(), at.getZ());
         if (camp == null) camp = at;
         // The fire, out.
@@ -171,7 +177,7 @@ public final class Scene {
             Vec3 place = Vec3.atBottomCenterOf(lying);
             // Along the way it was dragged, a little askew.
             r.moveTo(place.x, place.y, place.z, lies.toYRot() + (random.nextFloat() - 0.5f) * 30f, 0f);
-            r.set(kit, body, name, fire, tower, journal);
+            r.set(kit, body, name, fire, tower, journal, night);
             level.addFreshEntity(r);
         }
         if (body) {
@@ -185,7 +191,7 @@ public final class Scene {
         }
         if (!body) {
             // The journal lies in the tent, then.
-            drop(level, tent, Journal.of(name, journal), random);
+            drop(level, tent, Journal.of(name, journal, night), random);
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
             LostSignal.LOGGER.info("REMAINS scene at {} smear to {} body {}", camp.toShortString(), end.toShortString(), body);
