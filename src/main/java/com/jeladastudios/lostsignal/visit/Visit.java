@@ -144,8 +144,21 @@ public final class Visit {
         level.playSound(null, at.x, at.y, at.z, sound, SoundSource.HOSTILE, volume, pitch);
     }
 
+    /** Whom he has turned to, out in the night rather than behind the door; and for how long. */
+    ServerPlayer hunted;
+    int huntTicks;
+    /** How near the lookout someone out of its cab must be for him to come for them; how long he keeps at it. */
+    static final double HUNT_REACH = 64;
+    static final int HUNTS = 20 * 180;
+
     /** One beat of it. False when it is over. */
     boolean tick() {
+        // No one behind the door, the one he came for out in the night: he comes for them where they are.
+        if (hunted == null && !broke && t < DECIDE && at != null && at.isAlive() && inCab().isEmpty()) {
+            ServerPlayer out = outside();
+            if (out != null) hunt(out);
+        }
+        if (hunted != null) return hunting();
         if (approaching) {
             // Driven off on the way, hurt, or gone: no knock tonight.
             if (at == null || !at.isAlive()) {
@@ -317,6 +330,85 @@ public final class Visit {
             d.setOpen(null, level, s, door, false);
             sound(Vec3.atCenterOf(door), SoundEvents.WOODEN_DOOR_CLOSE, 1.3f, 0.6f);
         }
+    }
+
+    /** The player nearest the lookout and near enough to it, out of its cab; or null. */
+    ServerPlayer outside() {
+        Vec3 middle = Vec3.atBottomCenterOf(foot);
+        ServerPlayer best = null;
+        for (ServerPlayer p : level.players()) {
+            if (p.isSpectator() || !p.isAlive() || p.position().distanceTo(middle) > HUNT_REACH) continue;
+            if (best == null || p.distanceToSqr(middle) < best.distanceToSqr(middle)) best = p;
+        }
+        return best;
+    }
+
+    /** Turned from the door to someone out in the night: down or up the stair first if that is where they are. */
+    void hunt(ServerPlayer p) {
+        hunted = p;
+        huntTicks = 0;
+        approaching = false;
+        at.hunt(p, between(at.getY(), p.getY()));
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT at {}: no one in, he goes for {}", foot.toShortString(), p.getScoreboardName());
+    }
+
+    /** The places on the stair between one height and another, in the order walked; none where they are level. */
+    List<BlockPos> between(double from, double to) {
+        List<BlockPos> way = new ArrayList<>();
+        if (Math.abs(from - to) < 4 || !com.jeladastudios.lostsignal.tower.Stair.walkable(level, foot, out)) return way;
+        if (to < from) {
+            for (BlockPos p : com.jeladastudios.lostsignal.tower.Stair.down(foot, out)) if (p.getY() < from - 1 && p.getY() >= to - 2) way.add(p);
+        } else {
+            for (BlockPos p : com.jeladastudios.lostsignal.tower.Stair.up(foot, out)) if (p.getY() > from + 1 && p.getY() <= to + 1) way.add(p);
+        }
+        return way;
+    }
+
+    /** After them: until he has them, they get back behind the door, or they are gone from round the lookout. */
+    boolean hunting() {
+        if (at == null || !at.isAlive()) return false;
+        huntTicks++;
+        // Back in the cab: to the door again, and the night goes on there.
+        if (!inCab().isEmpty()) {
+            hunted = null;
+            List<BlockPos> back = new ArrayList<>();
+            for (BlockPos p : com.jeladastudios.lostsignal.tower.Stair.up(foot, out)) if (p.getY() > at.getY() - 2) back.add(p);
+            at.walkTo(back, false, 0);
+            approaching = true;
+            approachTicks = 0;
+            t = 0;
+            return true;
+        }
+        if (!hunted.isAlive() || hunted.level() != level || hunted.isSpectator()
+                || hunted.position().distanceTo(Vec3.atBottomCenterOf(foot)) > HUNT_REACH * 2 || huntTicks > HUNTS) {
+            // Got away: he goes back into the dark.
+            at.leave(hunted);
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT at {}: {} got away", foot.toShortString(), hunted.getScoreboardName());
+            return false;
+        }
+        if (at.distanceToSqr(hunted) < 1.8 * 1.8) {
+            strike(hunted);
+            return false;
+        }
+        return true;
+    }
+
+    /** Caught out in the night: as the door giving would have been, and then he is not there. */
+    void strike(ServerPlayer p) {
+        broke = true;
+        at.say("S_DOOR_IN");
+        p.hurt(level.damageSources().magic(), 10f + 4f * com.jeladastudios.lostsignal.tower.Towers.at(level, foot).anger);
+        p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 160, 0));
+        p.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0));
+        p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
+        Stranger s = at;
+        com.jeladastudios.lostsignal.tower.Speech.after(level, 30, () -> {
+            if (!s.isAlive()) return;
+            level.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, s.getX(), s.getY() + 1, s.getZ(), 30, 0.3, 0.6, 0.3, 0.01);
+            s.discard();
+        });
+        settle();
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT at {}: caught {} outside", foot.toShortString(), p.getScoreboardName());
     }
 
     /** The keepers of this lookout in its cab now. */

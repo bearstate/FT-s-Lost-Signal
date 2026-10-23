@@ -36,7 +36,7 @@ public class Stranger extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> MASKED = SynchedEntityData.defineId(Stranger.class, EntityDataSerializers.BOOLEAN);
 
     /** What he is out for: to watch from off, to come and talk, at a lookout in the night, or on his way up to one. */
-    public enum Mode { WATCH, TALK, VISIT, APPROACH }
+    public enum Mode { WATCH, TALK, VISIT, APPROACH, HUNT }
 
     /** How long a steady look he bears, in ticks, before he goes. */
     static final int BEARS_LOOK = 40;
@@ -149,6 +149,71 @@ public class Stranger extends PathfinderMob {
     private boolean thenLeave;
     private int thenBears;
 
+    /**
+     * After someone out in the night, not behind a door: by a way first where there is one (down or up the lookout's
+     * stair), then straight for them. Slow while he is looked at; quicker when he is not.
+     */
+    public void hunt(ServerPlayer player, java.util.List<net.minecraft.core.BlockPos> first) {
+        watching = player.getUUID();
+        mode = Mode.HUNT;
+        lifetime = Integer.MAX_VALUE;
+        keepsOff = 0;
+        stops = 3;
+        thenLeave = false;
+        thenBears = 0;
+        way.clear();
+        way.addAll(first);
+        wayTries = 0;
+        closest = Double.MAX_VALUE;
+        stuck = 0;
+    }
+
+    /** Closing on whoever he is after. */
+    void chase(ServerPlayer player) {
+        if (!way.isEmpty()) {
+            onTheWay(player);
+            return;
+        }
+        boolean seen = lookedAt(player);
+        double pace = seen ? 0.6 : 1.05;
+        if (tickCount % 10 == 0 || !getNavigation().isInProgress()) getNavigation().moveTo(player, pace);
+        // No way to them he can walk (a drop, a stream): no nearer for a while, and yet, the next time they look round,
+        // he is, behind them.
+        double gap = distanceTo(player);
+        if (gap < closest - 1) {
+            closest = gap;
+            stuck = 0;
+        } else if (++stuck > 80 && !seen && gap > 6) {
+            Vec3 spot = behind(player, 7 + random.nextInt(4));
+            if (spot != null) {
+                getNavigation().stop();
+                moveTo(spot.x, spot.y, spot.z, getYRot(), 0f);
+                closest = distanceTo(player);
+            }
+            stuck = 0;
+        }
+    }
+
+    private double closest = Double.MAX_VALUE;
+    private int stuck;
+
+    /** Somewhere to stand some blocks behind a player, out of their sight; or null. */
+    Vec3 behind(ServerPlayer player, int far) {
+        Vec3 look = player.getLookAngle();
+        double a0 = Math.atan2(-look.z, -look.x);
+        for (int k : new int[]{0, 1, -1, 2, -2}) {
+            double a = a0 + k * 0.5;
+            int x = (int) Math.floor(player.getX() + Math.cos(a) * far), z = (int) Math.floor(player.getZ() + Math.sin(a) * far);
+            net.minecraft.core.BlockPos p = new net.minecraft.core.BlockPos(x, level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+            if (Math.abs(p.getY() - player.getY()) > 4 || !level().getFluidState(p.below()).isEmpty() || !level().getBlockState(p).isAir()) continue;
+            Vec3 at = Vec3.atBottomCenterOf(p);
+            Vec3 to = at.add(0, 1.6, 0).subtract(player.getEyePosition()).normalize();
+            if (player.getViewVector(1f).dot(to) > 0.3) continue;
+            return at;
+        }
+        return null;
+    }
+
     /** Where he was making for, reached. */
     public boolean arrived() {
         return way.isEmpty();
@@ -224,6 +289,7 @@ public class Stranger extends PathfinderMob {
         double distance = Math.sqrt(distanceToSqr(player));
         switch (mode) {
             case APPROACH -> onTheWay(player);
+            case HUNT -> chase(player);
             case WATCH, VISIT -> {
                 face(player);
                 if (distance < keepsOff) {

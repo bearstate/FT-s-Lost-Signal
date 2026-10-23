@@ -36,7 +36,9 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **The stranger**: by day a man with things to say; by night the mask, the door, the window. He comes up to the
   lookout on foot: up the trail, up the stair, along the walkway, seen from the windows if you look (and he looks back).
   Masked, he can be fought, and does not run; driven off, he does not fall but goes back into the dark, and comes again
-  sooner and worse. Hiding under the bed, looking out from under it at the room.
+  sooner and worse. Out of the cab when he comes, he comes for you where you are (quicker when you do not look, and a
+  drop between you does not keep him off for long); back behind the door, he is at the door again. Hiding under the
+  bed, looking out from under it at the room.
 - **The radio used against you**: calls from no one, and a player's own voice played back.
 - **What is left** where someone was taken, and their journal: each written its own way, with a page for their last
   night (the weather, where they said they were, the last thing the lookout told them, the whistling if they heard it).
