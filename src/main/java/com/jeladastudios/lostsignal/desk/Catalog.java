@@ -48,7 +48,7 @@ public final class Catalog {
             new Entry(() -> Items.LANTERN, 1, 10),
             new Entry(() -> Items.CANDLE, 4, 6),
             new Entry(() -> Items.COMPASS, 1, 25),
-            new Entry(() -> Items.MAP, 1, 15),
+            new Entry(() -> Items.FILLED_MAP, 1, 20),
             new Entry(() -> Items.SPYGLASS, 1, 45, 1),
             new Entry(() -> Items.WRITABLE_BOOK, 1, 12),
             new Entry(() -> com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get(), 1, 40, 1),
@@ -56,6 +56,36 @@ public final class Catalog {
             new Entry(() -> Items.GOLDEN_CARROT, 4, 20, 2),
             new Entry(() -> com.jeladastudios.lostsignal.block.ModBlocks.TERMINAL_ITEM.get(), 1, 120),
             new Entry(Catalog::transceiver, 1, 150, 2));
+
+    /**
+     * The District's map of the country round a keeper's lookout: a map a thousand blocks across with the lookout in its
+     * middle, a mark on it, and a cross on every other lookout known about; it fills in as it is carried, as any map.
+     */
+    static ItemStack districtMap(ServerLevel level, com.jeladastudios.lostsignal.tower.Tower home) {
+        // Made by hand, not as the game makes a map (which sets it on a grid): the lookout in its very middle.
+        int id = level.getFreeMapId();
+        net.minecraft.nbt.CompoundTag data = new net.minecraft.nbt.CompoundTag();
+        data.putString("dimension", level.dimension().location().toString());
+        data.putInt("xCenter", home.x);
+        data.putInt("zCenter", home.z);
+        data.putByte("scale", (byte) 3);
+        data.putBoolean("trackingPosition", true);
+        data.putBoolean("unlimitedTracking", true);
+        data.putBoolean("locked", false);
+        data.putByteArray("colors", new byte[128 * 128]);
+        level.setMapData(net.minecraft.world.item.MapItem.makeKey(id), net.minecraft.world.level.saveddata.maps.MapItemSavedData.load(data));
+        ItemStack map = new ItemStack(Items.FILLED_MAP);
+        map.getOrCreateTag().putInt("map", id);
+        int half = 512;
+        for (var t : com.jeladastudios.lostsignal.tower.Towers.all(level)) {
+            if (Math.abs(t.x - home.x) > half || Math.abs(t.z - home.z) > half) continue;
+            net.minecraft.world.level.saveddata.maps.MapItemSavedData.addTargetDecoration(map, new net.minecraft.core.BlockPos(t.x, 0, t.z), "lookout" + t.number,
+                    t.key() == home.key() ? net.minecraft.world.level.saveddata.maps.MapDecoration.Type.TARGET_POINT
+                            : net.minecraft.world.level.saveddata.maps.MapDecoration.Type.TARGET_X);
+        }
+        map.setHoverName(net.minecraft.network.chat.Component.translatable("desk.fts_lostsignal.map.name", home.number));
+        return map;
+    }
 
     /** How many lots of one thing can be ordered at once. */
     static final int MOST = 8;
@@ -83,7 +113,7 @@ public final class Catalog {
         if (tower == null) return;
         post.credit -= cost;
         List<ItemStack> items = new ArrayList<>();
-        for (int i = 0; i < lots; i++) items.add(e.stack());
+        for (int i = 0; i < lots; i++) items.add(e.item().get() == Items.FILLED_MAP ? districtMap(level, tower) : e.stack());
         long tomorrow = level.getDayTime() / 24000 + 1;
         Desk.send(level, tower, items, tomorrow);
         desk.mail(level, post, Desk.DISTRICT, Mail.Line.of("desk.fts_lostsignal.order.taken.subject"), List.of(

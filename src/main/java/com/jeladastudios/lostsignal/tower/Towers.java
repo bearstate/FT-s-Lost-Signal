@@ -69,6 +69,11 @@ public final class Towers extends SavedData {
         return tower;
     }
 
+    /** Every lookout known in a world. */
+    public static List<Tower> all(ServerLevel level) {
+        return new ArrayList<>(of(level).towers.values());
+    }
+
     /** The lookout known at a place, or null. */
     public static Tower known(ServerLevel level, long key) {
         return of(level).towers.get(key);

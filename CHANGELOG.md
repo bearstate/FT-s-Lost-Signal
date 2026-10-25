@@ -44,7 +44,8 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   radio checks for itself.
 - **Pay credit**: weekly, for each day on duty and each duty done, and for good work (a hiker brought in, a fire called
   in, a report right to a degree, an observation right in every reading); spent on orders from the terminal (coal,
-  food, flares, a lantern, a compass, a spyglass, a signal lamp, a terminal, a handheld), sent up with the next
+  food, flares, a lantern, a compass, a spyglass, a signal lamp, a terminal, a handheld, a district map with the
+  lookout in its middle and every other lookout known marked on it), sent up with the next
   morning's crate. A crate still standing at the foot of the trail is filled rather than another set beside it.
 - **The season**: opening, the fire season, closing, the lookouts shut for the winter; by Serene Seasons' seasons where
   it is installed, else a calendar of five weeks of our own. The duties and the pay keep to it.

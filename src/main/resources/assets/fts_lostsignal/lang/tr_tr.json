@@ -615,5 +615,6 @@
   "desk.fts_lostsignal.bonus.relay": "Aktarma yapıldı",
   "poster.fts_lostsignal.missing": "KAYIP",
   "poster.fts_lostsignal.since": "%s. günden beri",
-  "desk.fts_lostsignal.letter.pup": "Mektupla biri patikadan çıktı: kule için bir köpek yavrusu. Her kulenin bir köpeği olmalı, diyorlar. Sandığın yanında bekliyor."
+  "desk.fts_lostsignal.letter.pup": "Mektupla biri patikadan çıktı: kule için bir köpek yavrusu. Her kulenin bir köpeği olmalı, diyorlar. Sandığın yanında bekliyor.",
+  "desk.fts_lostsignal.map.name": "Bölge haritası (Gözcü %s)"
 }
