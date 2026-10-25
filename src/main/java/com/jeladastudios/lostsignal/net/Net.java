@@ -58,7 +58,7 @@ public final class Net {
     public record Line(String key, int a, int b) {}
 
     /** What the terminal's screen shows, sent as it opens and after each thing sent from it. */
-    public record TermState(boolean open, long pos, boolean posted, int number, int here, String name, int credit, int season, int phase, int daysLeft,
+    public record TermState(boolean open, long pos, boolean posted, int number, int here, String name, int credit, int season, int phase, int daysLeft, int danger,
                             long day, int time, int present, int done, int missed, int applies, boolean observed, boolean observedRight,
                             int daysOnDuty, int dutiesDone, int bonus, int nextPay, java.util.List<com.jeladastudios.lostsignal.desk.Mail> inbox,
                             java.util.List<Line> stats, java.util.List<Line> catalog) {
@@ -74,6 +74,7 @@ public final class Net {
             buf.writeVarInt(m.season);
             buf.writeVarInt(m.phase);
             buf.writeVarInt(m.daysLeft);
+            buf.writeVarInt(m.danger);
             buf.writeVarLong(m.day);
             buf.writeVarInt(m.time);
             buf.writeVarInt(m.present);
@@ -114,7 +115,7 @@ public final class Net {
             boolean posted = buf.readBoolean();
             int number = buf.readVarInt(), here = buf.readVarInt();
             String name = buf.readUtf(32);
-            int credit = buf.readVarInt(), season = buf.readVarInt(), phase = buf.readVarInt(), daysLeft = buf.readVarInt();
+            int credit = buf.readVarInt(), season = buf.readVarInt(), phase = buf.readVarInt(), daysLeft = buf.readVarInt(), danger = buf.readVarInt();
             long day = buf.readVarLong();
             int time = buf.readVarInt(), present = buf.readVarInt(), done = buf.readVarInt(), missed = buf.readVarInt(), applies = buf.readVarInt();
             boolean observed = buf.readBoolean(), observedRight = buf.readBoolean();
@@ -122,7 +123,7 @@ public final class Net {
             int n = Math.min(buf.readVarInt(), 64);
             java.util.List<com.jeladastudios.lostsignal.desk.Mail> inbox = new java.util.ArrayList<>();
             for (int i = 0; i < n; i++) inbox.add(com.jeladastudios.lostsignal.desk.Mail.read(buf));
-            return new TermState(open, pos, posted, number, here, name, credit, season, phase, daysLeft, day, time, present, done, missed, applies,
+            return new TermState(open, pos, posted, number, here, name, credit, season, phase, daysLeft, danger, day, time, present, done, missed, applies,
                     observed, observedRight, daysOnDuty, dutiesDone, bonus, nextPay, inbox, lines(buf), lines(buf));
         }
 

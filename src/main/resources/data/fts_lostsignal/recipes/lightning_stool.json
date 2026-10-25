@@ -1,0 +1,19 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "building",
+ "pattern": [
+  "SSS",
+  "G G"
+ ],
+ "key": {
+  "S": {
+   "item": "minecraft:spruce_slab"
+  },
+  "G": {
+   "item": "minecraft:glass"
+  }
+ },
+ "result": {
+  "item": "fts_lostsignal:lightning_stool"
+ }
+}

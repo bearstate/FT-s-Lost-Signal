@@ -1,0 +1,78 @@
+{
+ "parent": "minecraft:block/block",
+ "textures": {
+  "particle": "minecraft:block/spruce_planks",
+  "wood": "minecraft:block/spruce_planks",
+  "post": "minecraft:block/spruce_log",
+  "face": "fts_lostsignal:block/fire_danger_0"
+ },
+ "elements": [
+  {
+   "from": [
+    7,
+    0,
+    8
+   ],
+   "to": [
+    9,
+    5,
+    10
+   ],
+   "faces": {
+    "north": {
+     "texture": "#post"
+    },
+    "south": {
+     "texture": "#post"
+    },
+    "east": {
+     "texture": "#post"
+    },
+    "west": {
+     "texture": "#post"
+    },
+    "down": {
+     "texture": "#post"
+    }
+   }
+  },
+  {
+   "from": [
+    1,
+    4,
+    7
+   ],
+   "to": [
+    15,
+    16,
+    8
+   ],
+   "faces": {
+    "north": {
+     "uv": [
+      1,
+      2,
+      15,
+      14
+     ],
+     "texture": "#face"
+    },
+    "south": {
+     "texture": "#wood"
+    },
+    "east": {
+     "texture": "#wood"
+    },
+    "west": {
+     "texture": "#wood"
+    },
+    "up": {
+     "texture": "#wood"
+    },
+    "down": {
+     "texture": "#wood"
+    }
+   }
+  }
+ ]
+}

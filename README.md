@@ -32,7 +32,8 @@ who comes to the door at night in a mask.
 - **The lookout terminal**: a 1994 tube monitor on the desk, run off the station's power: the District's messages,
   the duty roster, the one o'clock fire weather observation (read the instruments yourself and type it in; the District
   checks your figures), smoke reports, orders against your weekly pay credit, and your record. Posted at a lookout for
-  the season, by Serene Seasons' seasons or a calendar of its own; a Lookout advancement tab.
+  the season, by Serene Seasons' seasons or a calendar of its own; a fire danger rated each morning, and a sign to
+  set by it; lightning on the lookouts in a storm (stand on the glass-footed stool); a Lookout advancement tab.
 - **Forest fires**: smoke columns far off through the haze, a glow at night. Read them off the fire finder, report
   them, and another keeper's bearing crosses yours. Nothing in the world burns; supplies come up for good eyes.
 - **The stranger**: an ordinary man by day, who says things about the forest that stay with you. At night, a black
@@ -71,7 +72,7 @@ In each world's `serverconfig/fts_lostsignal-server.toml` (change it with the wo
 | | `takesHikers`, `takesKeepers`, `keepsLookouts` | Whom he may take, and whether some lookouts are his |
 | `remains` | `stains`, `bodies` | Dark stains and drag marks; a body at some scenes (else the journal is found in the tent) |
 | `hikers` | `enabled`, `frequency`, `falls`, `monsters` | Lost hikers, how often, whether they fall and are hurt, and whether the night's monsters hunt them |
-| `lookouts` | `districtCalls`, `supplies`, `fires`, `fireFrequency` | The District's day, supply crates, fires |
+| `lookouts` | `districtCalls`, `supplies`, `fires`, `fireFrequency`, `lightning` | The District's day, supply crates, fires, lightning on the lookouts |
 | `desk` | `enabled` | The terminal, the duty roster, pay credit and orders, the season |
 | `sleep` | `flowing` | The flowing night; turn it off if another mod handles sleep |
 

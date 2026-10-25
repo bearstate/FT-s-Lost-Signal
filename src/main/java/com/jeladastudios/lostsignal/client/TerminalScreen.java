@@ -434,6 +434,13 @@ public class TerminalScreen extends Screen {
                 ? Component.translatable("desk.fts_lostsignal.term.season_days", state.season(), Component.translatable("desk.fts_lostsignal.phase." + phase), state.daysLeft())
                 : Component.translatable("desk.fts_lostsignal.term.season", state.season(), Component.translatable("desk.fts_lostsignal.phase." + phase));
         text(g, season, sx + 8, top, BRIGHT);
+        if (state.danger() >= 0) {
+            String[] ratings = {"low", "moderate", "high", "very_high", "extreme"};
+            int[] colours = {GREEN, GREEN, 0xFFFFE070, 0xFFFFB060, 0xFFFF6A50};
+            int d = Math.min(4, state.danger());
+            Component danger = Component.translatable("desk.fts_lostsignal.term.danger", Component.translatable("desk.fts_lostsignal.danger." + ratings[d]));
+            text(g, danger, sx + sw - 10 - font.width(danger), top, colours[d]);
+        }
         int y = top + 16;
         var duties = com.jeladastudios.lostsignal.desk.Duty.values();
         for (var d : duties) {

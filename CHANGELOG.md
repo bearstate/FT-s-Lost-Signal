@@ -48,6 +48,14 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   morning's crate. A crate still standing at the foot of the trail is filled rather than another set beside it.
 - **The season**: opening, the fire season, closing, the lookouts shut for the winter; by Serene Seasons' seasons where
   it is installed, else a calendar of five weeks of our own. The duties and the pay keep to it.
+- **Fire danger**: rated each morning by the District from the last one o'clock observation (how dry and warm, the
+  wind, the days since rain), sent to every terminal, and the fires go by it: a dry afternoon in extreme danger burns
+  ten times as often as one in low. A fire danger sign for the foot of the trail, its arrow set each morning.
+- **Lightning**: in a thunderstorm a lookout is struck once or twice, through its rod, after a warning (the radio
+  crackles, the rod hums and glows blue). On the glass-footed lightning stool, only the flash; on the floor, thrown,
+  dazed and hurt, but never left with less than two hearts (`lookouts.lightning`).
+- **The season's evaluation**: as the lookouts close, days on duty, the share of the roster done, fires and hikers,
+  a grade, a bonus for a good one, and whether you are wanted back.
 - **Advancements**: a Lookout tab, from the first posting to the night he went away from your door.
 - **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
 - **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch

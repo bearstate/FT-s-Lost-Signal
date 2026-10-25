@@ -127,7 +127,7 @@ public final class Terminal {
         for (var s : post.stats.entrySet()) stats.add(new Net.Line(s.getKey(), s.getValue(), 0));
         List<Mail> inbox = new ArrayList<>(post.inbox);
         Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.TermState(open, AT.getOrDefault(p.getUUID(), BlockPos.ZERO).asLong(), post.tower != 0, post.number, here,
-                post.name, post.credit, desk.season, Season.phase(level).ordinal(), Season.daysLeft(level), day, (int) time, post.present, post.done,
+                post.name, post.credit, desk.season, Season.phase(level).ordinal(), Season.daysLeft(level), desk.rating, day, (int) time, post.present, post.done,
                 post.missed, applies, post.observed, post.observedRight, post.daysOnDuty, post.dutiesDone, bonus, nextPay, inbox, stats, catalog));
     }
 

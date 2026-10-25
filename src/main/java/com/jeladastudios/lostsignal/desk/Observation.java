@@ -65,6 +65,13 @@ public final class Observation {
         }
         post.count("observations");
         if (scheduled) Desk.done(p, Duty.WEATHER);
+        // The figures as sent go into tomorrow's fire danger, the instruments' own where a figure was left out.
+        CompoundTag sent = new CompoundTag();
+        sent.putFloat("Humidity", v[HUMIDITY] != EMPTY ? v[HUMIDITY] : now != null ? now.getFloat("Humidity") : 50);
+        sent.putFloat("Temperature", v[TEMPERATURE] != EMPTY ? v[TEMPERATURE] : now != null ? now.getFloat("Temperature") : 15);
+        sent.putFloat("Wind", v[WIND] != EMPTY ? v[WIND] : now != null ? now.getFloat("Wind") : 0);
+        desk.lastObs = sent;
+        if (v[RAIN] != EMPTY && v[RAIN] > 0) desk.lastRain = level.getDayTime() / 24000;
         post.observed = true;
         for (int f : off) lines.add(Mail.Line.of("desk.fts_lostsignal.obs.check", "#desk.fts_lostsignal.obs.field." + NAMES[f]));
         if (off.isEmpty()) {

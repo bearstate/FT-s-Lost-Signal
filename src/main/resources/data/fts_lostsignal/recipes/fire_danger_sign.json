@@ -1,0 +1,24 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "building",
+ "ingredients": [
+  {
+   "tag": "minecraft:signs"
+  },
+  {
+   "item": "minecraft:green_dye"
+  },
+  {
+   "item": "minecraft:blue_dye"
+  },
+  {
+   "item": "minecraft:yellow_dye"
+  },
+  {
+   "item": "minecraft:red_dye"
+  }
+ ],
+ "result": {
+  "item": "fts_lostsignal:fire_danger_sign"
+ }
+}

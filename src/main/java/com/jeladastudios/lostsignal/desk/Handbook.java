@@ -16,7 +16,7 @@ public final class Handbook {
 
     private Handbook() {}
 
-    static final int GUIDE_PAGES = 14, PAGE_PAGES = 2;
+    static final int GUIDE_PAGES = 16, PAGE_PAGES = 2;
 
     public static ItemStack guide() {
         return book("guide", "Lookout Guide", "Cold Fork Ranger District", GUIDE_PAGES);

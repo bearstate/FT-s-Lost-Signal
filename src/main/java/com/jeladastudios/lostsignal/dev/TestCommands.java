@@ -172,6 +172,13 @@ public final class TestCommands {
                             c.getSource().sendSuccess(() -> Component.literal("LS_TEST smoke " + r), false);
                             return 1;
                         }))))
+                .then(Commands.literal("lightning").executes(c -> {
+                    // The lookout the player is at struck, after its warning, storm or no storm.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    boolean ok = p != null && com.jeladastudios.lostsignal.tower.Lightning.force(p.serverLevel(), p);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST lightning " + ok), false);
+                    return ok ? 1 : 0;
+                }))
                 .then(Commands.literal("lost").then(Commands.argument("which", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 8)).executes(c -> {
                     // A lookout round the player called on a handheld out on the mountain: 1 the first the panel lists.
                     ServerPlayer p = c.getSource().getPlayer();

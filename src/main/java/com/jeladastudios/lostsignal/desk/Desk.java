@@ -39,7 +39,7 @@ public final class Desk extends SavedData {
      * What else is earned: a hiker brought in; a fire called in, from the panel or reported in full from the terminal;
      * a report right to a degree; an observation right in every reading.
      */
-    public static final int RESCUE_PAY = 40, FIRE_PAY = 15, REPORT_PAY = 25, PRECISE_PAY = 10, RIGHT_PAY = 5;
+    public static final int RESCUE_PAY = 40, FIRE_PAY = 15, REPORT_PAY = 25, PRECISE_PAY = 10, RIGHT_PAY = 5, SIGN_PAY = 2;
     /** How many days between pay. */
     static final int PAY_EVERY = 7;
     /** How near their lookout a keeper must be to be at it, in blocks. */
@@ -56,6 +56,12 @@ public final class Desk extends SavedData {
     String lastPhase = "";
     /** The last day looked at. */
     long lastDay = -1;
+    /** Today's fire danger (a Danger.Rating's place, -1 before the first morning) and the day it was rated. */
+    int rating = -1;
+    long ratingDay = -1;
+    /** The last day it rained, and the last observation sent in (its figures, for the morning's rating). */
+    long lastRain = -1;
+    CompoundTag lastObs;
 
     public static Desk of(ServerLevel level) {
         return level.getServer().overworld().getDataStorage().computeIfAbsent(Desk::load, Desk::new, "fts_lostsignal_desk");
@@ -82,7 +88,10 @@ public final class Desk extends SavedData {
     /** A day gone by for a post: counted to the week if they were on duty in it; the new day's duties not yet begun. */
     void today(Post post, long day) {
         if (post.day == day) return;
-        if (post.day >= 0 && post.present != 0) post.daysOnDuty++;
+        if (post.day >= 0 && post.present != 0) {
+            post.daysOnDuty++;
+            post.count("days");
+        }
         post.day = day;
         post.present = post.done = post.missed = 0;
         post.observed = post.observedRight = false;
@@ -109,6 +118,12 @@ public final class Desk extends SavedData {
             desk.setDirty();
             if (!first) desk.turned(level, was, phase);
         }
+        // Rain, as the District hears of it: the days since it last rained go into the fire danger.
+        if (level.isRaining() && desk.lastRain != day) {
+            desk.lastRain = day;
+            desk.setDirty();
+        }
+        if (time >= 500 && desk.ratingDay != day) Danger.morning(level, desk, phase != Season.Phase.CLOSED);
         if (day != desk.lastDay) {
             desk.lastDay = day;
             desk.setDirty();
@@ -125,6 +140,18 @@ public final class Desk extends SavedData {
                 BlockPos foot = Missions.towerAt(level, p);
                 if (foot != null && phase != Season.Phase.CLOSED) desk.postAt(level, p, post, Towers.at(level, foot));
                 continue;
+            }
+            // The fire danger sign and the lightning stool, sent once to every keeper (those posted before they were, too).
+            if (post.kit && !post.kit2) {
+                post.kit2 = true;
+                Tower home = Towers.known(level, post.tower);
+                if (home != null) {
+                    send(level, home, List.of(new ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.DANGER_SIGN_ITEM.get()),
+                            new ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.STOOL_ITEM.get()), Handbook.guide()), day);
+                    desk.mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.mail.gear.subject"), List.of(
+                            Mail.Line.of("desk.fts_lostsignal.mail.gear.1"), Mail.Line.of("desk.fts_lostsignal.mail.gear.2")));
+                }
+                desk.setDirty();
             }
             if (phase == Season.Phase.CLOSED) continue;
             Tower t = Towers.known(level, post.tower);
@@ -291,11 +318,42 @@ public final class Desk extends SavedData {
         setDirty();
         for (Post post : posts.values()) {
             if (post.tower == 0) continue;
-            if (now == Season.Phase.CLOSED) pay(level, post);
+            if (now == Season.Phase.CLOSED) {
+                pay(level, post);
+                evaluate(level, post);
+            }
+            if (now == Season.Phase.OPENING) post.season.clear();
             String key = "desk.fts_lostsignal.mail.season." + now.name().toLowerCase(java.util.Locale.ROOT);
             mail(level, post, DISTRICT, Mail.Line.of(key + ".subject", season), List.of(Mail.Line.of(key + ".body", season)));
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("DESK season {}: {} -> {}", season, was, now);
+    }
+
+    /** A grade's least share of the season's duties done, and its bonus. */
+    static final double[] GRADES = {0.8, 0.6, 0.4, 0};
+    static final int[] GRADE_PAY = {100, 60, 30, 0};
+
+    /**
+     * The season's evaluation, to each keeper as it closes: days on duty, the share of the duties done, fires called in,
+     * hikers brought in, a grade by them and a bonus for a good one, and whether they are wanted back.
+     */
+    void evaluate(ServerLevel level, Post post) {
+        int days = post.seasonStat("days"), duties = post.seasonStat("duties");
+        int all = 0;
+        for (Duty d : Duty.values()) if (applies(d)) all++;
+        double share = days == 0 ? 0 : Math.min(1, duties / (double) (days * all));
+        // Fires and the found count for something besides: each lifts the share a little.
+        share = Math.min(1, share + 0.03 * post.seasonStat("fires") + 0.05 * post.seasonStat("rescued"));
+        int grade = 0;
+        while (grade < GRADES.length - 1 && share < GRADES[grade]) grade++;
+        String letter = String.valueOf((char) ('A' + grade));
+        post.credit += GRADE_PAY[grade];
+        mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.eval.subject", season), List.of(
+                Mail.Line.of("desk.fts_lostsignal.eval.days", days, Math.round(share * 100)),
+                Mail.Line.of("desk.fts_lostsignal.eval.work", post.seasonStat("fires"), post.seasonStat("rescued"), post.seasonStat("good_observations")),
+                Mail.Line.of("desk.fts_lostsignal.eval.grade", letter, GRADE_PAY[grade]),
+                Mail.Line.of("desk.fts_lostsignal.eval.close." + letter.toLowerCase(java.util.Locale.ROOT))));
+        setDirty();
     }
 
     // === Trying =================================================================
@@ -320,6 +378,8 @@ public final class Desk extends SavedData {
                 }
             }
             case "season" -> desk.seasonStart = day - value;
+            case "danger" -> Danger.morning(level, desk, true);
+            case "evaluate" -> desk.evaluate(level, post);
             case "power" -> {
                 // The nearest station's battery filled, as a running generator would keep it.
                 BlockPos st = com.jeladastudios.lostsignal.rescue.Stations.near(level, p.blockPosition(), 12);
@@ -347,6 +407,10 @@ public final class Desk extends SavedData {
         tag.putInt("Season", season);
         tag.putString("LastPhase", lastPhase);
         tag.putLong("LastDay", lastDay);
+        tag.putInt("Rating", rating);
+        tag.putLong("RatingDay", ratingDay);
+        tag.putLong("LastRain", lastRain);
+        if (lastObs != null) tag.put("LastObs", lastObs);
         return tag;
     }
 
@@ -360,6 +424,10 @@ public final class Desk extends SavedData {
         d.season = Math.max(1, tag.getInt("Season"));
         d.lastPhase = tag.getString("LastPhase");
         d.lastDay = tag.contains("LastDay") ? tag.getLong("LastDay") : -1;
+        d.rating = tag.contains("Rating") ? tag.getInt("Rating") : -1;
+        d.ratingDay = tag.contains("RatingDay") ? tag.getLong("RatingDay") : -1;
+        d.lastRain = tag.contains("LastRain") ? tag.getLong("LastRain") : -1;
+        d.lastObs = tag.contains("LastObs") ? tag.getCompound("LastObs") : null;
         return d;
     }
 }

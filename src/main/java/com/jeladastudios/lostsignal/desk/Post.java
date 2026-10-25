@@ -40,11 +40,15 @@ public final class Post {
     /** The season they were last welcomed in; whether their terminal and handbook have been sent. */
     public int welcomed;
     public boolean kit;
+    /** The day they last set their lookout's fire danger sign to the day's rating; whether the sign and stool were sent. */
+    public long signDay = -1;
+    public boolean kit2;
     /** Whether today's observation has been sent and taken, and earned its bonus for being right. */
     public boolean observed, observedRight;
 
-    /** Their record, by what: fires reported, hikers brought in, and so on. */
+    /** Their record, by what: fires reported, hikers brought in, and so on; and the same for this season alone. */
     public final Map<String, Integer> stats = new TreeMap<>();
+    public final Map<String, Integer> season = new TreeMap<>();
 
     public final List<Mail> inbox = new ArrayList<>();
     long nextMail = 1;
@@ -58,6 +62,11 @@ public final class Post {
 
     public void count(String what) {
         stats.merge(what, 1, Integer::sum);
+        season.merge(what, 1, Integer::sum);
+    }
+
+    public int seasonStat(String what) {
+        return season.getOrDefault(what, 0);
     }
 
     public int stat(String what) {
@@ -102,11 +111,16 @@ public final class Post {
         t.putLong("LastPay", lastPay);
         t.putInt("Welcomed", welcomed);
         t.putBoolean("Kit", kit);
+        t.putBoolean("Kit2", kit2);
+        t.putLong("SignDay", signDay);
         t.putBoolean("Observed", observed);
         t.putBoolean("ObservedRight", observedRight);
         CompoundTag st = new CompoundTag();
         for (var e : stats.entrySet()) st.putInt(e.getKey(), e.getValue());
         t.put("Stats", st);
+        CompoundTag ss = new CompoundTag();
+        for (var e : season.entrySet()) ss.putInt(e.getKey(), e.getValue());
+        t.put("Season", ss);
         ListTag mails = new ListTag();
         for (Mail m : inbox) mails.add(m.save());
         t.put("Inbox", mails);
@@ -133,10 +147,14 @@ public final class Post {
         p.lastPay = t.contains("LastPay") ? t.getLong("LastPay") : -1;
         p.welcomed = t.getInt("Welcomed");
         p.kit = t.getBoolean("Kit");
+        p.kit2 = t.getBoolean("Kit2");
+        p.signDay = t.contains("SignDay") ? t.getLong("SignDay") : -1;
         p.observed = t.getBoolean("Observed");
         p.observedRight = t.getBoolean("ObservedRight");
         CompoundTag st = t.getCompound("Stats");
         for (String k : st.getAllKeys()) p.stats.put(k, st.getInt(k));
+        CompoundTag ss = t.getCompound("Season");
+        for (String k : ss.getAllKeys()) p.season.put(k, ss.getInt(k));
         for (Tag m : t.getList("Inbox", Tag.TAG_COMPOUND)) p.inbox.add(Mail.load((CompoundTag) m));
         p.nextMail = Math.max(1, t.getLong("NextMail"));
         return p;

@@ -20,7 +20,7 @@ public final class Config {
     public static final BooleanValue STAINS, BODIES;
     public static final BooleanValue HIKERS, FALLS, HUNTED;
     public static final DoubleValue HIKER_NIGHTS;
-    public static final BooleanValue DISTRICT, SUPPLIES, FIRES;
+    public static final BooleanValue DISTRICT, SUPPLIES, FIRES, LIGHTNING;
     public static final DoubleValue FIRE_CHANCE;
     public static final BooleanValue FLOWING_SLEEP;
     public static final BooleanValue DESK;
@@ -80,6 +80,10 @@ public final class Config {
                 .define("fires", true);
         FIRE_CHANCE = b.comment("How often they start (1 = as designed).")
                 .defineInRange("fireFrequency", 1.0, 0.0, 5.0);
+        LIGHTNING = b.comment("In a thunderstorm lightning strikes a lookout someone is at, once or twice a storm, after a warning",
+                        "(a hum and a blue glow at the rod). On the lightning stool, nothing; on the floor, thrown and hurt, but never",
+                        "left with less than two hearts.")
+                .define("lightning", true);
         b.pop();
 
         b.comment("The lookout's desk work: the terminal, the day's duties, pay credit and orders, the season.").push("desk");

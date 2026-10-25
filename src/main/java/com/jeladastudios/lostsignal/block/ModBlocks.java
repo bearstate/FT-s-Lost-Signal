@@ -16,7 +16,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 /**
  * The mod's blocks, and the items of those that can be had: the marks left on the ground (put there by the world, not
- * to be had), the lookout's signal lamp and its terminal; and the hand flare.
+ * to be had), the lookout's signal lamp, terminal, lightning stool and fire danger sign; and the hand flare.
  */
 public final class ModBlocks {
 
@@ -57,6 +57,26 @@ public final class ModBlocks {
 
     public static final RegistryObject<BlockItem> TERMINAL_ITEM = ITEMS.register("terminal",
             () -> new BlockItem(TERMINAL.get(), new Item.Properties()));
+
+    public static final RegistryObject<StoolBlock> STOOL = BLOCKS.register("lightning_stool",
+            () -> new StoolBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(1.0f)
+                    .sound(SoundType.WOOD)
+                    .noOcclusion()));
+
+    public static final RegistryObject<BlockItem> STOOL_ITEM = ITEMS.register("lightning_stool",
+            () -> new BlockItem(STOOL.get(), new Item.Properties()));
+
+    public static final RegistryObject<com.jeladastudios.lostsignal.desk.DangerSign> DANGER_SIGN = BLOCKS.register("fire_danger_sign",
+            () -> new com.jeladastudios.lostsignal.desk.DangerSign(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(1.0f)
+                    .sound(SoundType.WOOD)
+                    .noOcclusion()));
+
+    public static final RegistryObject<BlockItem> DANGER_SIGN_ITEM = ITEMS.register("fire_danger_sign",
+            () -> new BlockItem(DANGER_SIGN.get(), new Item.Properties()));
 
     public static final RegistryObject<Item> FLARE = ITEMS.register("flare",
             () -> new com.jeladastudios.lostsignal.item.FlareItem(new Item.Properties().stacksTo(16)));

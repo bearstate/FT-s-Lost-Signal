@@ -69,6 +69,11 @@ public final class Fires {
         float chance = level.isThundering() ? STORM : !level.isRaining() && time > 6000 && time < 11000 ? DRY : 0;
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2;
         chance *= com.jeladastudios.lostsignal.Config.scale(com.jeladastudios.lostsignal.Config.FIRE_CHANCE);
+        // The day's fire danger, where the District rates it: a dry afternoon goes by it, a storm a little.
+        if (com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.DESK)) {
+            var danger = com.jeladastudios.lostsignal.desk.Danger.today(level);
+            chance *= level.isThundering() ? (danger.ordinal() >= 2 ? 1.25f : danger.ordinal() == 0 ? 0.6f : 1f) : danger.fires;
+        }
         if (chance == 0) return;
         for (ServerPlayer p : level.players()) {
             BlockPos tower = Missions.towerAt(level, p);
