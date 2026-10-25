@@ -104,7 +104,7 @@ public class TerminalScreen extends Screen {
                 tab = index;
                 rebuildWidgets();
                 if (index == 0 && state != null && state.posted()) markRead();
-            }, () -> tab == index));
+            }, () -> tab == index).noTab());
             x += tw + 3;
         }
         if (state == null || !state.posted()) return;
@@ -174,6 +174,8 @@ public class TerminalScreen extends Screen {
         box.setValue(store[at] == null ? "" : store[at]);
         box.setResponder(s -> store[at] = s);
         addRenderableWidget(box);
+        // The page's first field ready to type into as it opens.
+        if (index == 0) setInitialFocus(box);
     }
 
     static final String[] SMOKE = new String[2];
@@ -220,8 +222,11 @@ public class TerminalScreen extends Screen {
     public boolean keyPressed(int key, int scan, int modifiers) {
         if (age < boot && key != GLFW.GLFW_KEY_ESCAPE) return true;
         boolean typing = getFocused() instanceof EditBox e && e.isFocused();
+        swallow = false;
         if (key >= GLFW.GLFW_KEY_1 && key <= GLFW.GLFW_KEY_6 && (!typing || hasControlDown())) {
             tab = key - GLFW.GLFW_KEY_1;
+            // The digit's own character follows the key: not to be typed into the new page's first field.
+            swallow = true;
             click();
             rebuildWidgets();
             if (tab == 0 && state != null && state.posted()) markRead();
@@ -268,8 +273,15 @@ public class TerminalScreen extends Screen {
         return super.keyPressed(key, scan, modifiers);
     }
 
+    /** Whether the next character is the page key's own, to be let go by. */
+    private boolean swallow;
+
     @Override
     public boolean charTyped(char c, int modifiers) {
+        if (swallow && Character.isDigit(c)) {
+            swallow = false;
+            return true;
+        }
         boolean took = super.charTyped(c, modifiers);
         if (took) click();
         return took;
@@ -602,10 +614,23 @@ public class TerminalScreen extends Screen {
         final Runnable press;
         final java.util.function.BooleanSupplier chosen;
 
+        /** Whether Tab stops on it: the send button does, the page tabs (turned by the number keys) do not. */
+        boolean tabStop = true;
+
         Plain(int x, int y, int w, int h, Component label, Runnable press, java.util.function.BooleanSupplier chosen) {
             super(x, y, w, h, label);
             this.press = press;
             this.chosen = chosen;
+        }
+
+        Plain noTab() {
+            tabStop = false;
+            return this;
+        }
+
+        @Override
+        public net.minecraft.client.gui.ComponentPath nextFocusPath(net.minecraft.client.gui.navigation.FocusNavigationEvent event) {
+            return tabStop ? super.nextFocusPath(event) : null;
         }
 
         @Override
