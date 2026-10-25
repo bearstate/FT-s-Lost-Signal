@@ -21,8 +21,12 @@ public final class Catalog {
 
     private Catalog() {}
 
-    /** One line of the list: what, how many to a lot, at what price a lot. */
-    public record Entry(Supplier<Item> item, int count, int price) {
+    /** One line of the list: what, how many to a lot, at what price a lot, and the rank it asks for. */
+    public record Entry(Supplier<Item> item, int count, int price, int rank) {
+
+        Entry(Supplier<Item> item, int count, int price) {
+            this(item, count, price, 0);
+        }
 
         public ItemStack stack() {
             return new ItemStack(item.get(), count);
@@ -45,11 +49,13 @@ public final class Catalog {
             new Entry(() -> Items.CANDLE, 4, 6),
             new Entry(() -> Items.COMPASS, 1, 25),
             new Entry(() -> Items.MAP, 1, 15),
-            new Entry(() -> Items.SPYGLASS, 1, 45),
+            new Entry(() -> Items.SPYGLASS, 1, 45, 1),
             new Entry(() -> Items.WRITABLE_BOOK, 1, 12),
-            new Entry(() -> com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get(), 1, 40),
+            new Entry(() -> com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get(), 1, 40, 1),
+            new Entry(() -> com.jeladastudios.lostsignal.block.ModBlocks.STOOL_ITEM.get(), 1, 20),
+            new Entry(() -> Items.GOLDEN_CARROT, 4, 20, 2),
             new Entry(() -> com.jeladastudios.lostsignal.block.ModBlocks.TERMINAL_ITEM.get(), 1, 120),
-            new Entry(Catalog::transceiver, 1, 150));
+            new Entry(Catalog::transceiver, 1, 150, 2));
 
     /** How many lots of one thing can be ordered at once. */
     static final int MOST = 8;
@@ -63,6 +69,11 @@ public final class Catalog {
         if (e.item().get() == Items.AIR) return;
         int cost = e.price() * lots;
         Desk desk = Desk.of(level);
+        if (post.rank < e.rank()) {
+            desk.mail(level, post, Desk.DISTRICT, Mail.Line.of("desk.fts_lostsignal.order.short.subject"),
+                    List.of(Mail.Line.of("desk.fts_lostsignal.order.rank", "#desk.fts_lostsignal.rank." + e.rank())));
+            return;
+        }
         if (post.credit < cost) {
             desk.mail(level, post, Desk.DISTRICT, Mail.Line.of("desk.fts_lostsignal.order.short.subject"),
                     List.of(Mail.Line.of("desk.fts_lostsignal.order.short.body", cost, post.credit)));

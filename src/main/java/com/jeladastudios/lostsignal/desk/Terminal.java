@@ -121,10 +121,12 @@ public final class Terminal {
         List<Net.Line> catalog = new ArrayList<>();
         for (Catalog.Entry e : Catalog.LIST) {
             var key = ForgeRegistries.ITEMS.getKey(e.item().get());
-            catalog.add(new Net.Line(key == null ? "minecraft:air" : key.toString(), e.count(), e.price()));
+            // The rank it asks for, after the item's name.
+            catalog.add(new Net.Line((key == null ? "minecraft:air" : key.toString()) + "|" + e.rank(), e.count(), e.price()));
         }
         List<Net.Line> stats = new ArrayList<>();
         for (var s : post.stats.entrySet()) stats.add(new Net.Line(s.getKey(), s.getValue(), 0));
+        stats.add(new Net.Line("rank", post.rank, Desk.service(post)));
         List<Mail> inbox = new ArrayList<>(post.inbox);
         Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.TermState(open, AT.getOrDefault(p.getUUID(), BlockPos.ZERO).asLong(), post.tower != 0, post.number, here,
                 post.name, post.credit, desk.season, Season.phase(level).ordinal(), Season.daysLeft(level), desk.rating, day, (int) time, post.present, post.done,

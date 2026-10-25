@@ -498,12 +498,18 @@ public class TerminalScreen extends Screen {
         int first = Math.max(0, Math.min(item - rows + 1, list.size() - rows));
         for (int i = first; i < first + rows; i++) {
             Net.Line l = list.get(i);
-            var it = ForgeRegistries.ITEMS.getValue(new ResourceLocation(l.key()));
-            String name = it == null ? l.key() : new ItemStack(it).getHoverName().getString();
+            String[] parts = l.key().split(java.util.regex.Pattern.quote("|"));
+            int needs = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+            var it = ForgeRegistries.ITEMS.getValue(new ResourceLocation(parts[0]));
+            String name = it == null ? parts[0] : new ItemStack(it).getHoverName().getString();
             String left = name + " x" + l.a();
+            if (needs > rank()) left += "  [" + Component.translatable("desk.fts_lostsignal.rank." + needs).getString() + "]";
             String price = String.valueOf(l.b());
             int y = top + (i - first) * 10;
-            if (i == item) {
+            if (needs > rank() && i != item) {
+                text(g, Component.literal(left), sx + 8, y, DIM);
+                text(g, Component.literal(price), sx + sw - 8 - font.width(price), y, DIM);
+            } else if (i == item) {
                 g.fill(sx + 4, y - 1, sx + sw - 4, y + 9, GREEN);
                 g.drawString(font, left, sx + 8, y, BACK, false);
                 g.drawString(font, price, sx + sw - 8 - font.width(price), y, BACK, false);
@@ -519,9 +525,25 @@ public class TerminalScreen extends Screen {
         }
     }
 
+    /** The keeper's rank, and their service towards the next, as the server sent them among the record. */
+    int rank() {
+        for (Net.Line l : state.stats()) if (l.key().equals("rank")) return l.a();
+        return 0;
+    }
+
+    int service() {
+        for (Net.Line l : state.stats()) if (l.key().equals("rank")) return l.b();
+        return 0;
+    }
+
     void recordText(GuiGraphics g, int top) {
         text(g, Component.translatable("desk.fts_lostsignal.term.posted", state.number(), state.season()), sx + 8, top, BRIGHT);
         text(g, Component.translatable("desk.fts_lostsignal.term.credit", state.credit()), sx + 8, top + 12, GREEN);
+        int[] ranks = {0, 60, 160, 320};
+        int r = Math.min(3, rank());
+        Component rankLine = r < 3 ? Component.translatable("desk.fts_lostsignal.term.rank", Component.translatable("desk.fts_lostsignal.rank." + r), service(), ranks[r + 1])
+                : Component.translatable("desk.fts_lostsignal.term.rank_top", Component.translatable("desk.fts_lostsignal.rank." + r), service());
+        text(g, rankLine, sx + sw / 2 + 8, top + 12, GREEN);
         String[] keys = {"duties", "checks", "observations", "good_observations", "fires", "reports", "rescued", "nights"};
         int y = top + 30;
         for (int i = 0; i < keys.length; i++) {

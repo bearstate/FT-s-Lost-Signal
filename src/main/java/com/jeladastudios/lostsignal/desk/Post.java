@@ -24,8 +24,9 @@ public final class Post {
     /** The lookout they are posted at, by its place, and its number; 0 and -1 where not posted. */
     public long tower;
     public int number = -1;
-    /** Their pay credit. */
+    /** Their pay credit, and their rank (0 seasonal lookout to 3 district lookout). */
     public int credit;
+    public int rank;
 
     /** The day the duties below are for; which they were at their lookout for while open, did, and missed. */
     public long day = -1;
@@ -94,6 +95,7 @@ public final class Post {
         t.putLong("Tower", tower);
         t.putInt("Number", number);
         t.putInt("Credit", credit);
+        t.putInt("Rank", rank);
         t.putLong("Day", day);
         t.putInt("Present", present);
         t.putInt("Done", done);
@@ -134,6 +136,7 @@ public final class Post {
         p.tower = t.getLong("Tower");
         p.number = t.contains("Number") ? t.getInt("Number") : -1;
         p.credit = t.getInt("Credit");
+        p.rank = t.getInt("Rank");
         p.day = t.getLong("Day");
         p.present = t.getInt("Present");
         p.done = t.getInt("Done");

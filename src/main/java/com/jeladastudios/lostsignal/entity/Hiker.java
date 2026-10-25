@@ -192,6 +192,7 @@ public class Hiker extends PathfinderMob {
                 com.jeladastudios.lostsignal.desk.Marks.award(p, "brought_home");
                 com.jeladastudios.lostsignal.desk.Desk.count(p, "rescued");
                 com.jeladastudios.lostsignal.desk.Desk.earn(p, "desk.fts_lostsignal.bonus.rescue", com.jeladastudios.lostsignal.desk.Desk.RESCUE_PAY);
+                com.jeladastudios.lostsignal.desk.Letters.owed(p, com.jeladastudios.lostsignal.remains.Journal.name(getUUID().getLeastSignificantBits()));
             }
         }
         staying = false;

@@ -62,6 +62,8 @@ public final class Desk extends SavedData {
     /** The last day it rained, and the last observation sent in (its figures, for the morning's rating). */
     long lastRain = -1;
     CompoundTag lastObs;
+    /** The hikers' letters on their way up. */
+    final List<Letters.Letter> letters = new ArrayList<>();
 
     public static Desk of(ServerLevel level) {
         return level.getServer().overworld().getDataStorage().computeIfAbsent(Desk::load, Desk::new, "fts_lostsignal_desk");
@@ -127,6 +129,7 @@ public final class Desk extends SavedData {
         if (day != desk.lastDay) {
             desk.lastDay = day;
             desk.setDirty();
+            Letters.send(level, desk);
             for (Post post : desk.posts.values()) {
                 desk.today(post, day);
                 if (post.tower != 0 && post.lastPay >= 0 && day - post.lastPay >= PAY_EVERY && phase != Season.Phase.CLOSED) desk.pay(level, post);
@@ -153,6 +156,9 @@ public final class Desk extends SavedData {
                 }
                 desk.setDirty();
             }
+            // Promoted, as the record grows.
+            int rank = rankOf(post);
+            if (rank > post.rank) desk.promote(level, p, post, rank);
             if (phase == Season.Phase.CLOSED) continue;
             Tower t = Towers.known(level, post.tower);
             if (t == null) continue;
@@ -286,10 +292,10 @@ public final class Desk extends SavedData {
     /** The week's pay: days on duty, duties done, what else was earned; onto their credit, and the slip to their terminal. */
     void pay(ServerLevel level, Post post) {
         long day = level.getDayTime() / 24000;
-        int days = post.daysOnDuty;
-        int amount = days * DAY_PAY + post.dutiesDone * DUTY_PAY;
+        int days = post.daysOnDuty, dayPay = dayPay(post);
+        int amount = days * dayPay + post.dutiesDone * DUTY_PAY;
         List<Mail.Line> lines = new ArrayList<>();
-        lines.add(Mail.Line.of("desk.fts_lostsignal.pay.days", days, days * DAY_PAY));
+        lines.add(Mail.Line.of("desk.fts_lostsignal.pay.days", days, days * dayPay));
         lines.add(Mail.Line.of("desk.fts_lostsignal.pay.duties", post.dutiesDone, post.dutiesDone * DUTY_PAY));
         for (Post.Bonus b : post.bonuses) {
             amount += b.amount();
@@ -308,6 +314,38 @@ public final class Desk extends SavedData {
         ServerPlayer p = level.getServer().getPlayerList().getPlayer(post.id);
         if (p != null && amount > 0) Marks.award(p, "payday");
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("DESK paid {} {} credit, now {}", post.name, amount, post.credit);
+    }
+
+    // === Rank ===================================================================
+
+    /** The service a rank asks for, and the day's pay at each. */
+    static final int[] RANKS = {0, 60, 160, 320};
+    static final int[] RANK_DAY_PAY = {10, 12, 14, 16};
+
+    /** A keeper's service: duties done, and more for fires called in, hikers brought in, right observations, nights kept. */
+    public static int service(Post post) {
+        return post.stat("duties") + 3 * post.stat("fires") + 5 * post.stat("rescued") + post.stat("good_observations") + 2 * post.stat("nights");
+    }
+
+    public static int rankOf(Post post) {
+        int s = service(post), rank = 0;
+        while (rank < RANKS.length - 1 && s >= RANKS[rank + 1]) rank++;
+        return rank;
+    }
+
+    static int dayPay(Post post) {
+        return RANK_DAY_PAY[Math.max(0, Math.min(RANK_DAY_PAY.length - 1, post.rank))];
+    }
+
+    /** Promoted: told on the terminal, with the raise and what they may order now. */
+    void promote(ServerLevel level, ServerPlayer p, Post post, int rank) {
+        post.rank = rank;
+        setDirty();
+        mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.rank.subject", "#desk.fts_lostsignal.rank." + rank), List.of(
+                Mail.Line.of("desk.fts_lostsignal.rank.body", post.name, "#desk.fts_lostsignal.rank." + rank, RANK_DAY_PAY[rank]),
+                Mail.Line.of("desk.fts_lostsignal.rank.orders")));
+        if (rank >= 2) Marks.award(p, "senior");
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("DESK {} promoted to {}", post.name, rank);
     }
 
     // === The season =============================================================
@@ -380,6 +418,12 @@ public final class Desk extends SavedData {
             case "season" -> desk.seasonStart = day - value;
             case "danger" -> Danger.morning(level, desk, true);
             case "evaluate" -> desk.evaluate(level, post);
+            case "letter" -> {
+                // A letter from a hiker due today, written the given way, with the given gift.
+                desk.letters.add(new Letters.Letter(p.getUUID(), "Dana", day, Math.floorMod(value, Letters.WAYS), Math.floorMod(value, Letters.GIFTS.length)));
+                Letters.send(level, desk);
+            }
+            case "service" -> post.stats.put("duties", value);
             case "power" -> {
                 // The nearest station's battery filled, as a running generator would keep it.
                 BlockPos st = com.jeladastudios.lostsignal.rescue.Stations.near(level, p.blockPosition(), 12);
@@ -411,6 +455,9 @@ public final class Desk extends SavedData {
         tag.putLong("RatingDay", ratingDay);
         tag.putLong("LastRain", lastRain);
         if (lastObs != null) tag.put("LastObs", lastObs);
+        ListTag ls = new ListTag();
+        for (Letters.Letter l : letters) ls.add(l.save());
+        tag.put("Letters", ls);
         return tag;
     }
 
@@ -428,6 +475,7 @@ public final class Desk extends SavedData {
         d.ratingDay = tag.contains("RatingDay") ? tag.getLong("RatingDay") : -1;
         d.lastRain = tag.contains("LastRain") ? tag.getLong("LastRain") : -1;
         d.lastObs = tag.contains("LastObs") ? tag.getCompound("LastObs") : null;
+        for (Tag l : tag.getList("Letters", Tag.TAG_COMPOUND)) d.letters.add(Letters.Letter.load((CompoundTag) l));
         return d;
     }
 }

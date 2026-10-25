@@ -54,6 +54,11 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **Lightning**: in a thunderstorm a lookout is struck once or twice, through its rod, after a warning (the radio
   crackles, the rod hums and glows blue). On the glass-footed lightning stool, only the flash; on the floor, thrown,
   dazed and hurt, but never left with less than two hearts (`lookouts.lightning`).
+- **Letters from the found**: a few days after a hiker is brought in, a letter from them comes up with the crate, in
+  their own words, and something with it: cookies, a cake, a compass, a photograph of the summit, or a cheque for the
+  lookouts' fund.
+- **Rank**: seasonal lookout, lookout, senior lookout, district lookout, by service (duties done, fires called in,
+  hikers brought in, right observations, nights he went away): a raise with each, and more of the order list.
 - **The season's evaluation**: as the lookouts close, days on duty, the share of the roster done, fires and hikers,
   a grade, a bonus for a good one, and whether you are wanted back.
 - **Advancements**: a Lookout tab, from the first posting to the night he went away from your door.
