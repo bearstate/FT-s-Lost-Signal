@@ -102,7 +102,7 @@ public final class Talk {
         Voice.say(k, Component.literal(t.keeper), "K_THANKS", 16, t.pitch);
         // What a keeper has to spare: bread, and a flare for the walk home.
         give(p, new ItemStack(Items.BREAD, 3));
-        give(p, new ItemStack(Items.FIREWORK_ROCKET).setHoverName(Component.translatable("item.fts_lostsignal.flare")));
+        give(p, new ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get()));
         return true;
     }
 

@@ -24,6 +24,14 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   morning. A lamp waved at night is a bright swinging light seen from far off, the lantern in their hand; by day
   they say you would never see it. The night's monsters hunt them as they hunt villagers and they run from them; one
   killed is lost, the scream heard on the mountain, what is left of them where it happened (hikers.monsters).
+- **Lost yourself**: out on the mountain with a handheld, the panel lists the lookouts round by how the set hears
+  them (which way they lie is what you do not know). Called, a keeper puts a flare up from the lookout to walk
+  towards, lights the lamp by night, and asks for one back; seen from the cab, it is taken a bearing on and the way in
+  told. A flare, or a lantern swung at night, seen from a lookout with no call is answered with a flare from it. From
+  a lookout no one keeps, someone answers too, and comes down for you.
+- **Flares of your own**: the keepers', the crates' and the camps' flares go up when used, as the hikers' do; paper,
+  gunpowder, redstone and string make two. The old ones, rockets by another name, become flares in the hand. A
+  lantern used at the air is swung over your head, a light seen from far off at night.
 - **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
 - **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch
   over the stairwell in its floor, and lanterns under it; and every lookout is kept off by FT's Geology's earthquakes

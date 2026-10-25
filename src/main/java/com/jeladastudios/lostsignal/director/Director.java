@@ -70,7 +70,7 @@ public final class Director {
     }
 
     /** Dusk, night, and the dark before dawn. */
-    static boolean dark(ServerLevel level) {
+    public static boolean dark(ServerLevel level) {
         long t = level.getDayTime() % 24000;
         return t > 12500 && t < 23300;
     }

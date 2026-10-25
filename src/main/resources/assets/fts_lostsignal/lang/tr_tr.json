@@ -338,5 +338,16 @@
   "radio.fts_lostsignal.line.D_QUAKE": "Gözcü, burası Merkez. Bölgenizde deprem bildirildi. Orada herkes iyi mi? Kulede hasar var mı? Tamam.",
   "radio.fts_lostsignal.line.D_QUAKE_02": "Anlaşıldı. Sağ salim olmana sevindim. Fırsat bulunca birini gönderip ayaklara baktıracağız. Merkez tamam.",
   "district.fts_lostsignal.reply.D_QUAKE": "Cevap: hâlâ ayaktayız",
-  "district.fts_lostsignal.said.D_QUAKE": "Merkez, burası Gözcü %s. Fena sallandı ama ayaktayız. Tamam."
+  "district.fts_lostsignal.said.D_QUAKE": "Merkez, burası Gözcü %s. Fena sallandı ama ayaktayız. Tamam.",
+  "call.fts_lostsignal.button_afield": "Gözcü %s",
+  "rescue.fts_lostsignal.lost": "Kayboldun mu? Yakındaki bir gözcüyü çağır: gözcü yürüyeceğin yöne bir fişek atar, seninkinin de kerterizini alır.",
+  "guide.fts_lostsignal.way": "Gözcü %1$s seni gözlem masasında buldu: kulenin yaklaşık %2$s blok %3$s tarafındasın. %4$s° kerterizinde (%5$s) yürü.",
+  "radio.fts_lostsignal.line.K_LOST_FLARE": "Tamam. Bekle. Kuleden bir fişek atıyorum. Gözün onda olsun, ona doğru yürü.",
+  "radio.fts_lostsignal.line.K_LOST_LAMP": "Lambayı da yaktım. O ışığı gördüğün sürece ona doğru yürü.",
+  "radio.fts_lostsignal.line.K_LOST_ASK": "Fişeğin varsa bir tane at. Buradan kerterizini alırım.",
+  "radio.fts_lostsignal.line.K_LOST_ASK_NIGHT": "Fişeğin varsa bir tane at. Ya da bir feneri yukarıda salla. Buradan kerterizini alırım.",
+  "radio.fts_lostsignal.line.K_LOST_SEEN": "İşte oradasın. Gözlem masasında seni buldum. Sana verdiğim kerterizde yürü, çok geçmeden kuleyi görürsün.",
+  "radio.fts_lostsignal.line.K_LOST_NOT_SEEN": "Hiçbir şey görmedim. Benden bakınca bir sırtın arkasında kalıyor olmalısın. Yüksek bir yere çık, bir daha dene.",
+  "radio.fts_lostsignal.line.S_LOST": "Seni görüyorum. Kıpırdama. Olduğun yerde kal, yanına ineceğim.",
+  "radio.fts_lostsignal.line.D_LOST": "Merkez. Dışarıda yolunu kaybettiysen bu frekanstan en yakın gözcüyü çağır. Fişeğin varsa at. Seni kuleden bulurlar."
 }

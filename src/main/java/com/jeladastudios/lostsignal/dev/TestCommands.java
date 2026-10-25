@@ -146,6 +146,20 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
                     return 1;
                 })))
+                .then(Commands.literal("lost").then(Commands.argument("which", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 8)).executes(c -> {
+                    // A lookout round the player called on a handheld out on the mountain: 1 the first the panel lists.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    int which = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "which");
+                    com.jeladastudios.lostsignal.tower.Guide.round(p, round -> {
+                        for (var t : round) com.jeladastudios.lostsignal.LostSignal.LOGGER.info("LS_TEST round: {} {} {} at {} {}, {} blocks", t.number, t.state,
+                                t.keeper, t.x, t.z, (int) Math.hypot(t.x - p.getX(), t.z - p.getZ()));
+                        var list = com.jeladastudios.lostsignal.tower.Calls.neighbours(p);
+                        com.jeladastudios.lostsignal.LostSignal.LOGGER.info("LS_TEST lost: panel {}", list);
+                        if (which <= list.size()) com.jeladastudios.lostsignal.tower.Calls.call(p, com.jeladastudios.lostsignal.net.Net.Call.LOOKOUT, list.get(which - 1).key());
+                    });
+                    return 1;
+                })))
                 .then(Commands.literal("answer").executes(c -> {
                     // The District's own call answered, as from the panel.
                     ServerPlayer p = c.getSource().getPlayer();

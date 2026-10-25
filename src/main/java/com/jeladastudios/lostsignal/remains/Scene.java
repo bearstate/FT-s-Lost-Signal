@@ -77,7 +77,7 @@ public final class Scene {
         // The lamp set down in the grass, still lit; their things about.
         BlockPos lamp = free(level, camp, 2, 4, random);
         if (lamp != null) level.setBlock(lamp, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, false), 3);
-        drop(level, camp, new ItemStack(Items.FIREWORK_ROCKET).setHoverName(Component.translatable("item.fts_lostsignal.flare")), random);
+        drop(level, camp, new ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get()), random);
         drop(level, camp, new ItemStack(Items.BREAD), random);
         drop(level, camp, net.minecraft.world.item.alchemy.PotionUtils.setPotion(new ItemStack(Items.POTION),
                 net.minecraft.world.item.alchemy.Potions.WATER), random);

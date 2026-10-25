@@ -158,6 +158,23 @@ public final class Broadcast {
         }
     }
 
+    /**
+     * What a lookout's set at a place makes of a voice sent from another: a station's receiver put there for the
+     * reckoning, whether or not its ground is loaded (a handheld's call heard at a lookout far off).
+     */
+    public static Reception station(ServerLevel level, Vec3 from, float power, Vec3 at) {
+        if (CommonRadioPlugin.serverApi == null) return Reception.CLEAR;
+        try {
+            var frequency = RadioManager.getInstance().frequencies().getOrCreate(RESCUE, Frequency.Modulation.FREQUENCY);
+            var rx = new com.codinglitch.simpleradio.radio.RadioReceiver(frequency,
+                    WorldlyPosition.of(new Vector3f((float) at.x, (float) at.y, (float) at.z), level), UUID.randomUUID());
+            rx.frequencingType(SimpleRadioFrequencing.STATION);
+            return reception(level, from, power, rx);
+        } catch (LinkageError e) {
+            return Reception.CLEAR;
+        }
+    }
+
     public static Reception reception(ServerLevel level, Vec3 from, float power, net.minecraft.core.BlockPos station) {
         if (CommonRadioPlugin.serverApi == null) return Reception.CLEAR;
         try {

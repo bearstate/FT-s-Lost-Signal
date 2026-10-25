@@ -40,6 +40,9 @@ public final class LostSignal {
             if (e.getTabKey() == net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS) {
                 e.accept(com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get());
             }
+            if (e.getTabKey() == net.minecraft.world.item.CreativeModeTabs.TOOLS_AND_UTILITIES) {
+                e.accept(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get());
+            }
         });
     }
 }

@@ -37,7 +37,8 @@ public final class Calls {
     }
 
     /**
-     * The panel opened: the lookouts round sent to it, now, if they are known, else once they have been worked out.
+     * The panel opened: the lookouts round sent to it, now, if they are known, else once they have been worked out;
+     * out on the mountain, the lookouts round the player.
      */
     public static void panel(ServerPlayer p) {
         ServerLevel level = p.serverLevel();
@@ -46,25 +47,31 @@ public final class Calls {
             String waiting = District.awaiting(level);
             Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Neighbours(neighbours(p), waiting == null ? "" : waiting));
         };
-        if (home == null) send.run();
+        if (home == null) Guide.round(p, round -> send.run());
         else Towers.find(level, home, send);
     }
 
-    /** The lookouts round the player's, for the panel: number, bearing, distance. */
+    /**
+     * The lookouts round the player's, for the panel: number, bearing, distance. Out on the mountain, the lookouts
+     * nearest the player, with no bearing or distance (-1): where they are is what they do not know.
+     */
     public static List<Net.Neighbour> neighbours(ServerPlayer p) {
         List<Net.Neighbour> list = new ArrayList<>();
         ServerLevel level = p.serverLevel();
         Tower home = home(level, p);
-        if (home == null) return list;
-        for (Tower t : Towers.around(level, home)) {
+        for (Tower t : home == null ? Guide.known(p) : Towers.around(level, home)) {
             if (list.size() >= LISTED) break;
-            int dx = t.x - home.x, dz = t.z - home.z;
-            int bearing = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(dx, -dz))), 360);
+            int bearing = -1, distance = -1;
+            if (home != null) {
+                int dx = t.x - home.x, dz = t.z - home.z;
+                bearing = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(dx, -dz))), 360);
+                distance = (int) Math.round(Math.hypot(dx, dz) / 10.0) * 10;
+            }
             int signal = -1;
             // On the set the player has: the station's, or the handheld's.
             var r = com.jeladastudios.lostsignal.radio.Broadcast.heardBy(level, t.cab(), 1f, p);
             if (r != null && r.heard()) signal = (int) Math.min(9, Math.round(r.sUnits()));
-            list.add(new Net.Neighbour(t.key(), t.number, bearing, (int) Math.round(Math.hypot(dx, dz) / 10.0) * 10, signal));
+            list.add(new Net.Neighbour(t.key(), t.number, bearing, distance, signal));
         }
         // Those the set hears first, strongest first; the ones behind the hills after them.
         list.sort(java.util.Comparator.comparingInt((Net.Neighbour n) -> -n.signal()));
@@ -91,13 +98,19 @@ public final class Calls {
         }
         if (kind == Net.Call.DISTRICT) {
             if (key == 1) answer(level, p, home, station);
-            else district(level, p, home);
+            else district(level, p, home, station == null && home == null);
             return;
         }
-        // Only a lookout on the panel's list: within reach of the player's own.
-        if (kind != Net.Call.LOOKOUT || home == null || home.near == null) return;
+        if (kind != Net.Call.LOOKOUT) return;
+        // Out on the mountain on a handheld: one of the lookouts round the player, to be guided in by.
+        if (home == null && station == null) {
+            Guide.call(p, key);
+            return;
+        }
+        // Only a lookout on the panel's list: within reach of the player's own, or round a set of their own elsewhere.
+        if (home != null && home.near == null) return;
         Tower found = null;
-        for (Tower n : Towers.around(level, home)) if (n.key() == key) found = n;
+        for (Tower n : home == null ? Guide.known(p) : Towers.around(level, home)) if (n.key() == key) found = n;
         if (found == null) return;
         Tower t = found;
         p.displayClientMessage(Component.translatable("call.fts_lostsignal.calling", t.number), true);
@@ -156,7 +169,7 @@ public final class Calls {
     static void answer(ServerLevel level, ServerPlayer p, Tower home, BlockPos station) {
         String waiting = District.awaiting(level);
         if (waiting == null) {
-            district(level, p, home);
+            district(level, p, home, station == null && home == null);
             return;
         }
         String number = home == null ? "?" : String.valueOf(home.number);
@@ -181,8 +194,11 @@ public final class Calls {
         }
     }
 
-    /** The District answering, and telling what it has to tell about the lookouts round. */
-    static void district(ServerLevel level, ServerPlayer p, Tower home) {
+    /**
+     * The District answering, and telling what it has to tell about the lookouts round; called from a handheld out on
+     * the mountain, what to do if lost.
+     */
+    static void district(ServerLevel level, ServerPlayer p, Tower home, boolean afield) {
         p.displayClientMessage(Component.translatable("call.fts_lostsignal.calling_district"), true);
         long time = level.getDayTime() % 24000;
         boolean night = time > 13000;
@@ -199,6 +215,10 @@ public final class Calls {
         String reply = District.reply(level);
         if (reply != null) {
             Speech.after(level, 40 + Speech.length(night ? "D_ANSWER_NIGHT" : "D_ANSWER"), () -> Lines.say(level, from, Lines.Speaker.DISTRICT, reply, 1f));
+            return;
+        }
+        if (afield) {
+            Speech.after(level, 40 + Speech.length(night ? "D_ANSWER_NIGHT" : "D_ANSWER"), () -> Lines.say(level, from, Lines.Speaker.DISTRICT, "D_LOST", 1f));
             return;
         }
         Towers.Notice n = home == null ? null : Towers.takeNotice(level, home);

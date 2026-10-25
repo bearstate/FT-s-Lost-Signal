@@ -25,6 +25,10 @@ who comes to the door at night in a mask.
   fall and get hurt. Bring them in before dawn.
 - **The fire finder**: sight a flare, a smoke or a lamp on the cartography table in the cab for its bearing and
   distance, and send the hiker the way back.
+- **Lost yourself**: out on the mountain with a handheld on 145.500, call the lookouts round you. A keeper puts a
+  flare up from the tower to walk towards, lights the lamp at night, and takes a bearing on yours to tell you the way
+  in. Flares come from the keepers and the supply crates, or are made (paper, gunpowder, redstone, string); a lantern
+  used at the air is swung over your head, seen from far off at night.
 - **Forest fires**: smoke columns far off through the haze, a glow at night. Read them off the fire finder, report
   them, and another keeper's bearing crosses yours. Nothing in the world burns; supplies come up for good eyes.
 - **The stranger**: an ordinary man by day, who says things about the forest that stay with you. At night, a black

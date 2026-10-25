@@ -86,9 +86,12 @@ public class RescueScreen extends Screen {
             // Its S-meter reading on the set; one it does not hear at all faded, after the rest.
             Component signal = nb.signal() < 0 ? Component.translatable("call.fts_lostsignal.no_signal")
                     : Component.translatable("call.fts_lostsignal.signal", nb.signal());
-            Component full = Component.translatable("call.fts_lostsignal.button", nb.number(),
+            // Out on the mountain, no bearing or distance: only which lookout, and how it comes in.
+            boolean afield = nb.bearing() < 0;
+            Component full = afield ? Component.translatable("call.fts_lostsignal.button_afield", nb.number()).append(" · ").append(signal)
+                    : Component.translatable("call.fts_lostsignal.button", nb.number(),
                     Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()).append(" · ").append(signal);
-            Component label = font.width(full) <= w - 8 ? full : Component.translatable("call.fts_lostsignal.button_short",
+            Component label = afield || font.width(full) <= w - 8 ? full : Component.translatable("call.fts_lostsignal.button_short",
                     nb.number(), Component.translatable("radio.fts_lostsignal.point_short." + point), nb.distance()).append(" · ").append(signal);
             if (nb.signal() < 0) label = label.copy().withStyle(net.minecraft.ChatFormatting.DARK_GRAY);
             addRenderableWidget(Button.builder(label, b -> Net.CHANNEL.sendToServer(new Net.Call(Net.Call.LOOKOUT, nb.key())))
@@ -147,6 +150,9 @@ public class RescueScreen extends Screen {
             g.drawCenteredString(font, Component.translatable("rescue.fts_lostsignal.last_reading",
                     Component.translatable("finder.fts_lostsignal.kind." + r.kind()), r.bearing(), r.distance(),
                     Math.floorMod(r.bearing() + 180, 360)), width / 2, height / 2 + 150, 0xE0C080);
+        } else if (handheld && !round.isEmpty() && round.get(0).bearing() < 0) {
+            // Out on the mountain: what the lookouts round can do for someone lost.
+            g.drawCenteredString(font, Component.translatable("rescue.fts_lostsignal.lost"), width / 2, height / 2 + 150, 0xA0A0A0);
         }
         super.render(g, mouseX, mouseY, partialTick);
     }

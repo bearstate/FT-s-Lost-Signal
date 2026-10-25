@@ -195,8 +195,7 @@ final class Dress {
             barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 4 + random.nextInt(4)));
             barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(random.nextBoolean() ? net.minecraft.world.item.Items.COOKED_SALMON
                     : net.minecraft.world.item.Items.BAKED_POTATO, 3 + random.nextInt(4)));
-            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.FIREWORK_ROCKET, 2)
-                    .setHoverName(net.minecraft.network.chat.Component.translatable("item.fts_lostsignal.flare")));
+            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get(), 2));
             barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CANDLE, 4));
             if (random.nextBoolean()) barrel.setItem(slot, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.PAPER, 6));
         }

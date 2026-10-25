@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [{"item": "minecraft:paper"}, {"item": "minecraft:gunpowder"}, {"item": "minecraft:redstone"}, {"item": "minecraft:string"}],
+  "result": {"item": "fts_lostsignal:flare", "count": 2}
+}

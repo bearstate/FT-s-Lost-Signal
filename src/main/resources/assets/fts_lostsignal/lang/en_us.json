@@ -338,5 +338,16 @@
   "radio.fts_lostsignal.line.D_QUAKE": "Lookout, District. We had a quake reported in your area. Everyone all right up there? Any damage to the tower? Over.",
   "radio.fts_lostsignal.line.D_QUAKE_02": "Copy. Glad you're in one piece. We'll get someone up to look at those legs when we can. District out.",
   "district.fts_lostsignal.reply.D_QUAKE": "Answer: still standing",
-  "district.fts_lostsignal.said.D_QUAKE": "District, Lookout %s. Shook hard, but we're standing. Over."
+  "district.fts_lostsignal.said.D_QUAKE": "District, Lookout %s. Shook hard, but we're standing. Over.",
+  "call.fts_lostsignal.button_afield": "Lookout %s",
+  "rescue.fts_lostsignal.lost": "Lost? Call a lookout round you: its keeper puts a flare up to walk towards, and takes a bearing on yours.",
+  "guide.fts_lostsignal.way": "Lookout %1$s has you on the finder: you are about %2$s blocks %3$s of it. Walk on a bearing of %4$s° (%5$s).",
+  "radio.fts_lostsignal.line.K_LOST_FLARE": "Okay. Hang on. I'm putting a flare up from the tower. Watch for it, and walk towards it.",
+  "radio.fts_lostsignal.line.K_LOST_LAMP": "And I've lit the lamp. As long as you can see that light, you walk towards it.",
+  "radio.fts_lostsignal.line.K_LOST_ASK": "If you've got a flare, put one up. I'll get a bearing on you from here.",
+  "radio.fts_lostsignal.line.K_LOST_ASK_NIGHT": "If you've got a flare, put one up. Or swing a lantern, up high. I'll get a bearing on you from here.",
+  "radio.fts_lostsignal.line.K_LOST_SEEN": "There you are. I've got you on the finder. Walk the bearing I'm giving you, and you'll see the tower before long.",
+  "radio.fts_lostsignal.line.K_LOST_NOT_SEEN": "Didn't see a thing. You must be behind a ridge from me. Get up somewhere high and try again.",
+  "radio.fts_lostsignal.line.S_LOST": "I see you. Don't move. Stay right where you are, and I'll come down to you.",
+  "radio.fts_lostsignal.line.D_LOST": "District. If you've lost your way out there, call the nearest lookout on this frequency. Put up a flare if you've got one. They'll find you from the tower."
 }
