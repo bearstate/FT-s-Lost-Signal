@@ -319,6 +319,13 @@ public final class Towers extends SavedData {
         }
     }
 
+    /** A hiker lost from a lookout and never found: their name to be posted up at the foot of its trail, with the day. */
+    public static void missing(ServerLevel level, BlockPos foot, String name) {
+        Tower t = at(level, foot);
+        t.posters.add(name + "|" + (level.getDayTime() / 24000 + 1));
+        of(level).setDirty();
+    }
+
     /** The stranger driven off from a lookout, hurt: he will be back for it, sooner, and worse. */
     public static void angered(ServerLevel level, BlockPos foot) {
         Tower t = at(level, foot);

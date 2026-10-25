@@ -172,6 +172,14 @@ public final class TestCommands {
                             c.getSource().sendSuccess(() -> Component.literal("LS_TEST smoke " + r), false);
                             return 1;
                         }))))
+                .then(Commands.literal("poster").executes(c -> {
+                    // A hiker of the lookout the player is at posted up as missing.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    var foot = p == null ? null : com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    if (foot == null) return 0;
+                    com.jeladastudios.lostsignal.tower.Towers.missing(p.serverLevel(), foot, "Dana");
+                    return 1;
+                }))
                 .then(Commands.literal("crew").executes(c -> {
                     // A crew sent to a spot two hundred blocks north of the lookout the player is at, out in two minutes.
                     ServerPlayer p = c.getSource().getPlayer();

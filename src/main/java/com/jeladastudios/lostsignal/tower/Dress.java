@@ -81,6 +81,10 @@ final class Dress {
             if (t.parcels.isEmpty()) t.parcelDue = -1;
             towers.setDirty();
         }
+        if (!t.posters.isEmpty() && poster(level, foot, t.posters.get(0))) {
+            t.posters.remove(0);
+            towers.setDirty();
+        }
         if (t.state == Tower.State.KEPT) keeper(level, t, floor);
         if (t.state == Tower.State.STRANGER) burning(level, t, foot, floor);
     }
@@ -228,6 +232,50 @@ final class Dress {
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("SUPPLY at {}", at.toShortString());
         return true;
+    }
+
+    /**
+     * A missing hiker posted up at the foot of the trail, a few steps from where the crates are set down: a sign facing
+     * down the slope, the way anyone coming up comes, MISSING, the name, the day they were last heard, the frequency.
+     * Waxed, so no one writes over it. False where its ground is not loaded, or there is nowhere to stand it.
+     */
+    static boolean poster(ServerLevel level, BlockPos foot, String entry) {
+        String[] parts = entry.split(java.util.regex.Pattern.quote("|"));
+        String name = parts[0], day = parts.length > 1 ? parts[1] : "?";
+        Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, foot);
+        double a = down != null ? Math.atan2(down.z, down.x) : 0;
+        // Beside the crates' spot, a little to one side of the trail.
+        double side = a + Math.PI / 2;
+        int x0 = (int) Math.floor(foot.getX() + 0.5 + Math.cos(a) * 26 + Math.cos(side) * 3), z0 = (int) Math.floor(foot.getZ() + 0.5 + Math.sin(a) * 26 + Math.sin(side) * 3);
+        if (!level.isLoaded(new BlockPos(x0, foot.getY(), z0))) return false;
+        float facing = (float) Math.toDegrees(Math.atan2(-Math.cos(a), Math.sin(a)));
+        for (int r = 0; r <= 3; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = x0 + dx, z = z0 + dz;
+                    BlockPos at = new BlockPos(x, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+                    if (!level.getBlockState(at).canBeReplaced() || !level.getFluidState(at).isEmpty() || !level.getBlockState(at.below()).isSolid()) continue;
+                    level.setBlock(at, Blocks.SPRUCE_SIGN.defaultBlockState().setValue(net.minecraft.world.level.block.StandingSignBlock.ROTATION,
+                            net.minecraft.world.level.block.state.properties.RotationSegment.convertToSegment(facing)), 3);
+                    if (level.getBlockEntity(at) instanceof net.minecraft.world.level.block.entity.SignBlockEntity sign) {
+                        var text = new net.minecraft.world.level.block.entity.SignText()
+                                .setMessage(0, net.minecraft.network.chat.Component.translatable("poster.fts_lostsignal.missing")
+                                        .withStyle(net.minecraft.ChatFormatting.DARK_RED, net.minecraft.ChatFormatting.BOLD))
+                                .setMessage(1, net.minecraft.network.chat.Component.literal(name))
+                                .setMessage(2, net.minecraft.network.chat.Component.translatable("poster.fts_lostsignal.since", day))
+                                .setMessage(3, net.minecraft.network.chat.Component.literal(com.jeladastudios.lostsignal.radio.Broadcast.RESCUE));
+                        sign.setText(text, true);
+                        sign.setWaxed(true);
+                        sign.setChanged();
+                        level.sendBlockUpdated(at, level.getBlockState(at), level.getBlockState(at), 3);
+                    }
+                    if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("POSTER for {} at {}", name, at.toShortString());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

@@ -612,5 +612,7 @@
   "district.fts_lostsignal.said.C_RELAY": "District, Lookout %1$s. Relay from Crew %2$s: on scene, about two acres, creeping, not much wind. Over.",
   "district.fts_lostsignal.reply.C_RELAY": "Relay: crew on scene",
   "crew.fts_lostsignal.relay": "The crew can't raise the District: relay it from the rescue panel (J).",
-  "desk.fts_lostsignal.bonus.relay": "Relay passed on"
+  "desk.fts_lostsignal.bonus.relay": "Relay passed on",
+  "poster.fts_lostsignal.missing": "MISSING",
+  "poster.fts_lostsignal.since": "since day %s"
 }

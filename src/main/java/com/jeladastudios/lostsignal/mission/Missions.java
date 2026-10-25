@@ -616,6 +616,10 @@ public final class Missions extends SavedData {
     void end(ServerLevel level, Mission mission, String how) {
         mission.stage = Mission.Stage.OVER;
         mission.ending = how;
+        // Never found: posted up as missing at the foot of the lookout's trail.
+        if ((how.equals("taken") || how.equals("lost")) && mission.hiker != null) {
+            com.jeladastudios.lostsignal.tower.Towers.missing(level, mission.tower, com.jeladastudios.lostsignal.remains.Journal.name(mission.hiker.getLeastSignificantBits()));
+        }
         missions.remove(mission.tower);
         setDirty();
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MISSION over at {}: {}", mission.tower.toShortString(), how);

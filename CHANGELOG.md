@@ -65,6 +65,8 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   lookouts' fund.
 - **Rank**: seasonal lookout, lookout, senior lookout, district lookout, by service (duties done, fires called in,
   hikers brought in, right observations, nights he went away): a raise with each, and more of the order list.
+- **Missing**: a hiker lost from a lookout and never found is posted up at the foot of its trail, a sign facing down
+  the slope: MISSING, their name, the day they were last heard, the frequency.
 - **The season's evaluation**: as the lookouts close, days on duty, the share of the roster done, fires and hikers,
   a grade, a bonus for a good one, and whether you are wanted back.
 - **Advancements**: a Lookout tab, from the first posting to the night he went away from your door.

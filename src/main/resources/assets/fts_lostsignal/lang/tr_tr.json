@@ -612,5 +612,7 @@
   "district.fts_lostsignal.said.C_RELAY": "Merkez, Gözcü %1$s. Ekip %2$s adına aktarıyorum: olay yerindeler, yaklaşık iki dönüm, yavaş ilerliyor, rüzgâr pek yok. Tamam.",
   "district.fts_lostsignal.reply.C_RELAY": "Aktar: ekip olay yerinde",
   "crew.fts_lostsignal.relay": "Ekip Merkez'e ulaşamıyor: kurtarma panelinden (J) aktar.",
-  "desk.fts_lostsignal.bonus.relay": "Aktarma yapıldı"
+  "desk.fts_lostsignal.bonus.relay": "Aktarma yapıldı",
+  "poster.fts_lostsignal.missing": "KAYIP",
+  "poster.fts_lostsignal.since": "%s. günden beri"
 }

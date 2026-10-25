@@ -77,6 +77,9 @@ public final class Tower {
     public final java.util.List<net.minecraft.world.item.ItemStack> parcels = new java.util.ArrayList<>();
     public long parcelDue = -1;
 
+    /** The hikers lost from it and never found, their names, and the day each was last heard; still to be posted up. */
+    public final java.util.List<String> posters = new java.util.ArrayList<>();
+
     public Tower(int x, int y, int z) {
         this.x = x;
         this.y = y;
@@ -127,6 +130,9 @@ public final class Tower {
         for (var s : parcels) ps.add(s.save(new CompoundTag()));
         t.put("Parcels", ps);
         t.putLong("ParcelDue", parcelDue);
+        net.minecraft.nbt.ListTag missing = new net.minecraft.nbt.ListTag();
+        for (String s : posters) missing.add(net.minecraft.nbt.StringTag.valueOf(s));
+        t.put("Posters", missing);
         if (near != null) {
             net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
             for (BlockPos p : near) list.add(net.minecraft.nbt.NbtUtils.writeBlockPos(p));
@@ -157,6 +163,7 @@ public final class Tower {
         tower.lastSupply = t.getLong("LastSupply");
         for (var s : t.getList("Parcels", net.minecraft.nbt.Tag.TAG_COMPOUND)) tower.parcels.add(net.minecraft.world.item.ItemStack.of((CompoundTag) s));
         tower.parcelDue = t.contains("ParcelDue") ? t.getLong("ParcelDue") : -1;
+        for (var s : t.getList("Posters", net.minecraft.nbt.Tag.TAG_STRING)) tower.posters.add(s.getAsString());
         if (t.contains("Near")) {
             tower.near = new java.util.ArrayList<>();
             for (net.minecraft.nbt.Tag e : t.getList("Near", net.minecraft.nbt.Tag.TAG_COMPOUND)) tower.near.add(net.minecraft.nbt.NbtUtils.readBlockPos((CompoundTag) e));
