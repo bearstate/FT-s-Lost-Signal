@@ -32,6 +32,23 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **Flares of your own**: the keepers', the crates' and the camps' flares go up when used, as the hikers' do; paper,
   gunpowder, redstone and string make two. The old ones, rockets by another name, become flares in the hand. A
   lantern used at the air is swung over your head, a light seen from far off at night.
+- **The lookout terminal**: a 1994 tube monitor and its keyboard on the desk, run off the station's power (with the
+  generator cold, the screen is dark). The District's messages; the duty roster (the morning radio check, the one
+  o'clock fire weather observation, the end of day check, the walkway lamp at dusk); the observation itself, read off
+  the instruments by eye and typed in by hand, the District holding each figure against what the instruments truly
+  read and sending it back where too many are off; the smoke report, its bearing and distance typed off the fire
+  finder; orders; and the keeper's record. Worked from the keyboard alone, too.
+- **Posted for the season**: at a lookout the District posts you there, says so on the radio and on the terminal, and
+  sends the terminal, the lookout guide and a page someone left folded in it up with the next crate. In a world that
+  had lookouts before, nothing is set into a lookout someone has been living in. Each lookout answers the District's
+  radio checks for itself.
+- **Pay credit**: weekly, for each day on duty and each duty done, and for good work (a hiker brought in, a fire called
+  in, a report right to a degree, an observation right in every reading); spent on orders from the terminal (coal,
+  food, flares, a lantern, a compass, a spyglass, a signal lamp, a terminal, a handheld), sent up with the next
+  morning's crate. A crate still standing at the foot of the trail is filled rather than another set beside it.
+- **The season**: opening, the fire season, closing, the lookouts shut for the winter; by Serene Seasons' seasons where
+  it is installed, else a calendar of five weeks of our own. The duties and the pay keep to it.
+- **Advancements**: a Lookout tab, from the first posting to the night he went away from your door.
 - **One thing at a time**: no one says a line over their own last one; the stranger is only ever in one place.
 - **Older lookouts made safe**: one built before Feel the Nature brought its stair out onto the walkway gets a hatch
   over the stairwell in its floor, and lanterns under it; and every lookout is kept off by FT's Geology's earthquakes

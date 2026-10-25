@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:lantern"
+    },
+    "title": {
+      "translate": "advancements.fts_lostsignal.brought_home.title"
+    },
+    "description": {
+      "translate": "advancements.fts_lostsignal.brought_home.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "fts_lostsignal:lookout/root"
+}

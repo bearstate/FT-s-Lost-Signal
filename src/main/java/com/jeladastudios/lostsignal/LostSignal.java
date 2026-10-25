@@ -39,6 +39,7 @@ public final class LostSignal {
         bus.addListener((net.minecraftforge.event.BuildCreativeModeTabContentsEvent e) -> {
             if (e.getTabKey() == net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS) {
                 e.accept(com.jeladastudios.lostsignal.block.ModBlocks.SIGNAL_LAMP_ITEM.get());
+                e.accept(com.jeladastudios.lostsignal.block.ModBlocks.TERMINAL_ITEM.get());
             }
             if (e.getTabKey() == net.minecraft.world.item.CreativeModeTabs.TOOLS_AND_UTILITIES) {
                 e.accept(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get());

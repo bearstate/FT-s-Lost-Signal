@@ -16,7 +16,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 /**
  * The mod's blocks, and the items of those that can be had: the marks left on the ground (put there by the world, not
- * to be had) and the lookout's signal lamp; and the hand flare.
+ * to be had), the lookout's signal lamp and its terminal; and the hand flare.
  */
 public final class ModBlocks {
 
@@ -46,6 +46,17 @@ public final class ModBlocks {
 
     public static final RegistryObject<BlockItem> SIGNAL_LAMP_ITEM = ITEMS.register("signal_lamp",
             () -> new BlockItem(SIGNAL_LAMP.get(), new Item.Properties()));
+
+    public static final RegistryObject<com.jeladastudios.lostsignal.desk.TerminalBlock> TERMINAL = BLOCKS.register("terminal",
+            () -> new com.jeladastudios.lostsignal.desk.TerminalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
+                    .strength(1.0f)
+                    .sound(SoundType.METAL)
+                    .noOcclusion()
+                    .lightLevel(s -> s.getValue(com.jeladastudios.lostsignal.desk.TerminalBlock.ON) ? 5 : 0)));
+
+    public static final RegistryObject<BlockItem> TERMINAL_ITEM = ITEMS.register("terminal",
+            () -> new BlockItem(TERMINAL.get(), new Item.Properties()));
 
     public static final RegistryObject<Item> FLARE = ITEMS.register("flare",
             () -> new com.jeladastudios.lostsignal.item.FlareItem(new Item.Properties().stacksTo(16)));

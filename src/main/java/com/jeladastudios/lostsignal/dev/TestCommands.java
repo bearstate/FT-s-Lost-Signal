@@ -146,6 +146,32 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST call " + which + " of " + list.size()), false);
                     return 1;
                 })))
+                .then(Commands.literal("desk").then(Commands.argument("what", com.mojang.brigadier.arguments.StringArgumentType.word())
+                        .executes(c -> desk(c, 0))
+                        .then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer()).executes(c ->
+                                desk(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "value"))))))
+                .then(Commands.literal("observe").then(Commands.argument("values", com.mojang.brigadier.arguments.StringArgumentType.greedyString()).executes(c -> {
+                    // An observation sent as from a terminal where the player stands: eight numbers, "x" for one left empty.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    String[] parts = com.mojang.brigadier.arguments.StringArgumentType.getString(c, "values").trim().split("\\s+");
+                    int[] v = new int[com.jeladastudios.lostsignal.desk.Observation.FIELDS];
+                    for (int i = 0; i < v.length; i++) v[i] = i < parts.length && !parts[i].equals("x") ? Integer.parseInt(parts[i]) : com.jeladastudios.lostsignal.desk.Observation.EMPTY;
+                    com.jeladastudios.lostsignal.desk.Observation.send(p, p.blockPosition(), v);
+                    var now = com.jeladastudios.lostsignal.tower.WeatherReport.reading(p.serverLevel(), p.blockPosition());
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST observe " + java.util.Arrays.toString(v) + " terminal " + now), false);
+                    return 1;
+                })))
+                .then(Commands.literal("smoke").then(Commands.argument("bearing", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 359))
+                        .then(Commands.argument("distance", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 2000)).executes(c -> {
+                            ServerPlayer p = c.getSource().getPlayer();
+                            var foot = p == null ? null : com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                            if (foot == null) return 0;
+                            String r = com.jeladastudios.lostsignal.tower.Fires.reportFrom(p, foot, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "bearing"),
+                                    com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "distance"));
+                            c.getSource().sendSuccess(() -> Component.literal("LS_TEST smoke " + r), false);
+                            return 1;
+                        }))))
                 .then(Commands.literal("lost").then(Commands.argument("which", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 8)).executes(c -> {
                     // A lookout round the player called on a handheld out on the mountain: 1 the first the panel lists.
                     ServerPlayer p = c.getSource().getPlayer();
@@ -388,6 +414,16 @@ public final class TestCommands {
                     h.getBlockX(), h.getBlockY(), h.getBlockZ(), h.fatigue(), h.goal() == null ? "-" : h.goal().toShortString()));
         }
         c.getSource().sendSuccess(() -> Component.literal(b.toString()), false);
+        return 1;
+    }
+
+    /** {@code /ls_test desk pay|credit <n>|parcel|season <day>|state}: the player's post, tried. */
+    static int desk(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, int value) {
+        ServerPlayer p = c.getSource().getPlayer();
+        if (p == null) return 0;
+        String s = com.jeladastudios.lostsignal.desk.Desk.test(p, com.mojang.brigadier.arguments.StringArgumentType.getString(c, "what"), value);
+        com.jeladastudios.lostsignal.LostSignal.LOGGER.info("LS_TEST desk {}", s);
+        c.getSource().sendSuccess(() -> Component.literal("LS_TEST desk " + s), false);
         return 1;
     }
 

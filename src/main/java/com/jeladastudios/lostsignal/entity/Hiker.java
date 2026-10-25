@@ -185,6 +185,15 @@ public class Hiker extends PathfinderMob {
 
     /** Found, or come in: they walk to the lookout's foot and wait there for the morning. */
     public void rescued(BlockPos lookout) {
+        // Brought in for the first time: to the credit of whoever is at the lookout, or with them.
+        if (state() != State.RESCUED && level() instanceof net.minecraft.server.level.ServerLevel server) {
+            for (net.minecraft.server.level.ServerPlayer p : server.players()) {
+                if (p.isSpectator() || p.distanceTo(this) > 32 && Math.hypot(p.getX() - lookout.getX(), p.getZ() - lookout.getZ()) > 96) continue;
+                com.jeladastudios.lostsignal.desk.Marks.award(p, "brought_home");
+                com.jeladastudios.lostsignal.desk.Desk.count(p, "rescued");
+                com.jeladastudios.lostsignal.desk.Desk.earn(p, "desk.fts_lostsignal.bonus.rescue", com.jeladastudios.lostsignal.desk.Desk.RESCUE_PAY);
+            }
+        }
         staying = false;
         guide = Guide.NONE;
         goal = lookout;

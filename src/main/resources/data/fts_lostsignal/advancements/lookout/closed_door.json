@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:spruce_door"
+    },
+    "title": {
+      "translate": "advancements.fts_lostsignal.closed_door.title"
+    },
+    "description": {
+      "translate": "advancements.fts_lostsignal.closed_door.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "fts_lostsignal:lookout/root"
+}

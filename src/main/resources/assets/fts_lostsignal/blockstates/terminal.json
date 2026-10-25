@@ -1,0 +1,34 @@
+{
+ "variants": {
+  "facing=north,on=false": {
+   "model": "fts_lostsignal:block/terminal"
+  },
+  "facing=north,on=true": {
+   "model": "fts_lostsignal:block/terminal_on"
+  },
+  "facing=east,on=false": {
+   "model": "fts_lostsignal:block/terminal",
+   "y": 90
+  },
+  "facing=east,on=true": {
+   "model": "fts_lostsignal:block/terminal_on",
+   "y": 90
+  },
+  "facing=south,on=false": {
+   "model": "fts_lostsignal:block/terminal",
+   "y": 180
+  },
+  "facing=south,on=true": {
+   "model": "fts_lostsignal:block/terminal_on",
+   "y": 180
+  },
+  "facing=west,on=false": {
+   "model": "fts_lostsignal:block/terminal",
+   "y": 270
+  },
+  "facing=west,on=true": {
+   "model": "fts_lostsignal:block/terminal_on",
+   "y": 270
+  }
+ }
+}

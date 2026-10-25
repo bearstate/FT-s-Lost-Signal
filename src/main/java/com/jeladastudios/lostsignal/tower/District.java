@@ -43,6 +43,8 @@ public final class District {
 
     private static final Map<String, Long> SAID = new HashMap<>();
     private static String waiting;
+    /** Who has answered the call waiting: each lookout answers for itself. */
+    private static final java.util.Set<java.util.UUID> ANSWERED = new java.util.HashSet<>();
     private static long waitingSince;
     private static boolean askedAgain;
 
@@ -52,7 +54,7 @@ public final class District {
         if (level.getGameTime() % 20 != 0 || level.players().isEmpty() || !com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.DISTRICT)) return;
         long day = level.getDayTime() / 24000, time = level.getDayTime() % 24000;
         // Nobody came back to it: asked again, once.
-        if (waiting != null && !askedAgain && level.getGameTime() - waitingSince > ASKS_AGAIN) {
+        if (waiting != null && !askedAgain && ANSWERED.isEmpty() && level.getGameTime() - waitingSince > ASKS_AGAIN) {
             askedAgain = true;
             waitingSince = level.getGameTime();
             Lines.say(level, Vec3.atCenterOf(level.getSharedSpawnPos()), Lines.Speaker.DISTRICT, waiting, 1f);
@@ -69,6 +71,7 @@ public final class District {
             waiting = REPLY.containsKey(s.line()) ? s.line() : null;
             waitingSince = level.getGameTime();
             askedAgain = false;
+            ANSWERED.clear();
             // One call at a time.
             break;
         }
@@ -82,6 +85,7 @@ public final class District {
             waiting = line;
             waitingSince = level.getGameTime();
             askedAgain = false;
+            ANSWERED.clear();
         }
     }
 
@@ -90,17 +94,30 @@ public final class District {
         return waiting == null || level.getGameTime() - waitingSince > REPLY_WITHIN ? null : waiting;
     }
 
-    /** The District's answer to a call back after one of its own, if one is waited on; taken, so it is said once. */
-    static String reply(ServerLevel level) {
-        if (waiting == null || level.getGameTime() - waitingSince > REPLY_WITHIN) return null;
-        String r = REPLY.get(waiting);
-        waiting = null;
-        return r;
+    /** Whether the District made one of its calls today: a radio check is only there to be answered once it is. */
+    public static boolean called(ServerLevel level, String line) {
+        return SAID.getOrDefault(line, -1L) == level.getDayTime() / 24000;
+    }
+
+    /** The District's own call waiting for an answer from a player who has not answered it yet: its line, or null. */
+    public static String awaiting(ServerLevel level, net.minecraft.server.level.ServerPlayer p) {
+        String w = awaiting(level);
+        return w == null || ANSWERED.contains(p.getUUID()) ? null : w;
+    }
+
+    /**
+     * The District's answer to a player's call back after one of its own, if one is waited on and they have not
+     * answered it yet; said once to each.
+     */
+    static String reply(ServerLevel level, net.minecraft.server.level.ServerPlayer p) {
+        if (waiting == null || level.getGameTime() - waitingSince > REPLY_WITHIN || !ANSWERED.add(p.getUUID())) return null;
+        return REPLY.get(waiting);
     }
 
     @SubscribeEvent
     public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
         SAID.clear();
         waiting = null;
+        ANSWERED.clear();
     }
 }

@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:compass"
+    },
+    "title": {
+      "translate": "advancements.fts_lostsignal.cross_bearing.title"
+    },
+    "description": {
+      "translate": "advancements.fts_lostsignal.cross_bearing.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "fts_lostsignal:lookout/first_smoke"
+}

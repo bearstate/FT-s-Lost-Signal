@@ -23,6 +23,7 @@ public final class Config {
     public static final BooleanValue DISTRICT, SUPPLIES, FIRES;
     public static final DoubleValue FIRE_CHANCE;
     public static final BooleanValue FLOWING_SLEEP;
+    public static final BooleanValue DESK;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -79,6 +80,11 @@ public final class Config {
                 .define("fires", true);
         FIRE_CHANCE = b.comment("How often they start (1 = as designed).")
                 .defineInRange("fireFrequency", 1.0, 0.0, 5.0);
+        b.pop();
+
+        b.comment("The lookout's desk work: the terminal, the day's duties, pay credit and orders, the season.").push("desk");
+        DESK = b.comment("All of it. Off, no one is posted, no duties are kept and nothing is paid; the terminal stays dark.")
+                .define("enabled", true);
         b.pop();
 
         b.comment("Sleep.").push("sleep");

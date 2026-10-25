@@ -73,6 +73,10 @@ public final class Tower {
     /** What was left of its keeper, still to be set out near it when its ground is next loaded. */
     public boolean remainsPending;
 
+    /** What has been sent up to it (orders, a keeper's kit), set down with a crate from a day on; -1 when nothing is. */
+    public final java.util.List<net.minecraft.world.item.ItemStack> parcels = new java.util.ArrayList<>();
+    public long parcelDue = -1;
+
     public Tower(int x, int y, int z) {
         this.x = x;
         this.y = y;
@@ -119,6 +123,10 @@ public final class Tower {
         t.putBoolean("RemainsPending", remainsPending);
         t.putBoolean("SupplyPending", supplyPending);
         t.putLong("LastSupply", lastSupply);
+        net.minecraft.nbt.ListTag ps = new net.minecraft.nbt.ListTag();
+        for (var s : parcels) ps.add(s.save(new CompoundTag()));
+        t.put("Parcels", ps);
+        t.putLong("ParcelDue", parcelDue);
         if (near != null) {
             net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
             for (BlockPos p : near) list.add(net.minecraft.nbt.NbtUtils.writeBlockPos(p));
@@ -147,6 +155,8 @@ public final class Tower {
         tower.remainsPending = t.getBoolean("RemainsPending");
         tower.supplyPending = t.getBoolean("SupplyPending");
         tower.lastSupply = t.getLong("LastSupply");
+        for (var s : t.getList("Parcels", net.minecraft.nbt.Tag.TAG_COMPOUND)) tower.parcels.add(net.minecraft.world.item.ItemStack.of((CompoundTag) s));
+        tower.parcelDue = t.contains("ParcelDue") ? t.getLong("ParcelDue") : -1;
         if (t.contains("Near")) {
             tower.near = new java.util.ArrayList<>();
             for (net.minecraft.nbt.Tag e : t.getList("Near", net.minecraft.nbt.Tag.TAG_COMPOUND)) tower.near.add(net.minecraft.nbt.NbtUtils.readBlockPos((CompoundTag) e));

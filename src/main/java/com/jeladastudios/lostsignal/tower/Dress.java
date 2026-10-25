@@ -74,9 +74,11 @@ final class Dress {
             t.remainsPending = false;
             towers.setDirty();
         }
-        if (t.supplyPending && supply(level, t, foot)) {
+        boolean parcels = !t.parcels.isEmpty() && t.parcelDue >= 0 && level.getDayTime() / 24000 >= t.parcelDue;
+        if ((t.supplyPending || parcels) && supply(level, t, foot, parcels)) {
+            if (t.supplyPending) t.lastSupply = level.getGameTime();
             t.supplyPending = false;
-            t.lastSupply = level.getGameTime();
+            if (t.parcels.isEmpty()) t.parcelDue = -1;
             towers.setDirty();
         }
         if (t.state == Tower.State.KEPT) keeper(level, t, floor);
@@ -177,27 +179,42 @@ final class Dress {
 
     /**
      * The District's supply crate, set down where the trail starts up to the lookout (some way down the slope below
-     * it) and said on the radio, with where it is. False where its ground is not loaded yet.
+     * it) and said on the radio, with where it is: the supplies, if they are due, and what has been sent up (as much of
+     * it as fits; the rest with the next). Put into the last crate where it still stands there with room in it, else
+     * set down beside it. False where its ground is not loaded yet, or there is nowhere to set one down.
      */
-    static boolean supply(ServerLevel level, Tower t, BlockPos foot) {
+    static boolean supply(ServerLevel level, Tower t, BlockPos foot, boolean parcels) {
         Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, foot);
         double a = down != null ? Math.atan2(down.z, down.x) : level.random.nextDouble() * Math.PI * 2;
-        int x = (int) Math.floor(foot.getX() + 0.5 + Math.cos(a) * 26), z = (int) Math.floor(foot.getZ() + 0.5 + Math.sin(a) * 26);
-        if (!level.isLoaded(new BlockPos(x, foot.getY(), z))) return false;
-        BlockPos at = new BlockPos(x, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
-        if (!level.getBlockState(at).canBeReplaced() || !level.getFluidState(at.below()).isEmpty()) return false;
-        level.setBlock(at, Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, Direction.UP), 3);
-        if (level.getBlockEntity(at) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity barrel) {
-            barrel.setCustomName(net.minecraft.network.chat.Component.translatable("block.fts_lostsignal.supply_crate"));
+        int x0 = (int) Math.floor(foot.getX() + 0.5 + Math.cos(a) * 26), z0 = (int) Math.floor(foot.getZ() + 0.5 + Math.sin(a) * 26);
+        if (!level.isLoaded(new BlockPos(x0, foot.getY(), z0))) return false;
+        net.minecraft.world.level.block.entity.BarrelBlockEntity barrel = crate(level, x0, z0);
+        if (barrel == null) return false;
+        BlockPos at = barrel.getBlockPos();
+        int x = at.getX(), z = at.getZ();
+        {
             var random = level.random;
-            int slot = 0;
-            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COAL, 10 + random.nextInt(9)));
-            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 4 + random.nextInt(4)));
-            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(random.nextBoolean() ? net.minecraft.world.item.Items.COOKED_SALMON
-                    : net.minecraft.world.item.Items.BAKED_POTATO, 3 + random.nextInt(4)));
-            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get(), 2));
-            barrel.setItem(slot++, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CANDLE, 4));
-            if (random.nextBoolean()) barrel.setItem(slot, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.PAPER, 6));
+            int slot = next(barrel, -1);
+            List<net.minecraft.world.item.ItemStack> put = new ArrayList<>();
+            if (t.supplyPending) {
+                put.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COAL, 10 + random.nextInt(9)));
+                put.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 4 + random.nextInt(4)));
+                put.add(new net.minecraft.world.item.ItemStack(random.nextBoolean() ? net.minecraft.world.item.Items.COOKED_SALMON
+                        : net.minecraft.world.item.Items.BAKED_POTATO, 3 + random.nextInt(4)));
+                put.add(new net.minecraft.world.item.ItemStack(com.jeladastudios.lostsignal.block.ModBlocks.FLARE.get(), 2));
+                put.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CANDLE, 4));
+                if (random.nextBoolean()) put.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.PAPER, 6));
+            }
+            for (var s : put) {
+                if (slot < 0) break;
+                barrel.setItem(slot, s);
+                slot = next(barrel, slot);
+            }
+            while (parcels && slot >= 0 && !t.parcels.isEmpty()) {
+                barrel.setItem(slot, t.parcels.remove(0));
+                slot = next(barrel, slot);
+            }
+            barrel.setChanged();
         }
         // On the radio, to whoever is at the lookout's set: and where it is from the tower's foot.
         Vec3 from = Vec3.atCenterOf(foot.above(22));
@@ -211,6 +228,48 @@ final class Dress {
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("SUPPLY at {}", at.toShortString());
         return true;
+    }
+
+    /**
+     * The crate at the foot of the trail: the last one, where it still stands at the spot or a step from it with room
+     * in it, else a new one set down at the nearest ground there is; null where there is none within a few steps.
+     */
+    static net.minecraft.world.level.block.entity.BarrelBlockEntity crate(ServerLevel level, int x0, int z0) {
+        for (int r = 0; r <= 3; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = x0 + dx, z = z0 + dz;
+                    BlockPos top = new BlockPos(x, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
+                    if (level.getBlockEntity(top.below()) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity old && old.hasCustomName()
+                            && old.getCustomName().getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents name
+                            && name.getKey().equals("block.fts_lostsignal.supply_crate")) {
+                        if (next(old, -1) >= 0 && old.getContainerSize() - filled(old) >= 6) return old;
+                        continue;
+                    }
+                    if (!level.getBlockState(top).canBeReplaced() || !level.getFluidState(top.below()).isEmpty()) continue;
+                    level.setBlock(top, Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, Direction.UP), 3);
+                    if (level.getBlockEntity(top) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity made) {
+                        made.setCustomName(net.minecraft.network.chat.Component.translatable("block.fts_lostsignal.supply_crate"));
+                        return made;
+                    }
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** The next empty slot of a crate after one, or -1 where it is full. */
+    static int next(net.minecraft.world.level.block.entity.BarrelBlockEntity barrel, int after) {
+        for (int i = after + 1; i < barrel.getContainerSize(); i++) if (barrel.getItem(i).isEmpty()) return i;
+        return -1;
+    }
+
+    static int filled(net.minecraft.world.level.block.entity.BarrelBlockEntity barrel) {
+        int n = 0;
+        for (int i = 0; i < barrel.getContainerSize(); i++) if (!barrel.getItem(i).isEmpty()) n++;
+        return n;
     }
 
     /** The keeper in their cab: put there if they are not. */

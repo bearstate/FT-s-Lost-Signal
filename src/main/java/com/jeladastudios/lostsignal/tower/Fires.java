@@ -247,8 +247,60 @@ public final class Fires {
             p.displayClientMessage(Component.translatable("fire.fts_lostsignal.read_first"), true);
             return;
         }
+        called(p, fire, com.jeladastudios.lostsignal.desk.Desk.FIRE_PAY, false);
+    }
+
+    /** How near a fire's true bearing a reported one must be, in degrees; and its distance, as a share of the true one. */
+    static final double REPORT_BEARING = 4, REPORT_DISTANCE = 0.35;
+    /** How near both must be for the report to count as an exact one. */
+    static final double EXACT_BEARING = 1, EXACT_DISTANCE = 0.15;
+
+    /**
+     * A smoke report sent from the terminal: the bearing and distance the keeper read off the fire finder and typed in,
+     * from the lookout they are at. Matched to a fire burning on that bearing (and about that far, where a distance is
+     * given): called in as from the panel, and earning more, the more so for a report right to a degree. "none" where no
+     * fire is there, "called" where it already has been, "ok" or "exact" where it is taken.
+     */
+    public static String reportFrom(ServerPlayer p, BlockPos foot, int bearing, int distance) {
+        Vec3 cab = Vec3.atCenterOf(foot.above(22));
+        Fire best = null;
+        double bestOff = Double.MAX_VALUE, bestShare = 0;
+        boolean already = false;
+        for (Fire f : FIRES) {
+            Vec3 to = f.at.subtract(cab);
+            double flat = Math.hypot(to.x, to.z);
+            int truth = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(to.x, -to.z))), 360);
+            double off = Math.abs(net.minecraft.util.Mth.wrapDegrees(bearing - truth));
+            double share = distance > 0 ? Math.abs(distance - flat) / flat : 0;
+            if (off > REPORT_BEARING || share > REPORT_DISTANCE) continue;
+            if (f.called) {
+                already = true;
+                continue;
+            }
+            if (off < bestOff) {
+                best = f;
+                bestOff = off;
+                bestShare = share;
+            }
+        }
+        if (best == null) return already ? "called" : "none";
+        boolean exact = bestOff <= EXACT_BEARING && distance > 0 && bestShare <= EXACT_DISTANCE;
+        called(p, best, com.jeladastudios.lostsignal.desk.Desk.REPORT_PAY, exact);
+        return exact ? "exact" : "ok";
+    }
+
+    /**
+     * A fire called in: crossed with another keeper's bearing where one is posted near, a crew sent, out in a few
+     * minutes; to the caller's credit and record.
+     */
+    static void called(ServerPlayer p, Fire fire, int pay, boolean exact) {
+        ServerLevel level = p.serverLevel();
         fire.called = true;
         Fire called = fire;
+        com.jeladastudios.lostsignal.desk.Marks.award(p, "first_smoke");
+        com.jeladastudios.lostsignal.desk.Desk.count(p, "fires");
+        com.jeladastudios.lostsignal.desk.Desk.earn(p, "desk.fts_lostsignal.bonus.fire", pay);
+        if (exact) com.jeladastudios.lostsignal.desk.Desk.earn(p, "desk.fts_lostsignal.bonus.exact", com.jeladastudios.lostsignal.desk.Desk.PRECISE_PAY);
         Vec3 from = p.position();
         BlockPos foot = Missions.towerAt(level, p);
         Tower home = foot == null ? null : Towers.at(level, foot);
@@ -268,6 +320,7 @@ public final class Fires {
         at += Speech.length("D_ANSWER");
         if (crossing != null) {
             Tower t = crossing;
+            com.jeladastudios.lostsignal.desk.Marks.award(p, "cross_bearing");
             Speech.after(level, at, () -> {
                 Lines.sayAs(level, t.cab(), Calls.lookout(t, t.keeper), "K_SMOKE", 1f, t.pitch, Calls.REACH);
                 Vec3 to = called.at.subtract(t.cab());

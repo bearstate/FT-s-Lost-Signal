@@ -212,6 +212,10 @@ public final class Visit {
             }
             if (allHidden && exposed.isEmpty()) {
                 say("S_DOOR_LEAVE");
+                for (ServerPlayer p : in) {
+                    com.jeladastudios.lostsignal.desk.Marks.award(p, "closed_door");
+                    com.jeladastudios.lostsignal.desk.Desk.count(p, "nights");
+                }
                 if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT went away ({})", in.isEmpty() ? "no one in" : "hidden");
             } else {
                 breakIn(in);

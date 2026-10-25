@@ -17,7 +17,7 @@ public final class Net {
     private Net() {}
 
     /** Raised whenever a message's shape changes, so a client of an older version is told so at the door. */
-    private static final String VERSION = "4";
+    private static final String VERSION = "5";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(LostSignal.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
@@ -36,6 +36,8 @@ public final class Net {
         CHANNEL.registerMessage(7, Call.class, Call::write, Call::read, Call::handle, toServer);
         CHANNEL.registerMessage(8, Meet.class, Meet::write, Meet::read, Meet::handle, toClient);
         CHANNEL.registerMessage(9, Bid.class, Bid::write, Bid::read, Bid::handle, toServer);
+        CHANNEL.registerMessage(10, TermState.class, TermState::write, TermState::read, TermState::handle, toClient);
+        CHANNEL.registerMessage(11, TermAct.class, TermAct::write, TermAct::read, TermAct::handle, toServer);
     }
 
     /** When each player last sent each kind of message, by the wall clock, so none can be sent faster than it should. */
@@ -50,6 +52,109 @@ public final class Net {
         LAST.put(key, now);
         if (LAST.size() > 4096) LAST.clear();
         return true;
+    }
+
+    /** A line of a list on the terminal: a name or key, and two numbers (an order's lot and price, a record's count). */
+    public record Line(String key, int a, int b) {}
+
+    /** What the terminal's screen shows, sent as it opens and after each thing sent from it. */
+    public record TermState(boolean open, long pos, boolean posted, int number, int here, String name, int credit, int season, int phase, int daysLeft,
+                            long day, int time, int present, int done, int missed, int applies, boolean observed, boolean observedRight,
+                            int daysOnDuty, int dutiesDone, int bonus, int nextPay, java.util.List<com.jeladastudios.lostsignal.desk.Mail> inbox,
+                            java.util.List<Line> stats, java.util.List<Line> catalog) {
+
+        static void write(TermState m, FriendlyByteBuf buf) {
+            buf.writeBoolean(m.open);
+            buf.writeLong(m.pos);
+            buf.writeBoolean(m.posted);
+            buf.writeVarInt(m.number);
+            buf.writeVarInt(m.here);
+            buf.writeUtf(m.name, 32);
+            buf.writeVarInt(m.credit);
+            buf.writeVarInt(m.season);
+            buf.writeVarInt(m.phase);
+            buf.writeVarInt(m.daysLeft);
+            buf.writeVarLong(m.day);
+            buf.writeVarInt(m.time);
+            buf.writeVarInt(m.present);
+            buf.writeVarInt(m.done);
+            buf.writeVarInt(m.missed);
+            buf.writeVarInt(m.applies);
+            buf.writeBoolean(m.observed);
+            buf.writeBoolean(m.observedRight);
+            buf.writeVarInt(m.daysOnDuty);
+            buf.writeVarInt(m.dutiesDone);
+            buf.writeVarInt(m.bonus);
+            buf.writeVarInt(m.nextPay);
+            buf.writeVarInt(m.inbox.size());
+            for (var mail : m.inbox) mail.write(buf);
+            lines(buf, m.stats);
+            lines(buf, m.catalog);
+        }
+
+        static void lines(FriendlyByteBuf buf, java.util.List<Line> list) {
+            buf.writeVarInt(list.size());
+            for (Line l : list) {
+                buf.writeUtf(l.key(), 128);
+                buf.writeVarInt(l.a());
+                buf.writeVarInt(l.b());
+            }
+        }
+
+        static java.util.List<Line> lines(FriendlyByteBuf buf) {
+            int n = Math.min(buf.readVarInt(), 64);
+            java.util.List<Line> list = new java.util.ArrayList<>();
+            for (int i = 0; i < n; i++) list.add(new Line(buf.readUtf(128), buf.readVarInt(), buf.readVarInt()));
+            return list;
+        }
+
+        static TermState read(FriendlyByteBuf buf) {
+            boolean open = buf.readBoolean();
+            long pos = buf.readLong();
+            boolean posted = buf.readBoolean();
+            int number = buf.readVarInt(), here = buf.readVarInt();
+            String name = buf.readUtf(32);
+            int credit = buf.readVarInt(), season = buf.readVarInt(), phase = buf.readVarInt(), daysLeft = buf.readVarInt();
+            long day = buf.readVarLong();
+            int time = buf.readVarInt(), present = buf.readVarInt(), done = buf.readVarInt(), missed = buf.readVarInt(), applies = buf.readVarInt();
+            boolean observed = buf.readBoolean(), observedRight = buf.readBoolean();
+            int daysOnDuty = buf.readVarInt(), dutiesDone = buf.readVarInt(), bonus = buf.readVarInt(), nextPay = buf.readVarInt();
+            int n = Math.min(buf.readVarInt(), 64);
+            java.util.List<com.jeladastudios.lostsignal.desk.Mail> inbox = new java.util.ArrayList<>();
+            for (int i = 0; i < n; i++) inbox.add(com.jeladastudios.lostsignal.desk.Mail.read(buf));
+            return new TermState(open, pos, posted, number, here, name, credit, season, phase, daysLeft, day, time, present, done, missed, applies,
+                    observed, observedRight, daysOnDuty, dutiesDone, bonus, nextPay, inbox, lines(buf), lines(buf));
+        }
+
+        static void handle(TermState m, Supplier<NetworkEvent.Context> ctx) {
+            var c = ctx.get();
+            c.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
+                    () -> () -> com.jeladastudios.lostsignal.client.TerminalScreen.state(m)));
+            c.setPacketHandled(true);
+        }
+    }
+
+    /** Something sent from the terminal: what (see desk.Terminal), a message's id where it is about one, and its numbers. */
+    public record TermAct(int action, long id, int[] values) {
+
+        static void write(TermAct m, FriendlyByteBuf buf) {
+            buf.writeVarInt(m.action);
+            buf.writeLong(m.id);
+            buf.writeVarIntArray(m.values);
+        }
+
+        static TermAct read(FriendlyByteBuf buf) {
+            return new TermAct(buf.readVarInt(), buf.readLong(), buf.readVarIntArray(16));
+        }
+
+        static void handle(TermAct m, Supplier<NetworkEvent.Context> ctx) {
+            var c = ctx.get();
+            c.enqueueWork(() -> {
+                var p = c.getSender();
+                if (p != null && allowed(p, "term" + m.action, 250)) com.jeladastudios.lostsignal.desk.Terminal.act(p, m.action, m.id, m.values);
+            });
+            c.setPacketHandled(true);
+        }
     }
 
     /** A keeper spoken to: the client opens the talk with them. */

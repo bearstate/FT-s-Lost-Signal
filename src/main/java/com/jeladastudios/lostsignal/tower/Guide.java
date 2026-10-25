@@ -261,7 +261,9 @@ public final class Guide {
         Speech.after(level, 40, () -> {
             Lines.sayAs(level, t.cab(), Calls.lookout(t, t.keeper), "K_LOST_SEEN", 1f, t.pitch, Calls.REACH);
             ServerPlayer now = level.getServer().getPlayerList().getPlayer(id);
-            if (now != null) now.sendSystemMessage(note);
+            if (now == null) return;
+            now.sendSystemMessage(note);
+            com.jeladastudios.lostsignal.desk.Marks.award(now, "lost_found");
         });
         if (Director.dark(level)) light(level, t);
     }

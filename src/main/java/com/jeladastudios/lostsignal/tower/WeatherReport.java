@@ -15,7 +15,7 @@ import java.util.Locale;
  * thermometer, hygrometer, barometer, anemometer and rain gauge it reads), what each instrument there gives; with none
  * reading, what the sky looks like.
  */
-final class WeatherReport {
+public final class WeatherReport {
 
     private WeatherReport() {}
 
@@ -57,7 +57,7 @@ final class WeatherReport {
     }
 
     /** What the cab's weather terminal reads now, or null where there is none (or FT's Geology reads differently). */
-    static CompoundTag reading(ServerLevel level, BlockPos station) {
+    public static CompoundTag reading(ServerLevel level, BlockPos station) {
         try {
             for (BlockPos p : BlockPos.betweenClosed(station.offset(-LOOKS, -3, -LOOKS), station.offset(LOOKS, 3, LOOKS))) {
                 if (level.getBlockEntity(p) instanceof com.jeladastudios.ftsgeology.blockentity.WeatherTerminalBlockEntity terminal) {

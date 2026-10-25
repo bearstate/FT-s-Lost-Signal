@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:writable_book"
+    },
+    "title": {
+      "translate": "advancements.fts_lostsignal.full_day.title"
+    },
+    "description": {
+      "translate": "advancements.fts_lostsignal.full_day.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "fts_lostsignal:lookout/first_obs"
+}

@@ -44,7 +44,7 @@ public final class Calls {
         ServerLevel level = p.serverLevel();
         Tower home = home(level, p);
         Runnable send = () -> {
-            String waiting = District.awaiting(level);
+            String waiting = District.awaiting(level, p);
             Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Neighbours(neighbours(p), waiting == null ? "" : waiting));
         };
         if (home == null) Guide.round(p, round -> send.run());
@@ -167,11 +167,15 @@ public final class Calls {
      * cab's instruments); what the keeper says shown as they say it, and the District's word back.
      */
     static void answer(ServerLevel level, ServerPlayer p, Tower home, BlockPos station) {
-        String waiting = District.awaiting(level);
+        String waiting = District.awaiting(level, p);
         if (waiting == null) {
             district(level, p, home, station == null && home == null);
             return;
         }
+        // The day's checks: on the duty roster.
+        if (waiting.equals("D_MORNING_01")) com.jeladastudios.lostsignal.desk.Desk.done(p, com.jeladastudios.lostsignal.desk.Duty.MORNING);
+        if (waiting.equals("D_EVENING_01")) com.jeladastudios.lostsignal.desk.Desk.done(p, com.jeladastudios.lostsignal.desk.Duty.EVENING);
+        com.jeladastudios.lostsignal.desk.Desk.count(p, "checks");
         String number = home == null ? "?" : String.valueOf(home.number);
         Component said = waiting.equals("D_WEATHER_01")
                 ? Component.translatable("district.fts_lostsignal.said." + waiting, number, WeatherReport.of(level, station != null ? station : p.blockPosition()))
@@ -187,7 +191,7 @@ public final class Calls {
                 other.sendSystemMessage(line);
             }
         }
-        String reply = District.reply(level);
+        String reply = District.reply(level, p);
         if (reply != null) {
             Vec3 from = p.position();
             Speech.after(level, 60, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, reply, 1f));
@@ -212,7 +216,7 @@ public final class Calls {
             return;
         }
         // Called back after the District's own call: that is what it answers.
-        String reply = District.reply(level);
+        String reply = District.reply(level, p);
         if (reply != null) {
             Speech.after(level, 40 + Speech.length(night ? "D_ANSWER_NIGHT" : "D_ANSWER"), () -> Lines.say(level, from, Lines.Speaker.DISTRICT, reply, 1f));
             return;

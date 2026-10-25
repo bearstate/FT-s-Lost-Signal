@@ -1,0 +1,166 @@
+{
+ "parent": "minecraft:block/block",
+ "textures": {
+  "particle": "fts_lostsignal:block/terminal_case",
+  "case": "fts_lostsignal:block/terminal_case",
+  "keys": "fts_lostsignal:block/terminal_keys",
+  "screen": "fts_lostsignal:block/terminal_screen_on"
+ },
+ "elements": [
+  {
+   "from": [
+    1,
+    0,
+    0.5
+   ],
+   "to": [
+    15,
+    1.5,
+    4.5
+   ],
+   "faces": {
+    "north": {
+     "texture": "#case"
+    },
+    "south": {
+     "texture": "#case"
+    },
+    "east": {
+     "texture": "#case"
+    },
+    "west": {
+     "texture": "#case"
+    },
+    "up": {
+     "texture": "#keys"
+    },
+    "down": {
+     "texture": "#case"
+    }
+   }
+  },
+  {
+   "from": [
+    5,
+    0,
+    6
+   ],
+   "to": [
+    11,
+    1,
+    13
+   ],
+   "faces": {
+    "north": {
+     "texture": "#case"
+    },
+    "south": {
+     "texture": "#case"
+    },
+    "east": {
+     "texture": "#case"
+    },
+    "west": {
+     "texture": "#case"
+    },
+    "up": {
+     "texture": "#case"
+    },
+    "down": {
+     "texture": "#case"
+    }
+   }
+  },
+  {
+   "from": [
+    2,
+    1,
+    5
+   ],
+   "to": [
+    14,
+    12,
+    11
+   ],
+   "faces": {
+    "north": {
+     "texture": "#case"
+    },
+    "south": {
+     "texture": "#case"
+    },
+    "east": {
+     "texture": "#case"
+    },
+    "west": {
+     "texture": "#case"
+    },
+    "up": {
+     "texture": "#case"
+    },
+    "down": {
+     "texture": "#case"
+    }
+   }
+  },
+  {
+   "from": [
+    4,
+    2.5,
+    11
+   ],
+   "to": [
+    12,
+    10.5,
+    15
+   ],
+   "faces": {
+    "north": {
+     "texture": "#case"
+    },
+    "south": {
+     "texture": "#case"
+    },
+    "east": {
+     "texture": "#case"
+    },
+    "west": {
+     "texture": "#case"
+    },
+    "up": {
+     "texture": "#case"
+    },
+    "down": {
+     "texture": "#case"
+    }
+   }
+  },
+  {
+   "from": [
+    3.5,
+    3,
+    4.9
+   ],
+   "to": [
+    12.5,
+    10.5,
+    5
+   ],
+   "faces": {
+    "north": {
+     "uv": [
+      3.5,
+      3,
+      12.5,
+      10.5
+     ],
+     "texture": "#screen"
+    }
+   },
+   "forge_data": {
+    "block_light": 15,
+    "sky_light": 15
+   }
+  }
+ ]
+}
