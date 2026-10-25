@@ -601,5 +601,16 @@
   "desk.fts_lostsignal.term.rank": "RÜTBE: %1$s   HİZMET %2$s/%3$s",
   "desk.fts_lostsignal.term.rank_top": "RÜTBE: %1$s   HİZMET %2$s",
   "advancements.fts_lostsignal.senior.title": "Kıdemli Gözcü",
-  "advancements.fts_lostsignal.senior.description": "Kıdemli gözcülüğe terfi et"
+  "advancements.fts_lostsignal.senior.description": "Kıdemli gözcülüğe terfi et",
+  "spyglass.fts_lostsignal.bearing": "KERTERİZ %s°",
+  "radio.fts_lostsignal.speaker.crew": "Ekip %s",
+  "radio.fts_lostsignal.line.C_ROLLING": "Merkez, Dördüncü Ekip. Dumanı aldık. Yola çıkıyoruz.",
+  "radio.fts_lostsignal.line.C_RELAY": "Gözcü, Dördüncü Ekip. Buradan Merkez'e ulaşamıyoruz. Bizim için aktar: olay yerindeyiz, yaklaşık iki dönüm, yavaş ilerliyor, rüzgâr pek yok. Tamam.",
+  "radio.fts_lostsignal.line.C_OUT": "Merkez, Dördüncü Ekip. O yangın söndü, soğudu. Gözcüye söyleyin, gözüne sağlık. Dördüncü Ekip, bitti.",
+  "radio.fts_lostsignal.line.D_RELAY_COPY": "Anlaşıldı, Gözcü. Dördüncü Ekip olay yerinde. Aktarma için teşekkürler. Merkez, bitti.",
+  "radio.fts_lostsignal.line.D_CREW_CHECK": "Dördüncü Ekip, Merkez. Nasıl duyuyorsunuz? ...Dördüncü Ekip?",
+  "district.fts_lostsignal.said.C_RELAY": "Merkez, Gözcü %1$s. Ekip %2$s adına aktarıyorum: olay yerindeler, yaklaşık iki dönüm, yavaş ilerliyor, rüzgâr pek yok. Tamam.",
+  "district.fts_lostsignal.reply.C_RELAY": "Aktar: ekip olay yerinde",
+  "crew.fts_lostsignal.relay": "Ekip Merkez'e ulaşamıyor: kurtarma panelinden (J) aktar.",
+  "desk.fts_lostsignal.bonus.relay": "Aktarma yapıldı"
 }

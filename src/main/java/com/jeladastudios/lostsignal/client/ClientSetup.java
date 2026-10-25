@@ -26,6 +26,8 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void overlays(net.minecraftforge.client.event.RegisterGuiOverlaysEvent event) {
         event.registerBelowAll("under_bed", (gui, g, partialTick, w, h) -> ClientHiding.draw(g, w, h));
+        // The compass reticle in the spyglass.
+        event.registerAboveAll("bearing_tape", (gui, g, partialTick, w, h) -> BearingTape.draw(g, w, h));
     }
 
     @SubscribeEvent

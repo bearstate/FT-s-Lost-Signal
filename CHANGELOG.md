@@ -54,6 +54,12 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **Lightning**: in a thunderstorm a lookout is struck once or twice, through its rod, after a warning (the radio
   crackles, the rod hums and glows blue). On the glass-footed lightning stool, only the flash; on the floor, thrown,
   dazed and hurt, but never left with less than two hearts (`lookouts.lightning`).
+- **The crews**: a crew is sent to every fire called in, on the radio as it sets out; by night its headlamps are seen
+  from the lookout, a file of lights coming up the valley, then spread round the fire's edge. Down in the trees they
+  cannot raise the District and ask the lookout to pass it on: a relay, answered from the panel, and a little to the
+  keeper's credit. On the radio again once it is out (lines subtitled until recorded).
+- **A compass in the spyglass**: looked through, a tape of bearings across the top of the view, so a smoke or a flare
+  is read from the walkway, or out on the mountain.
 - **Letters from the found**: a few days after a hiker is brought in, a letter from them comes up with the crate, in
   their own words, and something with it: cookies, a cake, a compass, a photograph of the summit, or a cheque for the
   lookouts' fund.

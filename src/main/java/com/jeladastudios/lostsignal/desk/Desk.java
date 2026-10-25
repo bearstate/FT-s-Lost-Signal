@@ -39,7 +39,7 @@ public final class Desk extends SavedData {
      * What else is earned: a hiker brought in; a fire called in, from the panel or reported in full from the terminal;
      * a report right to a degree; an observation right in every reading.
      */
-    public static final int RESCUE_PAY = 40, FIRE_PAY = 15, REPORT_PAY = 25, PRECISE_PAY = 10, RIGHT_PAY = 5, SIGN_PAY = 2;
+    public static final int RESCUE_PAY = 40, FIRE_PAY = 15, REPORT_PAY = 25, PRECISE_PAY = 10, RIGHT_PAY = 5, SIGN_PAY = 2, RELAY_PAY = 5;
     /** How many days between pay. */
     static final int PAY_EVERY = 7;
     /** How near their lookout a keeper must be to be at it, in blocks. */

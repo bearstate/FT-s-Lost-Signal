@@ -601,5 +601,16 @@
   "desk.fts_lostsignal.term.rank": "RANK: %1$s   SERVICE %2$s/%3$s",
   "desk.fts_lostsignal.term.rank_top": "RANK: %1$s   SERVICE %2$s",
   "advancements.fts_lostsignal.senior.title": "Senior Lookout",
-  "advancements.fts_lostsignal.senior.description": "Be promoted to senior lookout"
+  "advancements.fts_lostsignal.senior.description": "Be promoted to senior lookout",
+  "spyglass.fts_lostsignal.bearing": "BEARING %s°",
+  "radio.fts_lostsignal.speaker.crew": "Crew %s",
+  "radio.fts_lostsignal.line.C_ROLLING": "District, Crew Four. Copy the smoke. We're rolling.",
+  "radio.fts_lostsignal.line.C_RELAY": "Lookout, Crew Four. Can't raise District from down in here. Relay for us: we're on scene, about two acres, creeping, not much wind. Over.",
+  "radio.fts_lostsignal.line.C_OUT": "District, Crew Four. That one's out and cold. Tell the lookout good eyes. Crew Four out.",
+  "radio.fts_lostsignal.line.D_RELAY_COPY": "Copy, Lookout. Crew Four on scene. Thanks for the relay. District out.",
+  "radio.fts_lostsignal.line.D_CREW_CHECK": "Crew Four, District. How copy? ...Crew Four?",
+  "district.fts_lostsignal.said.C_RELAY": "District, Lookout %1$s. Relay from Crew %2$s: on scene, about two acres, creeping, not much wind. Over.",
+  "district.fts_lostsignal.reply.C_RELAY": "Relay: crew on scene",
+  "crew.fts_lostsignal.relay": "The crew can't raise the District: relay it from the rescue panel (J).",
+  "desk.fts_lostsignal.bonus.relay": "Relay passed on"
 }

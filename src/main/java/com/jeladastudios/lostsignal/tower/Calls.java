@@ -44,7 +44,9 @@ public final class Calls {
         ServerLevel level = p.serverLevel();
         Tower home = home(level, p);
         Runnable send = () -> {
-            String waiting = District.awaiting(level, p);
+            // A crew's relay waiting on the keeper comes first; else the District's own call, if one waits.
+            String relay = Crew.relayFor(p);
+            String waiting = relay != null ? relay : District.awaiting(level, p);
             Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Neighbours(neighbours(p), waiting == null ? "" : waiting));
         };
         if (home == null) Guide.round(p, round -> send.run());
@@ -167,6 +169,7 @@ public final class Calls {
      * cab's instruments); what the keeper says shown as they say it, and the District's word back.
      */
     static void answer(ServerLevel level, ServerPlayer p, Tower home, BlockPos station) {
+        if (Crew.relay(level, p, home)) return;
         String waiting = District.awaiting(level, p);
         if (waiting == null) {
             district(level, p, home, station == null && home == null);

@@ -35,7 +35,8 @@ who comes to the door at night in a mask.
   the season, by Serene Seasons' seasons or a calendar of its own; a fire danger rated each morning, and a sign to
   set by it; lightning on the lookouts in a storm (stand on the glass-footed stool); a Lookout advancement tab.
 - **Forest fires**: smoke columns far off through the haze, a glow at night. Read them off the fire finder, report
-  them, and another keeper's bearing crosses yours. Nothing in the world burns; supplies come up for good eyes.
+  them, and another keeper's bearing crosses yours; the crew's headlamps come up the valley, and they may ask you to
+  relay for them. A compass tape in the spyglass. Nothing in the world burns; supplies come up for good eyes.
 - **The stranger**: an ordinary man by day, who says things about the forest that stay with you. At night, a black
   horned mask, red eyes, a ritual robe: footsteps on the stair, three knocks, a face at the window. Hide under the bed
   (crouch and use it). Don't open the door.

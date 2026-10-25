@@ -338,6 +338,8 @@ public final class Fires {
         }
         String done = crossing != null ? "D_SMOKE_CROSS" : "D_SMOKE_01";
         Speech.after(level, at, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, done, 1f));
+        // The crew sent: on the radio once the District has said so, out for as long as the fire takes.
+        Crew.send(level, p, called.at, foot == null ? from : Vec3.atCenterOf(foot.above(22)), at + Speech.length(done) + 40, CREW * 20);
         // The crew on it: out in a few minutes. And the District remembers good eyes: supplies come up, once it is said.
         Speech.after(level, CREW * 20, () -> {
             called.smoke.out();

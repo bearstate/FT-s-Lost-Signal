@@ -172,6 +172,15 @@ public final class TestCommands {
                             c.getSource().sendSuccess(() -> Component.literal("LS_TEST smoke " + r), false);
                             return 1;
                         }))))
+                .then(Commands.literal("crew").executes(c -> {
+                    // A crew sent to a spot two hundred blocks north of the lookout the player is at, out in two minutes.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    var foot = p == null ? null : com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    if (foot == null) return 0;
+                    var cab = net.minecraft.world.phys.Vec3.atCenterOf(foot.above(22));
+                    com.jeladastudios.lostsignal.tower.Crew.send(p.serverLevel(), p, cab.add(0, -22, -200), cab, 20, 20 * 120);
+                    return 1;
+                }))
                 .then(Commands.literal("lightning").executes(c -> {
                     // The lookout the player is at struck, after its warning, storm or no storm.
                     ServerPlayer p = c.getSource().getPlayer();
