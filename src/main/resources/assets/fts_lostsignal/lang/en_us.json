@@ -614,5 +614,6 @@
   "crew.fts_lostsignal.relay": "The crew can't raise the District: relay it from the rescue panel (J).",
   "desk.fts_lostsignal.bonus.relay": "Relay passed on",
   "poster.fts_lostsignal.missing": "MISSING",
-  "poster.fts_lostsignal.since": "since day %s"
+  "poster.fts_lostsignal.since": "since day %s",
+  "desk.fts_lostsignal.letter.pup": "And someone came up the trail with it: a pup, for the lookout. Every lookout should have a dog, they say. It is waiting by the crate."
 }

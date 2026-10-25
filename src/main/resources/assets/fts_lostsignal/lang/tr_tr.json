@@ -614,5 +614,6 @@
   "crew.fts_lostsignal.relay": "Ekip Merkez'e ulaşamıyor: kurtarma panelinden (J) aktar.",
   "desk.fts_lostsignal.bonus.relay": "Aktarma yapıldı",
   "poster.fts_lostsignal.missing": "KAYIP",
-  "poster.fts_lostsignal.since": "%s. günden beri"
+  "poster.fts_lostsignal.since": "%s. günden beri",
+  "desk.fts_lostsignal.letter.pup": "Mektupla biri patikadan çıktı: kule için bir köpek yavrusu. Her kulenin bir köpeği olmalı, diyorlar. Sandığın yanında bekliyor."
 }

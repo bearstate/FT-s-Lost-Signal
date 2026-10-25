@@ -42,7 +42,9 @@ public final class Letters {
 
     /** How many ways a letter is written, and what can come with one. */
     static final int WAYS = 3;
-    static final String[] GIFTS = {"cookies", "cake", "compass", "photo", "cheque"};
+    static final String[] GIFTS = {"cookies", "cake", "compass", "photo", "cheque", "pup"};
+    /** How often what comes is a pup: every lookout should have a dog. */
+    static final float PUP = 0.12f;
     /** The cheque, in pay credit. */
     static final int CHEQUE = 40;
 
@@ -52,7 +54,8 @@ public final class Letters {
         ServerLevel level = p.serverLevel();
         Desk desk = Desk.of(level);
         long due = level.getDayTime() / 24000 + 2 + level.random.nextInt(3);
-        desk.letters.add(new Letter(p.getUUID(), hiker, due, level.random.nextInt(WAYS), level.random.nextInt(GIFTS.length)));
+        int gift = level.random.nextFloat() < PUP ? GIFTS.length - 1 : level.random.nextInt(GIFTS.length - 1);
+        desk.letters.add(new Letter(p.getUUID(), hiker, due, level.random.nextInt(WAYS), gift));
         desk.setDirty();
     }
 
@@ -71,11 +74,13 @@ public final class Letters {
             String gift = GIFTS[l.gift()];
             ItemStack thing = gift(gift, l.from());
             if (thing != null) items.add(thing);
+            else if (gift.equals("pup")) tower.pups.add(l.to());
             else post.credit += CHEQUE;
             Desk.send(level, tower, items, day);
             desk.mail(level, post, Desk.DISTRICT, Mail.Line.of("desk.fts_lostsignal.letter.subject", l.from()), List.of(
                     Mail.Line.of("desk.fts_lostsignal.letter.body", l.from()),
-                    Mail.Line.of(gift.equals("cheque") ? "desk.fts_lostsignal.letter.cheque" : "desk.fts_lostsignal.letter.gift", CHEQUE)));
+                    Mail.Line.of(gift.equals("cheque") ? "desk.fts_lostsignal.letter.cheque" : gift.equals("pup") ? "desk.fts_lostsignal.letter.pup"
+                            : "desk.fts_lostsignal.letter.gift", CHEQUE)));
             post.count("letters");
         }
         desk.setDirty();
@@ -105,6 +110,7 @@ public final class Letters {
             case "cake" -> new ItemStack(Items.CAKE);
             case "compass" -> new ItemStack(Items.COMPASS);
             case "photo" -> new ItemStack(Items.PAINTING);
+            // A pup, or a cheque: nothing for the crate.
             default -> null;
         };
         if (s != null) s.setHoverName(Component.translatable("letter.fts_lostsignal.gift." + gift, from));

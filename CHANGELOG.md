@@ -61,8 +61,10 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **A compass in the spyglass**: looked through, a tape of bearings across the top of the view, so a smoke or a flare
   is read from the walkway, or out on the mountain.
 - **Letters from the found**: a few days after a hiker is brought in, a letter from them comes up with the crate, in
-  their own words, and something with it: cookies, a cake, a compass, a photograph of the summit, or a cheque for the
-  lookouts' fund.
+  their own words, and something with it: cookies, a cake, a compass, a photograph of the summit, a cheque for the
+  lookouts' fund, or now and then a pup, waiting by the crate.
+- **Dogs know him**: a tame dog growls at the stranger when he is near and looks his way, wherever he stands, before
+  anyone sees him.
 - **Rank**: seasonal lookout, lookout, senior lookout, district lookout, by service (duties done, fires called in,
   hikers brought in, right observations, nights he went away): a raise with each, and more of the order list.
 - **Missing**: a hiker lost from a lookout and never found is posted up at the foot of its trail, a sign facing down

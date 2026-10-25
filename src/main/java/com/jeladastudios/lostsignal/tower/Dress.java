@@ -85,6 +85,17 @@ final class Dress {
             t.posters.remove(0);
             towers.setDirty();
         }
+        // A pup sent up with a letter, waiting by the crate.
+        if (!t.pups.isEmpty()) {
+            Vec3 down = com.jeladastudios.lostsignal.rescue.Sight.downhill(level, foot);
+            double a = down != null ? Math.atan2(down.z, down.x) : 0;
+            int x = (int) Math.floor(foot.getX() + 0.5 + Math.cos(a) * 24), z = (int) Math.floor(foot.getZ() + 0.5 + Math.sin(a) * 24);
+            if (level.isLoaded(new BlockPos(x, foot.getY(), z))
+                    && Dogs.pup(level, new BlockPos(x, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z), t.pups.get(0))) {
+                t.pups.remove(0);
+                towers.setDirty();
+            }
+        }
         if (t.state == Tower.State.KEPT) keeper(level, t, floor);
         if (t.state == Tower.State.STRANGER) burning(level, t, foot, floor);
     }
