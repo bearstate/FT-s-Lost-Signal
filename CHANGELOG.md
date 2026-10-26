@@ -98,6 +98,12 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   and asks if you are alone up there (Marion calls you by your name; this calls you Lookout). Miss the one o'clock
   observation and in the morning one is on your terminal that you never sent. Let a fire burn itself out uncalled and
   someone thanks you for it on the radio. And now and then, at night, a message from no one (`desk.horror`).
+- **The season's last night**: a red flag warning in the morning; from dusk dry lightning all round and no rain, and
+  a big smoke far off in plain view of your lookout. Marion is not on the night desk tonight, someone else is, and
+  "the District" on the radio says to let it go. Call it in and the crews go and the campers in its way come out,
+  and he comes up to your door. Let it go and he thanks you at dawn and leaves your lookout be, and a camper in its
+  way is not found. The District knows either way: the evaluation, Marion's word in the morning and the next season's
+  first mail go by it. Which is right is never said.
 - **What the story left on the mountain**: the papers it is found in and two places to go. Hollow Peak, the lookout
   closed in 1979, its footings on a summit some way off, the District's notice on the one leg still standing and
   under where its cab fell a chest with the lookout's log of that summer; Marion says where it is, and the log says

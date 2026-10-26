@@ -59,6 +59,8 @@ public final class Post {
      * night the false call came; the last night looked at for a message from no one, and the last one that brought one.
      */
     public long falseCall = -1, falseObs = -1, fakeNight = -1, noOneNight = -1, noOneLast = -1;
+    /** The season's last night: which season it was last kept for, how it went (see LastNight), and what of it has happened. */
+    int lastNightSeason = -1, lastNight, lastNightDone;
 
     public final List<Mail> inbox = new ArrayList<>();
     long nextMail = 1;
@@ -153,6 +155,9 @@ public final class Post {
         t.putLong("FakeNight", fakeNight);
         t.putLong("NoOneNight", noOneNight);
         t.putLong("NoOneLast", noOneLast);
+        t.putInt("LastNightSeason", lastNightSeason);
+        t.putInt("LastNight", lastNight);
+        t.putInt("LastNightDone", lastNightDone);
         return t;
     }
 
@@ -194,6 +199,9 @@ public final class Post {
         p.fakeNight = t.contains("FakeNight") ? t.getLong("FakeNight") : -1;
         p.noOneNight = t.contains("NoOneNight") ? t.getLong("NoOneNight") : -1;
         p.noOneLast = t.contains("NoOneLast") ? t.getLong("NoOneLast") : -1;
+        p.lastNightSeason = t.contains("LastNightSeason") ? t.getInt("LastNightSeason") : -1;
+        p.lastNight = t.getInt("LastNight");
+        p.lastNightDone = t.getInt("LastNightDone");
         return p;
     }
 }

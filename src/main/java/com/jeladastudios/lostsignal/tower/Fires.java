@@ -39,12 +39,17 @@ public final class Fires {
      */
     static final int NEAR = 200, FAR = 450, BURNS = 15 * 60, CREW = 3 * 60;
 
-    /** A fire: where, when it started, whether it has been called in; and whether it is one burning in the world. */
+    /**
+     * A fire: where, when it started, whether it has been called in; whether it is one burning in the world; and, for
+     * the season's last night's, the columns beside its own and who is told when it is called in.
+     */
     static final class Fire {
         final Vec3 at;
         final Signals.Burning smoke;
         final boolean real;
         boolean called;
+        final List<Signals.Burning> beside = new java.util.ArrayList<>();
+        Runnable onCalled;
 
         Fire(Vec3 at, Signals.Burning smoke, boolean real) {
             this.at = at;
@@ -62,8 +67,9 @@ public final class Fires {
         for (Fire f : FIRES) {
             if (f.smoke.burning()) continue;
             FIRES.remove(f);
-            // Burnt itself out, never called in.
-            if (!f.called && !f.real) com.jeladastudios.lostsignal.desk.Costs.burnedOut(level, f.at);
+            for (Signals.Burning b : f.beside) b.out();
+            // Burnt itself out, never called in (the last night's goes by the last night).
+            if (!f.called && !f.real && f.onCalled == null) com.jeladastudios.lostsignal.desk.Costs.burnedOut(level, f.at);
         }
         if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FIRES)) return;
         scan(level);
@@ -110,6 +116,63 @@ public final class Fires {
             FIRES.add(new Fire(at, Signals.fire(level, at, BURNS), false));
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FIRE at {}", BlockPos.containing(at).toShortString());
         });
+    }
+
+    /** The season's last night's fire, as the lookout it is seen from has it: where it is once it has started, and whether it has been called in. */
+    public static final class Big {
+        Fire fire;
+
+        public boolean started() {
+            return fire != null;
+        }
+
+        public boolean called() {
+            return fire != null && fire.called;
+        }
+
+        public Vec3 at() {
+            return fire == null ? null : fire.at;
+        }
+
+        /** Its smoke gone, the columns beside it too. */
+        public void out() {
+            if (fire == null) return;
+            fire.smoke.out();
+            for (Signals.Burning b : fire.beside) b.out();
+        }
+    }
+
+    /** How long the last night's fire burns, in seconds: from dusk to past dawn. */
+    static final int BIG_BURNS = 13 * 60;
+
+    /**
+     * The season's last night's fire: a big one, three columns across, far off in forest the lookout can see, burning
+     * until past dawn; called in, whoever is waiting on it is told.
+     */
+    public static Big big(ServerLevel level, BlockPos tower, Runnable onCalled) {
+        Big big = new Big();
+        long seed = level.random.nextLong();
+        Lookouts.offThread(level, () -> spots(level, tower, new java.util.Random(seed)), found -> {
+            if (found == null || found.isEmpty()) return;
+            Vec3 cab = Vec3.atCenterOf(tower.above(22));
+            // The furthest it can be seen from the cab: a long way from anyone, it seems.
+            Vec3 at = null;
+            for (Vec3 s : found) {
+                if (com.jeladastudios.lostsignal.signal.Sightline.clear(level, cab, s.add(0, 20, 0)) && (at == null || s.distanceTo(cab) > at.distanceTo(cab))) at = s;
+            }
+            if (at == null) at = found.get(0);
+            Fire f = new Fire(at, Signals.fire(level, at, BIG_BURNS), false);
+            for (int[] o : new int[][]{{16, 7}, {-11, 14}}) {
+                int x = (int) Math.floor(at.x) + o[0], z = (int) Math.floor(at.z) + o[1];
+                Integer y = ground(level, x, z);
+                f.beside.add(Signals.fire(level, new Vec3(x + 0.5, y == null ? at.y : y, z + 0.5), BIG_BURNS));
+            }
+            f.onCalled = onCalled;
+            big.fire = f;
+            FIRES.add(f);
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("FIRE the last night's at {}", BlockPos.containing(at).toShortString());
+        });
+        return big;
     }
 
     /**
@@ -350,9 +413,11 @@ public final class Fires {
         Speech.after(level, at, () -> Lines.say(level, from, Lines.Speaker.DISTRICT, done, 1f));
         // The crew sent: on the radio once the District has said so, out for as long as the fire takes.
         Crew.send(level, p, called.at, foot == null ? from : Vec3.atCenterOf(foot.above(22)), at + Speech.length(done) + 40, CREW * 20);
+        if (called.onCalled != null) called.onCalled.run();
         // The crew on it: out in a few minutes. And the District remembers good eyes: supplies come up, once it is said.
         Speech.after(level, CREW * 20, () -> {
             called.smoke.out();
+            for (Signals.Burning b : called.beside) b.out();
             if (called.real) putOut(level, called.at);
         });
         if (home != null && com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.SUPPLIES)) {

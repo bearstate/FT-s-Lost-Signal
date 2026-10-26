@@ -63,6 +63,31 @@ public final class Season {
         return end - d;
     }
 
+    /** For trying: today taken for the season's last, whatever the calendar says. */
+    static boolean lastForced;
+
+    /**
+     * Whether today is the season's last day, the lookouts closing tomorrow: our own calendar's last closing day, or
+     * Serene Seasons' last day of mid autumn (where its days cannot be read, its first).
+     */
+    public static boolean lastDay(ServerLevel level) {
+        if (lastForced) return true;
+        int sub = subSeason(level);
+        if (sub < 0) return phase(level) == Phase.CLOSING && daysLeft(level) == 1;
+        if (sub != 7) return false;
+        try {
+            Object state = getState.invoke(null, level.getServer().getLevel(Level.OVERWORLD));
+            Class<?> type = Class.forName("sereneseasons.api.season.ISeasonState");
+            int length = (Integer) type.getMethod("getSubSeasonDuration").invoke(state);
+            int dayLength = (Integer) type.getMethod("getDayDuration").invoke(state);
+            int into = (Integer) type.getMethod("getSeasonCycleTicks").invoke(state) % length;
+            return length - into <= dayLength;
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+            // Every day of it, then: the last night comes once a season, so on the first.
+            return true;
+        }
+    }
+
     /** Serene Seasons' sub-season (0 early spring to 11 late winter), or -1 where it is not there. */
     static int subSeason(ServerLevel level) {
         if (!tried) link();

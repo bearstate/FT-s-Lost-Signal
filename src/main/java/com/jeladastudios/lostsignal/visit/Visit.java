@@ -528,6 +528,8 @@ public final class Visit {
             if (p.isSpectator()) continue;
             BlockPos tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(level, p);
             if (tower == null || at(tower) || LOOKED.getOrDefault(tower, -1L) == night) continue;
+            // The season's last night at a lookout keeps its own hours.
+            if (com.jeladastudios.lostsignal.desk.LastNight.quiet(level, tower)) continue;
             // Only for someone up in the cab, not passing at the foot.
             if (p.getY() < tower.getY() + 19) continue;
             // The moment within the small hours it comes, drawn as the night goes: a look every second, at odds

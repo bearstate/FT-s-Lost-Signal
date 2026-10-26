@@ -44,6 +44,8 @@ who comes to the door at night in a mask.
   from what you said on the frequency, played back to you from somewhere you are not (Simple Voice Chat).
 - **What is left**: where someone was taken, a broken camp, a tent down, dark stains and a trail into the trees,
   square footprints, a journal.
+- **The season's last night**: dry lightning, a big smoke in plain view, someone else on the night desk, and a
+  choice that is yours: call it in, or let it go. The District, Marion and he all remember which.
 - **A story to piece together**: the night desk's messages, the lookout guide and the page folded in it, an old
   newspaper clipping, the Board of Review's summary of a fire in 1979, and two places out on the mountain to find:
   the ruin of the lookout closed that year, with its log, and what the log points to.

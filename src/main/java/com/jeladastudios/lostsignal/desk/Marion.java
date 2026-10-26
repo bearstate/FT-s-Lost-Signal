@@ -171,9 +171,9 @@ public final class Marion {
 
     /** The season's last night: what she says as the lookouts close. */
     static void close(ServerLevel level, Desk desk, Post post) {
-        long day = level.getDayTime() / 24000;
-        post.mail(FROM, Mail.Line.of("marion.fts_lostsignal.last.subject"), List.of(Mail.Line.of("marion.fts_lostsignal.last.1"),
-                Mail.Line.of("marion.fts_lostsignal.last.2")), day, (int) (level.getDayTime() % 24000));
-        desk.setDirty();
+        // As the last night went for them.
+        String last = LastNight.marion(desk, post);
+        desk.mail(level, post, FROM, Mail.Line.of("marion.fts_lostsignal." + last + ".subject"), List.of(Mail.Line.of("marion.fts_lostsignal." + last + ".1"),
+                Mail.Line.of("marion.fts_lostsignal." + last + ".2")));
     }
 }

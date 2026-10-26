@@ -153,6 +153,8 @@ public final class Desk extends SavedData {
                 if (post.tower != 0 && post.lastPay >= 0 && day - post.lastPay >= PAY_EVERY && phase != Season.Phase.CLOSED) desk.pay(level, post);
             }
         }
+        // The season's last night, where it is.
+        LastNight.tick(level, desk);
         for (ServerPlayer p : level.players()) {
             if (p.isSpectator()) continue;
             Post post = desk.post(p);
@@ -182,7 +184,7 @@ public final class Desk extends SavedData {
             if (t == null) continue;
             boolean at = Math.hypot(p.getX() - t.x, p.getZ() - t.z) < AT_TOWER;
             // The night desk, writing to a keeper up at their lookout; and what letting a duty go costs.
-            if (Math.hypot(p.getX() - t.x, p.getZ() - t.z) < 32) Marion.night(level, p, post, desk);
+            if (Math.hypot(p.getX() - t.x, p.getZ() - t.z) < 32 && !LastNight.tonight(level, desk, post)) Marion.night(level, p, post, desk);
             if (at) Costs.night(level, p, post, desk, t);
             for (Duty d : Duty.values()) {
                 if (!applies(d)) continue;
@@ -257,6 +259,11 @@ public final class Desk extends SavedData {
         post.mail(from, subject, body, level.getDayTime() / 24000, (int) (level.getDayTime() % 24000));
         setDirty();
         told(level, post);
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+            StringBuilder said = new StringBuilder(subject.text().getString());
+            for (Mail.Line l : body) said.append(" | ").append(l.text().getString());
+            LostSignal.LOGGER.info("MAIL to {} from {}: {}", post.name, from, said);
+        }
     }
 
     /** A keeper told of a new message on their terminal, if they are at their lookout. */
@@ -391,6 +398,7 @@ public final class Desk extends SavedData {
             if (now == Season.Phase.OPENING) post.season.clear();
             String key = "desk.fts_lostsignal.mail.season." + now.name().toLowerCase(java.util.Locale.ROOT);
             mail(level, post, DISTRICT, Mail.Line.of(key + ".subject", season), List.of(Mail.Line.of(key + ".body", season)));
+            if (now == Season.Phase.OPENING) LastNight.opening(level, this, post);
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("DESK season {}: {} -> {}", season, was, now);
     }
@@ -410,15 +418,21 @@ public final class Desk extends SavedData {
         double share = days == 0 ? 0 : Math.min(1, duties / (double) (days * all));
         // Fires and the found count for something besides: each lifts the share a little.
         share = Math.min(1, share + 0.03 * post.seasonStat("fires") + 0.05 * post.seasonStat("rescued"));
+        // And the last night, as it went: weighed in the grade, not in the share of the roster shown.
+        double shown = share;
+        share = Math.max(0, Math.min(1, share + LastNight.weighs(this, post)));
+        String last = LastNight.evaluated(this, post);
         int grade = 0;
         while (grade < GRADES.length - 1 && share < GRADES[grade]) grade++;
         String letter = String.valueOf((char) ('A' + grade));
         post.credit += GRADE_PAY[grade];
-        mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.eval.subject", season), List.of(
-                Mail.Line.of("desk.fts_lostsignal.eval.days", days, Math.round(share * 100)),
-                Mail.Line.of("desk.fts_lostsignal.eval.work", post.seasonStat("fires"), post.seasonStat("rescued"), post.seasonStat("good_observations")),
-                Mail.Line.of("desk.fts_lostsignal.eval.grade", letter, GRADE_PAY[grade]),
-                Mail.Line.of("desk.fts_lostsignal.eval.close." + letter.toLowerCase(java.util.Locale.ROOT))));
+        List<Mail.Line> lines = new ArrayList<>();
+        lines.add(Mail.Line.of("desk.fts_lostsignal.eval.days", days, Math.round(shown * 100)));
+        lines.add(Mail.Line.of("desk.fts_lostsignal.eval.work", post.seasonStat("fires"), post.seasonStat("rescued"), post.seasonStat("good_observations")));
+        if (last != null) lines.add(Mail.Line.of("desk.fts_lostsignal.eval.last." + last, post.number));
+        lines.add(Mail.Line.of("desk.fts_lostsignal.eval.grade", letter, GRADE_PAY[grade]));
+        lines.add(Mail.Line.of("desk.fts_lostsignal.eval.close." + letter.toLowerCase(java.util.Locale.ROOT)));
+        mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.eval.subject", season), lines);
         setDirty();
     }
 
@@ -460,6 +474,12 @@ public final class Desk extends SavedData {
                 post.noOneNight = -1;
                 post.noOneLast = -1;
                 Costs.sure = true;
+            }
+            case "last" -> {
+                // Today taken for the season's last (1) or not (0), the keeper's last night begun afresh.
+                Season.lastForced = value != 0;
+                post.lastNightSeason = -1;
+                post.lastNightDone = 0;
             }
             case "reply" -> {
                 // The latest message waiting on a reply, answered the given way (0 or 1).
