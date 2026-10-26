@@ -40,7 +40,11 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   finder; orders; and the keeper's record. Worked from the keyboard alone, too.
 - **Marion on the night desk**: after dark the District's night desk writes to your terminal, a night at a time:
   who she is, what you did that day, the knock at your door, the friend she lost in 1996, and an old lookout called
-  Hollow Peak. Some of it can be written back to, one of two ways (A or B on the terminal), and she answers.
+  Hollow Peak. Some of it can be written back to, one of two ways (A or B on the terminal), and she answers. She
+  remembers how: tell her of the knock and a pup comes up to you; tell her of the call at two in the morning and she
+  keeps an ear on your channel after; say you will go up to Hollow Peak and she asks what is left there once you
+  have, and tells you of the big spruce below the east ridge; tell her of the rows of trees out there and she makes a
+  call, and warns you before the season's last night.
 - **Posted for the season**: at a lookout the District posts you there, says so on the radio and on the terminal, and
   sends the terminal, the lookout guide and a page someone left folded in it up with the next crate. In a world that
   had lookouts before, nothing is set into a lookout someone has been living in. Each lookout answers the District's

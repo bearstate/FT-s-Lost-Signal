@@ -184,6 +184,8 @@ public final class Desk extends SavedData {
             // Promoted, as the record grows.
             int rank = rankOf(post);
             if (rank > post.rank) desk.promote(level, p, post, rank);
+            // The District's word on the east ridge, the morning after Marion made her call.
+            Marion.morning(level, desk, post);
             if (phase == Season.Phase.CLOSED) continue;
             Tower t = Towers.known(level, post.tower);
             if (t == null) continue;
@@ -241,6 +243,15 @@ public final class Desk extends SavedData {
         if (post == null) return;
         post.bonuses.add(new Post.Bonus(key, amount));
         of(p.serverLevel()).setDirty();
+    }
+
+    /** A place of the story first come to by a player, counted once in their record: Marion may hear of it. */
+    public static void seen(ServerPlayer p, String what) {
+        Post post = posted(p);
+        if (post == null || post.stat(what) > 0) return;
+        post.count(what);
+        of(p.serverLevel()).setDirty();
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("DESK {} has seen {}", p.getName().getString(), what);
     }
 
     /** Counted in a player's record. */
@@ -479,6 +490,7 @@ public final class Desk extends SavedData {
                 Letters.send(level, desk);
             }
             case "service" -> post.stats.put("duties", value);
+            case "nights" -> post.stats.put("nights", value);
             case "falsecall" -> post.falseCall = day;
             case "falseobs" -> post.falseObs = day;
             case "noone" -> {

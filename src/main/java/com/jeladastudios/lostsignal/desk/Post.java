@@ -54,6 +54,10 @@ public final class Post {
     /** What Marion has said to them, each by the day she said it; and the last night she wrote. */
     public final Map<String, Long> marion = new TreeMap<>();
     public long marionNight = -1;
+    /** How they wrote back to her, each by what she said (0 the first way, 1 the second): she remembers. */
+    public final Map<String, Integer> answers = new TreeMap<>();
+    /** The morning the District's word on the east ridge comes, after Marion has made her call; -1 none. */
+    public long rangerDay = -1;
     /**
      * What letting a duty go costs: the night of the false call still to come, the morning of the false observation, the
      * night the false call came; the last night looked at for a message from no one, and the last one that brought one.
@@ -150,6 +154,10 @@ public final class Post {
         for (var e : marion.entrySet()) mar.putLong(e.getKey(), e.getValue());
         t.put("Marion", mar);
         t.putLong("MarionNight", marionNight);
+        CompoundTag ans = new CompoundTag();
+        for (var e : answers.entrySet()) ans.putInt(e.getKey(), e.getValue());
+        t.put("Answers", ans);
+        t.putLong("RangerDay", rangerDay);
         t.putLong("FalseCall", falseCall);
         t.putLong("FalseObs", falseObs);
         t.putLong("FakeNight", fakeNight);
@@ -194,6 +202,9 @@ public final class Post {
         CompoundTag mar = t.getCompound("Marion");
         for (String k : mar.getAllKeys()) p.marion.put(k, mar.getLong(k));
         p.marionNight = t.contains("MarionNight") ? t.getLong("MarionNight") : -1;
+        CompoundTag ans = t.getCompound("Answers");
+        for (String k : ans.getAllKeys()) p.answers.put(k, ans.getInt(k));
+        p.rangerDay = t.contains("RangerDay") ? t.getLong("RangerDay") : -1;
         p.falseCall = t.contains("FalseCall") ? t.getLong("FalseCall") : -1;
         p.falseObs = t.contains("FalseObs") ? t.getLong("FalseObs") : -1;
         p.fakeNight = t.contains("FakeNight") ? t.getLong("FakeNight") : -1;

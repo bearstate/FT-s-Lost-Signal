@@ -98,6 +98,9 @@ public final class Story extends SavedData {
         }
         for (ServerPlayer p : level.players()) {
             if (p.isSpectator()) continue;
+            // Gone up to, walked into: in their record, for Marion to hear of.
+            if (s.hollowBuilt && Math.hypot(p.getX() - s.hollow.getX(), p.getZ() - s.hollow.getZ()) < 16) com.jeladastudios.lostsignal.desk.Desk.seen(p, "hollow_seen");
+            if (s.plantingBuilt && s.planting != null && Math.hypot(p.getX() - s.planting.getX(), p.getZ() - s.planting.getZ()) < 24) com.jeladastudios.lostsignal.desk.Desk.seen(p, "planting_seen");
             // Each set out where the ground will have it: off lava, fire and water, a few dozen blocks over if need be.
             if (!s.hollowBuilt && near(p, s.hollow) && Ruin.loaded(level, s.hollow)) {
                 BlockPos spot = Ruin.near(level, s.hollow, 8);

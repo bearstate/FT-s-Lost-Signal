@@ -55,6 +55,7 @@ public final class Costs {
             // From the foot of the tower: heard on the lookout's own set, and nowhere further.
             Vec3 from = Vec3.atCenterOf(t.foot()).add(2, 1, 2);
             Lines.sayAs(level, from, Component.translatable("radio.fts_lostsignal.speaker.district"), "D_FALSE_ALONE", 1f, 0.97f, 96);
+            Marion.heard(level, desk, post);
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("COSTS false call at {}", t.number);
         }
         if (post.falseObs >= 0 && post.falseObs <= day && time >= FALSE_OBS && time < 6000) {
@@ -77,6 +78,7 @@ public final class Costs {
                 post.mail("", Mail.Line.of("costs.fts_lostsignal.no_one.subject"), List.of(Mail.Line.of("costs.fts_lostsignal.no_one." + which)),
                         day, (int) time);
                 desk.told(level, post);
+                Marion.heard(level, desk, post);
                 if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("COSTS message from no one to {}: {}", post.name, which);
             }
             desk.setDirty();

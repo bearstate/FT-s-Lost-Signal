@@ -99,6 +99,8 @@ public final class LastNight {
                 set(desk, post, s = WARNED);
                 desk.mail(level, post, Desk.DISTRICT, Mail.Line.of("lastnight.fts_lostsignal.warning.subject"),
                         List.of(Mail.Line.of("lastnight.fts_lostsignal.warning.1"), Mail.Line.of("lastnight.fts_lostsignal.warning.2", post.number)));
+                // And from Marion, to a keeper she has warned before: she is on tonight.
+                Marion.warn(level, desk, post);
             }
             if (s == WARNED && at && time >= SMOKE && time < VISIT) {
                 set(desk, post, s = BURNING);

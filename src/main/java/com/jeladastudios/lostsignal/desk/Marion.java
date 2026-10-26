@@ -55,14 +55,60 @@ public final class Marion {
             new Beat("obs", 1, new int[0], (l, p) -> p.stat("good_observations") > 0, 1),
             new Beat("fire", 1, new int[]{1, 1}, (l, p) -> p.stat("fires") > 0, 1),
             new Beat("rescue", 2, new int[0], (l, p) -> p.stat("rescued") > 0, 1),
-            new Beat("knock", 1, new int[]{2, 1}, (l, p) -> p.stat("nights") > 0, 1),
+            new Beat("knock", 1, new int[]{3, 1}, (l, p) -> p.stat("nights") > 0, 1),
             new Beat("corinne1", 1, new int[]{1, 1}, (l, p) -> since(l, p, "intro") >= 3 || Season.phase(l) != Season.Phase.OPENING, 1),
             new Beat("corinne2", 2, new int[]{2, 2}, (l, p) -> since(l, p, "corinne1") >= 2, 2),
             new Beat("page", 2, new int[0], (l, p) -> since(l, p, "corinne2") >= 1, 1),
             new Beat("hollow1", 1, new int[]{1, 1}, (l, p) -> since(l, p, "corinne2") >= 3 && Season.phase(l) != Season.Phase.OPENING, 2),
             new Beat("hollow2", 2, new int[]{2, 2}, (l, p) -> since(l, p, "hollow1") >= 2 && Season.phase(l) == Season.Phase.CLOSING, 2),
             new Beat("hollow3", 2, new int[]{1, 1}, (l, p) -> since(l, p, "hollow2") >= 1 && com.jeladastudios.lostsignal.story.Story.hollow(l) != null, 1,
-                    Marion::hollow));
+                    Marion::hollow),
+            // Hollow Peak gone up to: she asks what is left there, the more so where they said they would go; and where
+            // they said so and never went, she is glad of it.
+            new Beat("went_said", 1, new int[]{2, 1}, (l, p) -> answered(p, "hollow3") == 1 && !done(p, "nogo") && p.stat("hollow_seen") > 0, 1),
+            new Beat("went", 1, new int[]{2, 1}, (l, p) -> done(p, "hollow1") && !done(p, "went_said")
+                    && (answered(p, "hollow3") != 1 || done(p, "nogo")) && p.stat("hollow_seen") > 0, 1),
+            new Beat("nogo", 1, (l, p) -> answered(p, "hollow3") == 1 && since(l, p, "hollow3") >= 4 && p.stat("hollow_seen") == 0),
+            // The planting walked into: the crate driver saw their tracks.
+            new Beat("trees", 1, new int[]{2, 1}, (l, p) -> done(p, "hollow1") && p.stat("planting_seen") > 0, 1));
+
+    /** How a keeper wrote back to one of hers: 0 the first way, 1 the second, -1 not at all. */
+    static int answered(Post p, String id) {
+        return p.answers.getOrDefault(id, -1);
+    }
+
+    /** Whether she is keeping an ear on their channel: told of the call at two in the morning. */
+    static boolean listens(Post p) {
+        return answered(p, "fake") == 0;
+    }
+
+    /** Whether she has warned them against whoever sits at her desk some night: told of the call, or of the trees. */
+    static boolean warns(Post p) {
+        return listens(p) || answered(p, "trees") == 0;
+    }
+
+    /** Listening on their channel, she heard what came over it, and says so: it was not her. */
+    static void heard(ServerLevel level, Desk desk, Post post) {
+        if (!listens(post)) return;
+        com.jeladastudios.lostsignal.tower.Speech.after(level, 900, () -> desk.mail(level, post, FROM, Mail.Line.of(key("listen", "subject")),
+                List.of(Mail.Line.of(key("listen", "1"), post.number, post.name))));
+    }
+
+    /** The season's last morning, to a keeper she has warned: she is on tonight, and anyone else on her desk is no one from here. */
+    static void warn(ServerLevel level, Desk desk, Post post) {
+        if (!warns(post)) return;
+        desk.mail(level, post, FROM, Mail.Line.of(key("warn", "subject")), List.of(Mail.Line.of(key("warn", "1"), post.number, post.name),
+                Mail.Line.of(key("warn", "2"), post.number, post.name)));
+    }
+
+    /** The morning after she made her call about the east ridge: the District's word on it. */
+    static void morning(ServerLevel level, Desk desk, Post post) {
+        long day = level.getDayTime() / 24000;
+        if (post.rangerDay < 0 || day < post.rangerDay || level.getDayTime() % 24000 < 1500) return;
+        post.rangerDay = -1;
+        desk.mail(level, post, Desk.DISTRICT, Mail.Line.of("desk.fts_lostsignal.mail.ranger.subject"),
+                List.of(Mail.Line.of("desk.fts_lostsignal.mail.ranger.1"), Mail.Line.of("desk.fts_lostsignal.mail.ranger.2")));
+    }
 
     /** How far Hollow Peak is from a keeper's lookout, to the hundred blocks, and which way. */
     static Object[] hollow(ServerLevel level, Post post) {
@@ -141,7 +187,17 @@ public final class Marion {
         for (Mail x : post.inbox) if (x.id == id) m = x;
         if (m == null || m.replied >= 0 || choice < 0 || choice >= m.replies.size()) return;
         m.replied = choice;
+        if (m.thread != null && !m.thread.isEmpty()) post.answers.put(m.thread, choice);
         desk.setDirty();
+        // What she does about it: a pup sent up to one who told her of the knock; a call made about the east ridge.
+        if ("knock".equals(m.thread) && choice == 0) {
+            var t = com.jeladastudios.lostsignal.tower.Towers.known(level, post.tower);
+            if (t != null) {
+                t.pups.add(post.id);
+                com.jeladastudios.lostsignal.tower.Towers.of(level).setDirty();
+            }
+        }
+        if ("trees".equals(m.thread) && choice == 0) post.rangerDay = level.getDayTime() / 24000 + 1;
         Beat beat = null;
         for (Beat b : BEATS) if (b.id().equals(m.thread)) beat = b;
         if (beat == null) return;
