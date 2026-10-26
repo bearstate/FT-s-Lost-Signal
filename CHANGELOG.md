@@ -110,7 +110,8 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   where the planting is, a quarter mile east below the ridge: rows of spruce, the oldest giants now, something hung
   by each, and a ledger on a lectern among black candles, its last page this world's own (each hiker or keeper
   taken is a new sapling there, with their name). The Board of Review's summary of the Hollow Fire comes up with a
-  crate from Marion's archive; a lookout left in a hurry has a clipping from 1980 in a barrel in its cab.
+  crate from Marion's archive; a lookout left in a hurry has a clipping from 1980 in a barrel in its cab. Each new
+  season opens with the District's list of those still missing from the last, and the ledger keeps them a year apart.
 - **The radio used against you**: calls from no one, and a player's own voice played back.
 - **What is left** where someone was taken, and their journal: each written its own way, with a page for their last
   night (the weather, where they said they were, the last thing the lookout told them, the whistling if they heard it).

@@ -97,6 +97,11 @@ public final class Desk extends SavedData {
         return null;
     }
 
+    /** Which season it is, counted from the first; the first where the desk is off. */
+    public static int season(ServerLevel level) {
+        return Config.on(Config.DESK) ? of(level).season : 1;
+    }
+
     /** The fires called in this season, all the District's keepers together. */
     public static int seasonFires(ServerLevel level) {
         if (!Config.on(Config.DESK)) return 0;
@@ -398,7 +403,15 @@ public final class Desk extends SavedData {
             if (now == Season.Phase.OPENING) post.season.clear();
             String key = "desk.fts_lostsignal.mail.season." + now.name().toLowerCase(java.util.Locale.ROOT);
             mail(level, post, DISTRICT, Mail.Line.of(key + ".subject", season), List.of(Mail.Line.of(key + ".body", season)));
-            if (now == Season.Phase.OPENING) LastNight.opening(level, this, post);
+            if (now == Season.Phase.OPENING) {
+                LastNight.opening(level, this, post);
+                // Those who went missing last season and were never found, as the District has them.
+                List<String> missing = com.jeladastudios.lostsignal.story.Story.givenIn(level, season - 1);
+                if (!missing.isEmpty()) {
+                    mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.mail.missing.subject"), List.of(Mail.Line.of("desk.fts_lostsignal.mail.missing.1"),
+                            Mail.Line.of("desk.fts_lostsignal.mail.missing.2", String.join(", ", missing)), Mail.Line.of("desk.fts_lostsignal.mail.missing.3")));
+                }
+            }
         }
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("DESK season {}: {} -> {}", season, was, now);
     }

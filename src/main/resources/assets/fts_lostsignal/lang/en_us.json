@@ -764,5 +764,11 @@
   "lastnight.fts_lostsignal.next.reported.subject": "FROM THE RIDGE CREW",
   "lastnight.fts_lostsignal.next.reported.body": "The crew from the ridge fire asked us to pass this on to Lookout %s: thank you. Welcome back.",
   "lastnight.fts_lostsignal.next.letgo.subject": "BOARD OF REVIEW",
-  "lastnight.fts_lostsignal.next.letgo.body": "The board has reviewed the ridge fire and the log of Lookout %s. No further action. You are posted again."
+  "lastnight.fts_lostsignal.next.letgo.body": "The board has reviewed the ridge fire and the log of Lookout %s. No further action. You are posted again.",
+  "story.fts_lostsignal.ledger.last": "LAST YEAR\ngiven:\n%s",
+  "story.fts_lostsignal.ledger.ago": "%s YEARS AGO\ngiven:\n%s",
+  "desk.fts_lostsignal.mail.missing.subject": "STILL MISSING",
+  "desk.fts_lostsignal.mail.missing.1": "These went missing in the district last season and have not been found:",
+  "desk.fts_lostsignal.mail.missing.2": "%s",
+  "desk.fts_lostsignal.mail.missing.3": "If you find anything of theirs, call it in."
 }

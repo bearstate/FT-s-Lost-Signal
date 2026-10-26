@@ -109,7 +109,7 @@ final class Planting {
         BlockPos lectern = new BlockPos(hx, Ruin.surface(level, hx, hz) + 1, hz);
         if (Ruin.set(level, lectern, Blocks.LECTERN.defaultBlockState().setValue(LecternBlock.FACING, Direction.WEST).setValue(LecternBlock.HAS_BOOK, true))
                 && level.getBlockEntity(lectern) instanceof LecternBlockEntity l) {
-            l.setBook(Papers.ledger(s.names(), fires(level)));
+            l.setBook(Papers.ledger(s.bySeason(), com.jeladastudios.lostsignal.desk.Desk.season(level), fires(level)));
             l.setChanged();
         }
         for (int[] o : new int[][]{{0, 2}, {0, -2}, {1, 1}}) {
@@ -144,7 +144,7 @@ final class Planting {
         for (int y = top - 4; y <= top + 4; y++) {
             BlockPos p = new BlockPos(hx, y, hz);
             if (level.getBlockEntity(p) instanceof LecternBlockEntity l && l.hasBook()) {
-                l.setBook(Papers.ledger(s.names(), fires(level)));
+                l.setBook(Papers.ledger(s.bySeason(), com.jeladastudios.lostsignal.desk.Desk.season(level), fires(level)));
                 l.setChanged();
             }
         }

@@ -41,7 +41,7 @@ public final class Story extends SavedData {
 
     BlockPos hollow, planting;
     boolean hollowBuilt, plantingBuilt;
-    /** Those given in this world, in order: name and what they were (hiker or keeper), as "name|kind". */
+    /** Those given in this world, in order: name, what they were (hiker or keeper) and the season, as "name|kind|season". */
     final List<String> given = new ArrayList<>();
     /** How many of them have their sapling at the planting. */
     int planted;
@@ -61,16 +61,30 @@ public final class Story extends SavedData {
     public static void given(ServerLevel level, String name, String kind) {
         if (name == null || name.isEmpty() || name.equals("-")) return;
         Story s = of(level);
-        s.given.add(name + "|" + kind);
+        s.given.add(name + "|" + kind + "|" + com.jeladastudios.lostsignal.desk.Desk.season(level));
         s.setDirty();
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("STORY given {} ({})", name, kind);
     }
 
-    /** The names of those given in this world, in order. */
-    List<String> names() {
-        List<String> names = new ArrayList<>();
-        for (String g : given) names.add(g.split(java.util.regex.Pattern.quote("|"))[0]);
-        return names;
+    /** The names of those given in this world, by the season they were given in (the first, where it was not kept). */
+    java.util.SortedMap<Integer, List<String>> bySeason() {
+        java.util.SortedMap<Integer, List<String>> by = new java.util.TreeMap<>();
+        for (String g : given) {
+            String[] p = g.split(java.util.regex.Pattern.quote("|"));
+            int season = 1;
+            try {
+                if (p.length > 2) season = Integer.parseInt(p[2]);
+            } catch (NumberFormatException e) {
+                // An old entry: the first season's.
+            }
+            by.computeIfAbsent(season, k -> new ArrayList<>()).add(p[0]);
+        }
+        return by;
+    }
+
+    /** The names of those given in a season of this world, in order. */
+    public static List<String> givenIn(ServerLevel level, int season) {
+        return of(level).bySeason().getOrDefault(season, List.of());
     }
 
     @SubscribeEvent

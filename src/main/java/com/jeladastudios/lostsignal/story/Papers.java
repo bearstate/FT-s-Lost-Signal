@@ -33,19 +33,32 @@ public final class Papers {
         return book("clipping", "Clipping", "The Cold Fork Courier", CLIPPING_PAGES);
     }
 
-    /** Silas's ledger: the old years, and a last page for this one, the fires put out and the names of those given in this world. */
-    public static ItemStack ledger(List<String> given, int fires) {
+    /**
+     * Silas's ledger: the old years; then this world's, a season to a year, each with the names of those given in it;
+     * and this year's last, the fires put out in it besides.
+     */
+    public static ItemStack ledger(java.util.SortedMap<Integer, List<String>> bySeason, int season, int fires) {
         ItemStack s = book("ledger", "Owed and Given", "S.L.", LEDGER_PAGES);
         ListTag pages = s.getOrCreateTag().getList("pages", net.minecraft.nbt.Tag.TAG_STRING);
-        if (given.isEmpty()) pages.add(page(Component.translatable("story.fts_lostsignal.ledger.now_owed", fires)));
-        // Nine names to the first page of the year, under its heading; twelve to each after.
-        for (int from = 0; from < given.size(); from += from == 0 ? 9 : 12) {
-            List<String> some = given.subList(from, Math.min(given.size(), from + (from == 0 ? 9 : 12)));
-            pages.add(page(from == 0 ? Component.translatable("story.fts_lostsignal.ledger.now", fires, String.join("\n", some))
-                    : Component.literal(String.join("\n", some))));
+        for (var e : bySeason.entrySet()) {
+            int ago = season - e.getKey();
+            if (ago <= 0) continue;
+            year(pages, e.getValue(), names -> ago == 1 ? Component.translatable("story.fts_lostsignal.ledger.last", names)
+                    : Component.translatable("story.fts_lostsignal.ledger.ago", ago, names));
         }
+        List<String> now = bySeason.getOrDefault(season, List.of());
+        if (now.isEmpty()) pages.add(page(Component.translatable("story.fts_lostsignal.ledger.now_owed", fires)));
+        else year(pages, now, names -> Component.translatable("story.fts_lostsignal.ledger.now", fires, names));
         s.getOrCreateTag().put("pages", pages);
         return s;
+    }
+
+    /** A year's names: nine to its first page, under its heading; twelve to each after. */
+    static void year(ListTag pages, List<String> names, java.util.function.Function<String, Component> heading) {
+        for (int from = 0; from < names.size(); from += from == 0 ? 9 : 12) {
+            String some = String.join("\n", names.subList(from, Math.min(names.size(), from + (from == 0 ? 9 : 12))));
+            pages.add(page(from == 0 ? heading.apply(some) : Component.literal(some)));
+        }
     }
 
     static ItemStack book(String what, String title, String author, int pages) {

@@ -764,5 +764,11 @@
   "lastnight.fts_lostsignal.next.reported.subject": "SIRT EKİBİNDEN",
   "lastnight.fts_lostsignal.next.reported.body": "Sırt yangınındaki ekip Gözcü %s için şunu iletmemizi istedi: teşekkürler. Tekrar hoş geldin.",
   "lastnight.fts_lostsignal.next.letgo.subject": "İNCELEME KURULU",
-  "lastnight.fts_lostsignal.next.letgo.body": "Kurul sırt yangınını ve Gözcü %s kulesinin kayıt defterini inceledi. Başka bir işleme gerek görülmedi. Yeniden göreve verildin."
+  "lastnight.fts_lostsignal.next.letgo.body": "Kurul sırt yangınını ve Gözcü %s kulesinin kayıt defterini inceledi. Başka bir işleme gerek görülmedi. Yeniden göreve verildin.",
+  "story.fts_lostsignal.ledger.last": "GEÇEN YIL\nverilen:\n%s",
+  "story.fts_lostsignal.ledger.ago": "%s YIL ÖNCE\nverilen:\n%s",
+  "desk.fts_lostsignal.mail.missing.subject": "HÂLÂ KAYIP",
+  "desk.fts_lostsignal.mail.missing.1": "Geçen sezon bölgede kaybolan ve hâlâ bulunamayanlar:",
+  "desk.fts_lostsignal.mail.missing.2": "%s",
+  "desk.fts_lostsignal.mail.missing.3": "Onlara ait bir şey bulursan bildir."
 }
