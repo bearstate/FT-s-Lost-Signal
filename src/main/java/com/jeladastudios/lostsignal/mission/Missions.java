@@ -468,6 +468,7 @@ public final class Missions extends SavedData {
                     net.minecraft.network.chat.Component.translatable("radio.fts_lostsignal.speaker.unknown"), "X_SCREAM_FAR", 400, 1f);
         });
         remains(level, mission, h);
+        com.jeladastudios.lostsignal.story.Story.given(level, com.jeladastudios.lostsignal.remains.Journal.name(h.getUUID().getLeastSignificantBits()), "hiker");
         h.discard();
     }
 

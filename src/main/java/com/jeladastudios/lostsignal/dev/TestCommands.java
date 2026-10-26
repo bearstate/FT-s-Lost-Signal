@@ -162,6 +162,14 @@ public final class TestCommands {
                         .executes(c -> desk(c, 0))
                         .then(Commands.argument("value", com.mojang.brigadier.arguments.IntegerArgumentType.integer()).executes(c ->
                                 desk(c, com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "value"))))))
+                .then(Commands.literal("story").then(Commands.argument("what", com.mojang.brigadier.arguments.StringArgumentType.word()).executes(c -> {
+                    // The story's places: where (where they are), here, ruin, planting, give, resite.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    String r = com.jeladastudios.lostsignal.story.Story.test(p, com.mojang.brigadier.arguments.StringArgumentType.getString(c, "what"));
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST story " + r), false);
+                    return 1;
+                })))
                 .then(Commands.literal("observe").then(Commands.argument("values", com.mojang.brigadier.arguments.StringArgumentType.greedyString()).executes(c -> {
                     // An observation sent as from a terminal where the player stands: eight numbers, "x" for one left empty.
                     ServerPlayer p = c.getSource().getPlayer();
@@ -268,7 +276,7 @@ public final class TestCommands {
                     if (foot == null) foot = com.jeladastudios.lostsignal.mission.Lookouts.near(level, p.blockPosition(), 1);
                     if (foot == null) return 0;
                     var home = com.jeladastudios.lostsignal.tower.Towers.at(level, foot);
-                    StringBuilder s = new StringBuilder("LS_TEST towers: " + home.number + " " + home.state + " " + home.keeper + " " + home.need);
+                    StringBuilder s = new StringBuilder("LS_TEST towers: " + home.number + " " + home.state + " " + home.keeper + " " + home.need + " @" + home.x + "," + home.y + "," + home.z);
                     for (var t : com.jeladastudios.lostsignal.tower.Towers.around(level, home)) {
                         s.append(" | ").append(t.number).append(" ").append(t.state).append(" ").append(t.keeper).append(" @").append(t.x).append(",").append(t.z);
                     }

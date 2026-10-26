@@ -98,6 +98,13 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   and asks if you are alone up there (Marion calls you by your name; this calls you Lookout). Miss the one o'clock
   observation and in the morning one is on your terminal that you never sent. Let a fire burn itself out uncalled and
   someone thanks you for it on the radio. And now and then, at night, a message from no one (`desk.horror`).
+- **What the story left on the mountain**: the papers it is found in and two places to go. Hollow Peak, the lookout
+  closed in 1979, its footings on a summit some way off, the District's notice on the one leg still standing and
+  under where its cab fell a chest with the lookout's log of that summer; Marion says where it is, and the log says
+  where the planting is, a quarter mile east below the ridge: rows of spruce, the oldest giants now, something hung
+  by each, and a ledger on a lectern among black candles, its last page this world's own (each hiker or keeper
+  taken is a new sapling there, with their name). The Board of Review's summary of the Hollow Fire comes up with a
+  crate from Marion's archive; a lookout left in a hurry has a clipping from 1980 in a barrel in its cab.
 - **The radio used against you**: calls from no one, and a player's own voice played back.
 - **What is left** where someone was taken, and their journal: each written its own way, with a page for their last
   night (the weather, where they said they were, the last thing the lookout told them, the whistling if they heard it).

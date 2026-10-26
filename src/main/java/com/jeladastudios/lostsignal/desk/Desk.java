@@ -87,6 +87,24 @@ public final class Desk extends SavedData {
         return post.tower == 0 ? null : post;
     }
 
+    /** The lookout of a keeper posted, the first found; null where no one is. */
+    public static Tower firstPosted(ServerLevel level) {
+        if (!Config.on(Config.DESK)) return null;
+        for (Post post : of(level).posts.values()) {
+            Tower t = post.tower == 0 ? null : Towers.known(level, post.tower);
+            if (t != null) return t;
+        }
+        return null;
+    }
+
+    /** The fires called in this season, all the District's keepers together. */
+    public static int seasonFires(ServerLevel level) {
+        if (!Config.on(Config.DESK)) return 0;
+        int n = 0;
+        for (Post post : of(level).posts.values()) n += post.seasonStat("fires");
+        return n;
+    }
+
     /** A day gone by for a post: counted to the week if they were on duty in it; the new day's duties not yet begun. */
     void today(Post post, long day) {
         if (post.day == day) return;
@@ -442,6 +460,14 @@ public final class Desk extends SavedData {
                 post.noOneNight = -1;
                 post.noOneLast = -1;
                 Costs.sure = true;
+            }
+            case "reply" -> {
+                // The latest message waiting on a reply, answered the given way (0 or 1).
+                Mail last = null;
+                for (Mail m : post.inbox) if (!m.replies.isEmpty() && m.replied < 0) last = m;
+                if (last == null) return "reply none";
+                Marion.reply(p, last.id, value);
+                return "reply " + last.thread + " " + value;
             }
             case "marion" -> {
                 // Her next beat now; with a value, the nights since each beat put back that far first.

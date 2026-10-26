@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
 /**
@@ -24,9 +25,14 @@ public final class Marion {
 
     /**
      * One thing she has to say: its name, how many lines, how many replies (and how many lines each answer has), when
-     * it may be said (by the keeper's post and the day), and how many nights after the one before it waits at least.
+     * it may be said (by the keeper's post and the day), how many nights after the one before it waits at least, and
+     * what it says beyond the keeper's number and name, if anything.
      */
-    record Beat(String id, int lines, int[] answers, BiPredicate<ServerLevel, Post> when, int after) {
+    record Beat(String id, int lines, int[] answers, BiPredicate<ServerLevel, Post> when, int after, BiFunction<ServerLevel, Post, Object[]> args) {
+
+        Beat(String id, int lines, int[] answers, BiPredicate<ServerLevel, Post> when, int after) {
+            this(id, lines, answers, when, after, null);
+        }
 
         Beat(String id, int lines, BiPredicate<ServerLevel, Post> when) {
             this(id, lines, new int[0], when, 0);
@@ -54,7 +60,20 @@ public final class Marion {
             new Beat("corinne2", 2, new int[]{2, 2}, (l, p) -> since(l, p, "corinne1") >= 2, 2),
             new Beat("page", 2, new int[0], (l, p) -> since(l, p, "corinne2") >= 1, 1),
             new Beat("hollow1", 1, new int[]{1, 1}, (l, p) -> since(l, p, "corinne2") >= 3 && Season.phase(l) != Season.Phase.OPENING, 2),
-            new Beat("hollow2", 2, new int[]{1, 1}, (l, p) -> since(l, p, "hollow1") >= 2 && Season.phase(l) == Season.Phase.CLOSING, 2));
+            new Beat("hollow2", 2, new int[]{2, 2}, (l, p) -> since(l, p, "hollow1") >= 2 && Season.phase(l) == Season.Phase.CLOSING, 2),
+            new Beat("hollow3", 2, new int[]{1, 1}, (l, p) -> since(l, p, "hollow2") >= 1 && com.jeladastudios.lostsignal.story.Story.hollow(l) != null, 1,
+                    Marion::hollow));
+
+    /** How far Hollow Peak is from a keeper's lookout, to the hundred blocks, and which way. */
+    static Object[] hollow(ServerLevel level, Post post) {
+        var t = com.jeladastudios.lostsignal.tower.Towers.known(level, post.tower);
+        var h = com.jeladastudios.lostsignal.story.Story.hollow(level);
+        if (t == null || h == null) return new Object[]{"?", "?"};
+        double dx = h.getX() - t.x, dz = h.getZ() - t.z;
+        int bearing = Math.floorMod((int) Math.round(Math.toDegrees(Math.atan2(dx, -dz))), 360);
+        return new Object[]{Math.round(Math.hypot(dx, dz) / 100) * 100,
+                "#radio.fts_lostsignal.point." + com.jeladastudios.lostsignal.finder.FireFinder.point(bearing)};
+    }
 
     /**
      * At night, a keeper at their lookout: the next thing she has to say to them, if anything is due, and at most one
@@ -90,13 +109,23 @@ public final class Marion {
         post.marion.put(b.id(), day);
         post.marionNight = day;
         List<Mail.Line> lines = new ArrayList<>();
-        for (int i = 1; i <= b.lines(); i++) lines.add(Mail.Line.of(key(b.id(), String.valueOf(i)), post.number, post.name));
+        Object[] args = {post.number, post.name};
+        if (b.args() != null) {
+            Object[] more = b.args().apply(level, post);
+            args = java.util.Arrays.copyOf(args, 2 + more.length);
+            System.arraycopy(more, 0, args, 2, more.length);
+        }
+        for (int i = 1; i <= b.lines(); i++) lines.add(Mail.Line.of(key(b.id(), String.valueOf(i)), args));
         List<Mail.Line> replies = new ArrayList<>();
         for (int i = 1; i <= b.answers().length; i++) replies.add(Mail.Line.of(key(b.id(), "r" + i)));
         post.mail(FROM, Mail.Line.of(key(b.id(), "subject")), lines, day, (int) (level.getDayTime() % 24000), replies, b.id());
         desk.setDirty();
         desk.told(level, post);
-        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("MARION to {}: {}", post.name, b.id());
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+            StringBuilder said = new StringBuilder();
+            for (Mail.Line l : lines) said.append(" | ").append(l.text().getString());
+            LostSignal.LOGGER.info("MARION to {}: {}{}", post.name, b.id(), said);
+        }
     }
 
     static String key(String id, String part) {
@@ -125,6 +154,16 @@ public final class Marion {
                     (int) (level.getDayTime() % 24000));
             desk.setDirty();
             desk.told(level, post);
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) {
+                StringBuilder said = new StringBuilder();
+                for (Mail.Line l : body) said.append(" | ").append(l.text().getString());
+                LostSignal.LOGGER.info("MARION answers {} on {}{}", post.name, b.id(), said);
+            }
+            // Hollow Peak: what the Board of Review found, out of the archive and up with the next crate.
+            if (b.id().equals("hollow2")) {
+                var t = com.jeladastudios.lostsignal.tower.Towers.known(level, post.tower);
+                if (t != null) Desk.send(level, t, List.of(com.jeladastudios.lostsignal.story.Papers.report()), level.getDayTime() / 24000);
+            }
             ServerPlayer now = level.getServer().getPlayerList().getPlayer(post.id);
             if (now != null) Terminal.send(now, false);
         });

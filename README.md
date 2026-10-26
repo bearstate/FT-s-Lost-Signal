@@ -44,6 +44,9 @@ who comes to the door at night in a mask.
   from what you said on the frequency, played back to you from somewhere you are not (Simple Voice Chat).
 - **What is left**: where someone was taken, a broken camp, a tent down, dark stains and a trail into the trees,
   square footprints, a journal.
+- **A story to piece together**: the night desk's messages, the lookout guide and the page folded in it, an old
+  newspaper clipping, the Board of Review's summary of a fire in 1979, and two places out on the mountain to find:
+  the ruin of the lookout closed that year, with its log, and what the log points to.
 - **Flowing sleep**: the night runs by fast while you sleep instead of jumping to morning; the radio and a knock wake
   you.
 - **Every fright can be turned down or off**, per world.

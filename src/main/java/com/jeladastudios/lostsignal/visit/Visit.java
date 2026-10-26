@@ -454,6 +454,7 @@ public final class Visit {
         level.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, k.getX(), k.getY() + 1, k.getZ(), 30, 0.3, 0.6, 0.3, 0.01);
         for (ServerPlayer p : inCab()) p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0));
         k.discard();
+        com.jeladastudios.lostsignal.story.Story.given(level, tower.keeper, "keeper");
         com.jeladastudios.lostsignal.tower.Towers.force(level, tower, "abandoned");
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT took keeper {} of {}", tower.keeper, tower.number);
     }

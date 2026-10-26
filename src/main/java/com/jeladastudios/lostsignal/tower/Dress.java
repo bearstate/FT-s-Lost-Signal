@@ -69,6 +69,12 @@ final class Dress {
             t.dressed = true;
             towers.setDirty();
         }
+        // What its keeper kept, in a barrel in the cab: the district's old story, cut out of the paper.
+        if (t.state == Tower.State.ABANDONED && !t.papers) {
+            t.papers = true;
+            towers.setDirty();
+            clipping(level, floor);
+        }
         if (t.remainsPending) {
             remains(level, t, foot);
             t.remainsPending = false;
@@ -161,6 +167,21 @@ final class Dress {
 
     /** Where Feel the Nature hangs the lanterns under a lookout: under two landings and under the cab's floor. */
     static final int[][] LIGHTS = {{2, 1, 0}, {-2, 10, 0}, {1, 19, 2}};
+
+    /** The 1980 clipping put in a barrel on the cab's floor, where there is one with room. */
+    static void clipping(ServerLevel level, BlockPos floor) {
+        for (BlockPos p : BlockPos.betweenClosed(floor.offset(-3, 1, -3), floor.offset(3, 1, 3))) {
+            if (!(level.getBlockEntity(p) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity barrel)) continue;
+            // Filled as it would be when first opened, so what it holds goes in among the rest.
+            barrel.unpackLootTable(null);
+            int slot = next(barrel, -1);
+            if (slot < 0) continue;
+            barrel.setItem(slot, com.jeladastudios.lostsignal.story.Papers.clipping());
+            barrel.setChanged();
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("TOWER clipping put in {}", p.toShortString());
+            return;
+        }
+    }
 
     /** The spots on the cab's floor with nothing on them. */
     static List<BlockPos> free(ServerLevel level, BlockPos floor) {
