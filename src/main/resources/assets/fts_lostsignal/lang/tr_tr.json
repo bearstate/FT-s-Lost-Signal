@@ -677,5 +677,22 @@
   "marion.fts_lostsignal.hollow2.a2.1": "bence neden önemli olduğunu biliyorsun.",
   "marion.fts_lostsignal.last.subject": "sezon sonu",
   "marion.fts_lostsignal.last.1": "sezonun son gecesi. yukarıda iyi iş çıkardın.",
-  "marion.fts_lostsignal.last.2": "baharda geri gel, olur mu? çıkarken de kapıyı kilitle."
+  "marion.fts_lostsignal.last.2": "baharda geri gel, olur mu? çıkarken de kapıyı kilitle.",
+  "radio.fts_lostsignal.line.D_FALSE_ALONE": "Gözcü, Merkez. ...Orada yalnız mısın, gözcü? Tamam.",
+  "radio.fts_lostsignal.line.S_THANK_BURN": "Yanmasına izin verdiğin için teşekkür ederim.",
+  "costs.fts_lostsignal.false_obs": "S 4 C, nem %%99, B 1013 hPa sabit, rüzgâr 0 knot, yağış 0 mm, gökyüzü açık. Ziyaretçi: 1.",
+  "costs.fts_lostsignal.no_one.subject": "...",
+  "costs.fts_lostsignal.no_one.lit": "lamban yanıyor.",
+  "costs.fts_lostsignal.no_one.see": "seni buradan görebiliyorum.",
+  "costs.fts_lostsignal.no_one.dark": "bu gece yukarısı karanlık.",
+  "costs.fts_lostsignal.burned.subject": "BİLDİRİLMEYEN YANGIN",
+  "costs.fts_lostsignal.burned.body": "Bugün bölgende bir yangın kendi kendine söndü ve kimse bildirmedi. Ne oldu, gözcü?",
+  "costs.fts_lostsignal.burned.cut": "Bildirilmeyen yangın",
+  "marion.fts_lostsignal.fake.subject": "gece ikide",
+  "marion.fts_lostsignal.fake.1": "dün gece ikide telsizde biriyle mi konuşuyordun?",
+  "marion.fts_lostsignal.fake.2": "ben değildim. bütün gece masadaydım, senden parazitten başka bir şey duymadım.",
+  "marion.fts_lostsignal.fake.r1": "yalnız mıyım diye sordular.",
+  "marion.fts_lostsignal.fake.r2": "rüya görmüşümdür.",
+  "marion.fts_lostsignal.fake.a1.1": "buna asla cevap verme. ben sana adınla seslenirim. adın yerine gözcü diyorsa ben değilim.",
+  "marion.fts_lostsignal.fake.a2.1": "belki. yine de kapıyı kapalı tut."
 }

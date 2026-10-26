@@ -45,6 +45,7 @@ public final class Marion {
 
     static final List<Beat> BEATS = List.of(
             new Beat("intro", 2, new int[]{1, 1}, (l, p) -> true, 0),
+            new Beat("fake", 2, new int[]{1, 1}, (l, p) -> p.fakeNight >= 0 && l.getDayTime() / 24000 > p.fakeNight, 1),
             new Beat("obs", 1, new int[0], (l, p) -> p.stat("good_observations") > 0, 1),
             new Beat("fire", 1, new int[]{1, 1}, (l, p) -> p.stat("fires") > 0, 1),
             new Beat("rescue", 2, new int[0], (l, p) -> p.stat("rescued") > 0, 1),

@@ -677,5 +677,22 @@
   "marion.fts_lostsignal.hollow2.a2.1": "i think you know why it matters.",
   "marion.fts_lostsignal.last.subject": "end of season",
   "marion.fts_lostsignal.last.1": "last night of the season. you did good up there.",
-  "marion.fts_lostsignal.last.2": "come back in the spring, okay? and lock the door on your way out."
+  "marion.fts_lostsignal.last.2": "come back in the spring, okay? and lock the door on your way out.",
+  "radio.fts_lostsignal.line.D_FALSE_ALONE": "Lookout, District. ...Are you alone up there, Lookout? Over.",
+  "radio.fts_lostsignal.line.S_THANK_BURN": "Thank you for letting it burn.",
+  "costs.fts_lostsignal.false_obs": "T 4 C, RH 99%%, P 1013 hPa steady, wind 0 kt, rain 0 mm, sky clear. Visitors: 1.",
+  "costs.fts_lostsignal.no_one.subject": "...",
+  "costs.fts_lostsignal.no_one.lit": "your light is on.",
+  "costs.fts_lostsignal.no_one.see": "i can see you from here.",
+  "costs.fts_lostsignal.no_one.dark": "it's dark up there tonight.",
+  "costs.fts_lostsignal.burned.subject": "UNREPORTED FIRE",
+  "costs.fts_lostsignal.burned.body": "A fire burned itself out in your area today and nobody called it in. What happened, Lookout?",
+  "costs.fts_lostsignal.burned.cut": "Unreported fire",
+  "marion.fts_lostsignal.fake.subject": "two a.m.",
+  "marion.fts_lostsignal.fake.1": "were you talking to someone on the radio at two last night?",
+  "marion.fts_lostsignal.fake.2": "it wasn't me. i was on all night and heard nothing from you but static.",
+  "marion.fts_lostsignal.fake.r1": "they asked if i was alone.",
+  "marion.fts_lostsignal.fake.r2": "i must have dreamed it.",
+  "marion.fts_lostsignal.fake.a1.1": "don't ever answer that. i call you by your name. if it says lookout and not your name, it isn't me.",
+  "marion.fts_lostsignal.fake.a2.1": "maybe. keep the door shut anyway."
 }

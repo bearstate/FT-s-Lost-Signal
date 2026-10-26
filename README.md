@@ -74,7 +74,7 @@ In each world's `serverconfig/fts_lostsignal-server.toml` (change it with the wo
 | `remains` | `stains`, `bodies` | Dark stains and drag marks; a body at some scenes (else the journal is found in the tent) |
 | `hikers` | `enabled`, `frequency`, `falls`, `monsters` | Lost hikers, how often, whether they fall and are hurt, and whether the night's monsters hunt them |
 | `lookouts` | `districtCalls`, `supplies`, `fires`, `fireFrequency`, `lightning` | The District's day, supply crates, fires, lightning on the lookouts |
-| `desk` | `enabled` | The terminal, the duty roster, pay credit and orders, the season |
+| `desk` | `enabled`, `horror` | The terminal, the duty roster, pay credit and orders, the season; what a duty let go costs at night |
 | `sleep` | `flowing` | The flowing night; turn it off if another mod handles sleep |
 
 ## Building

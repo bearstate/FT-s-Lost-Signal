@@ -23,7 +23,7 @@ public final class Config {
     public static final BooleanValue DISTRICT, SUPPLIES, FIRES, LIGHTNING;
     public static final DoubleValue FIRE_CHANCE;
     public static final BooleanValue FLOWING_SLEEP;
-    public static final BooleanValue DESK;
+    public static final BooleanValue DESK, HORROR;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -89,6 +89,10 @@ public final class Config {
         b.comment("The lookout's desk work: the terminal, the day's duties, pay credit and orders, the season.").push("desk");
         DESK = b.comment("All of it. Off, no one is posted, no duties are kept and nothing is paid; the terminal stays dark.")
                 .define("enabled", true);
+        HORROR = b.comment("What a duty let go costs at night: a call from \"the District\" that is not the District, an observation",
+                        "on the terminal no one sent, thanks on the radio for a fire let burn, now and then a message from no one.",
+                        "Off, none of it (the stranger's own setting turns it off too).")
+                .define("horror", true);
         b.pop();
 
         b.comment("Sleep.").push("sleep");

@@ -54,6 +54,11 @@ public final class Post {
     /** What Marion has said to them, each by the day she said it; and the last night she wrote. */
     public final Map<String, Long> marion = new TreeMap<>();
     public long marionNight = -1;
+    /**
+     * What letting a duty go costs: the night of the false call still to come, the morning of the false observation, the
+     * night the false call came; the last night looked at for a message from no one, and the last one that brought one.
+     */
+    public long falseCall = -1, falseObs = -1, fakeNight = -1, noOneNight = -1, noOneLast = -1;
 
     public final List<Mail> inbox = new ArrayList<>();
     long nextMail = 1;
@@ -143,6 +148,11 @@ public final class Post {
         for (var e : marion.entrySet()) mar.putLong(e.getKey(), e.getValue());
         t.put("Marion", mar);
         t.putLong("MarionNight", marionNight);
+        t.putLong("FalseCall", falseCall);
+        t.putLong("FalseObs", falseObs);
+        t.putLong("FakeNight", fakeNight);
+        t.putLong("NoOneNight", noOneNight);
+        t.putLong("NoOneLast", noOneLast);
         return t;
     }
 
@@ -179,6 +189,11 @@ public final class Post {
         CompoundTag mar = t.getCompound("Marion");
         for (String k : mar.getAllKeys()) p.marion.put(k, mar.getLong(k));
         p.marionNight = t.contains("MarionNight") ? t.getLong("MarionNight") : -1;
+        p.falseCall = t.contains("FalseCall") ? t.getLong("FalseCall") : -1;
+        p.falseObs = t.contains("FalseObs") ? t.getLong("FalseObs") : -1;
+        p.fakeNight = t.contains("FakeNight") ? t.getLong("FakeNight") : -1;
+        p.noOneNight = t.contains("NoOneNight") ? t.getLong("NoOneNight") : -1;
+        p.noOneLast = t.contains("NoOneLast") ? t.getLong("NoOneLast") : -1;
         return p;
     }
 }

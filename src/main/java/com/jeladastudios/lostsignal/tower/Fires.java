@@ -59,7 +59,12 @@ public final class Fires {
     @SubscribeEvent
     public static void tick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level) || level.dimension() != Level.OVERWORLD) return;
-        for (Fire f : FIRES) if (!f.smoke.burning()) FIRES.remove(f);
+        for (Fire f : FIRES) {
+            if (f.smoke.burning()) continue;
+            FIRES.remove(f);
+            // Burnt itself out, never called in.
+            if (!f.called && !f.real) com.jeladastudios.lostsignal.desk.Costs.burnedOut(level, f.at);
+        }
         if (!com.jeladastudios.lostsignal.Config.on(com.jeladastudios.lostsignal.Config.FIRES)) return;
         scan(level);
         // A real fire burnt itself out: its smoke goes too.
@@ -253,6 +258,11 @@ public final class Fires {
             return;
         }
         called(p, fire, com.jeladastudios.lostsignal.desk.Desk.FIRE_PAY, false);
+    }
+
+    /** For trying: every fire's smoke gone now, as if each had burnt itself out. */
+    public static void burnOutAll() {
+        for (Fire f : FIRES) f.smoke.out();
     }
 
     /** How near a fire's true bearing a reported one must be, in degrees; and its distance, as a share of the true one. */

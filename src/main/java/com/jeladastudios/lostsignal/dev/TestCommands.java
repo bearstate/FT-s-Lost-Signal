@@ -184,6 +184,11 @@ public final class TestCommands {
                             c.getSource().sendSuccess(() -> Component.literal("LS_TEST smoke " + r), false);
                             return 1;
                         }))))
+                .then(Commands.literal("fireout").executes(c -> {
+                    // Every fire burnt out now, called in or not.
+                    com.jeladastudios.lostsignal.tower.Fires.burnOutAll();
+                    return 1;
+                }))
                 .then(Commands.literal("poster").executes(c -> {
                     // A hiker of the lookout the player is at posted up as missing.
                     ServerPlayer p = c.getSource().getPlayer();

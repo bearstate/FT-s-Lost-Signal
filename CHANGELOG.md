@@ -94,6 +94,10 @@ is not who he says, and the stranger, by day and through the door at night. Subt
 - **The rules hold**: the guide's and the page folded in it are true. A lookout with its lamp lit is one someone is
   up in, and he is less sure of it; a dark one is an empty one to him, and he comes to see. Give him water by day and he
   takes it as an invitation, that night and the next. Leave the cab's door open and there is no knock: he is in.
+- **What a duty let go costs**: miss the end of day check and at two in the morning "the District" calls your lookout
+  and asks if you are alone up there (Marion calls you by your name; this calls you Lookout). Miss the one o'clock
+  observation and in the morning one is on your terminal that you never sent. Let a fire burn itself out uncalled and
+  someone thanks you for it on the radio. And now and then, at night, a message from no one (`desk.horror`).
 - **The radio used against you**: calls from no one, and a player's own voice played back.
 - **What is left** where someone was taken, and their journal: each written its own way, with a page for their last
   night (the weather, where they said they were, the last thing the lookout told them, the whistling if they heard it).

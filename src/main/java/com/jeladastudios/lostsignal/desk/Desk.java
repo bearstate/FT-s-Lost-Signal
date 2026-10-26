@@ -163,8 +163,9 @@ public final class Desk extends SavedData {
             Tower t = Towers.known(level, post.tower);
             if (t == null) continue;
             boolean at = Math.hypot(p.getX() - t.x, p.getZ() - t.z) < AT_TOWER;
-            // The night desk, writing to a keeper up at their lookout.
+            // The night desk, writing to a keeper up at their lookout; and what letting a duty go costs.
             if (Math.hypot(p.getX() - t.x, p.getZ() - t.z) < 32) Marion.night(level, p, post, desk);
+            if (at) Costs.night(level, p, post, desk, t);
             for (Duty d : Duty.values()) {
                 if (!applies(d)) continue;
                 // A radio check is there to be answered only once the District has made it today.
@@ -226,6 +227,7 @@ public final class Desk extends SavedData {
 
     /** A duty missed by someone who was at their lookout while it was open. */
     void missedDuty(ServerLevel level, ServerPlayer p, Post post, Duty d) {
+        Costs.missed(level, post, d);
         if (d == Duty.WEATHER) {
             mail(level, post, DISTRICT, Mail.Line.of("desk.fts_lostsignal.mail.missed_weather.subject"),
                     List.of(Mail.Line.of("desk.fts_lostsignal.mail.missed_weather.body", post.number)));
@@ -432,6 +434,15 @@ public final class Desk extends SavedData {
                 Letters.send(level, desk);
             }
             case "service" -> post.stats.put("duties", value);
+            case "falsecall" -> post.falseCall = day;
+            case "falseobs" -> post.falseObs = day;
+            case "noone" -> {
+                // The nights gone wrong, and a message from no one due tonight, whatever the odds.
+                post.stats.put("nights", Math.max(1, post.stat("nights")));
+                post.noOneNight = -1;
+                post.noOneLast = -1;
+                Costs.sure = true;
+            }
             case "marion" -> {
                 // Her next beat now; with a value, the nights since each beat put back that far first.
                 if (value > 0) post.marion.replaceAll((k, d) -> d - value);
