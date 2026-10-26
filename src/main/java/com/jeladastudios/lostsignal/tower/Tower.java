@@ -51,6 +51,8 @@ public final class Tower {
     public long metStranger = -1;
     /** How many times he has been driven off from it, hurt, and not yet come back for it: he comes sooner, and worse. */
     public int anger;
+    /** The day its keeper last gave him water, -1 never: he takes it as an invitation. */
+    public long wateredDay = -1;
 
     /** Whether the world has been made to look as it is: the door left open, the candles. */
     public boolean dressed;
@@ -122,6 +124,7 @@ public final class Tower {
         t.putLong("CheckOn", checkOn);
         t.putLong("MetStranger", metStranger);
         t.putInt("Anger", anger);
+        t.putLong("WateredDay", wateredDay);
         t.putBoolean("Dressed", dressed);
         t.putBoolean("Fitted", fitted);
         t.putBoolean("Sheltered", sheltered);
@@ -160,6 +163,7 @@ public final class Tower {
         tower.checkOn = t.getLong("CheckOn");
         tower.metStranger = t.contains("MetStranger") ? t.getLong("MetStranger") : -1;
         tower.anger = t.getInt("Anger");
+        tower.wateredDay = t.contains("WateredDay") ? t.getLong("WateredDay") : -1;
         tower.dressed = t.getBoolean("Dressed");
         tower.fitted = t.getBoolean("Fitted");
         tower.sheltered = t.getBoolean("Sheltered");

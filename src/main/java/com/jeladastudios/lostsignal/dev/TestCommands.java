@@ -113,6 +113,18 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("LS_TEST visit " + (v == null ? "none" : "at " + v.foot.toShortString() + " door " + v.door.toShortString())), false);
                     return v == null ? 0 : 1;
                 }))
+                .then(Commands.literal("visitopen").executes(c -> {
+                    // A visit tonight with the cab's door left standing open.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var tower = com.jeladastudios.lostsignal.mission.Missions.towerAt(p.serverLevel(), p);
+                    var v = tower == null ? null : com.jeladastudios.lostsignal.visit.Visit.begin(p.serverLevel(), tower);
+                    if (v == null) return 0;
+                    var s = p.serverLevel().getBlockState(v.door);
+                    if (s.getBlock() instanceof net.minecraft.world.level.block.DoorBlock door) door.setOpen(null, p.serverLevel(), s, v.door, true);
+                    c.getSource().sendSuccess(() -> Component.literal("LS_TEST visitopen door " + v.door.toShortString()), false);
+                    return 1;
+                }))
                 .then(Commands.literal("remains").executes(c -> remains(c, true))
                         .then(Commands.literal("nobody").executes(c -> remains(c, false))))
                 .then(Commands.literal("offer").executes(c -> {

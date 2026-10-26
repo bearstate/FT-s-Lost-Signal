@@ -41,6 +41,11 @@ public final class Visit {
 
     /** How likely a night brings it up the stair of a lookout someone keeps: more so when a hiker is out. */
     static final float CHANCE = 0.12f, CHANCE_MISSION = 0.3f;
+    /**
+     * The rules, as they hold: a lookout with its lamp lit is one someone is up in, and he is less sure of it; a dark one
+     * is an empty one to him, and he comes to see. Given water by day, he takes it as an invitation, that night and the next.
+     */
+    static final float LIT = 0.7f, DARK = 1.6f, WATERED = 3f;
 
     /** When the small hours were last looked at, on the day's clock. */
     private static long lastClock = Long.MAX_VALUE;
@@ -181,6 +186,12 @@ public final class Visit {
             double up = (double) t / KNOCK * 20;
             double sway = (t / 14) % 2 == 0 ? 1.5 : -1.5;
             sound(middle.add(sway, up, 0), SoundEvents.WOOD_STEP, 0.9f, 0.6f);
+        }
+        // The door left open: no knock. He is in.
+        if (t == KNOCK && doorOpen()) {
+            walkIn(inCab());
+            t = DECIDE;
+            return true;
         }
         if (t == KNOCK || t == KNOCK + 18 || t == KNOCK + 36) {
             sound(Vec3.atCenterOf(door), SoundEvents.WOODEN_DOOR_CLOSE, 1.2f, 0.5f);
@@ -447,12 +458,39 @@ public final class Visit {
         if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT took keeper {} of {}", tower.keeper, tower.number);
     }
 
+    /** Whether the cab's door stands open. */
+    boolean doorOpen() {
+        BlockState s = level.getBlockState(door);
+        return s.getBlock() instanceof DoorBlock && s.getValue(DoorBlock.OPEN);
+    }
+
+    /** The door left open: a creak, and he is in the doorway, among whoever did not hide; with all hidden, he goes. */
+    void walkIn(List<ServerPlayer> in) {
+        sound(Vec3.atCenterOf(door), SoundEvents.WOODEN_DOOR_OPEN, 0.5f, 0.55f);
+        if (in.stream().allMatch(Hiding::hidden)) {
+            broke = true;
+            ServerPlayer watched = in.isEmpty() ? nearest() : in.get(0);
+            if ((at == null || !at.isAlive()) && watched != null) at = masked(watched, door, out.getOpposite(), GONE);
+            say("S_DOOR_LEAVE");
+            if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT walked in at an open door, all hidden");
+            return;
+        }
+        enter(in);
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT walked in at an open door on {}", in.size());
+    }
+
     /** The door gives, and it is in among whoever did not hide. */
     void breakIn(List<ServerPlayer> in) {
-        broke = true;
         sound(Vec3.atCenterOf(door), SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, 1.5f, 0.7f);
         level.destroyBlock(door, false);
         if (level.getBlockState(door.above()).getBlock() instanceof DoorBlock) level.destroyBlock(door.above(), false);
+        enter(in);
+        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT broke in on {}", in.size());
+    }
+
+    /** In the doorway, and on whoever did not hide. */
+    void enter(List<ServerPlayer> in) {
+        broke = true;
         // In the doorway.
         ServerPlayer watched = in.isEmpty() ? nearest() : in.get(0);
         if ((at == null || !at.isAlive()) && watched != null) at = masked(watched, door, out.getOpposite(), GONE);
@@ -467,7 +505,6 @@ public final class Visit {
             p.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0));
             p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
         }
-        if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("VISIT broke in on {}", in.size());
     }
 
     @SubscribeEvent
@@ -498,7 +535,10 @@ public final class Visit {
             // Two in the cab, the keeper and a guest they let stay, and he is less likely to try it.
             if (com.jeladastudios.lostsignal.tower.Towers.company(level, tower)) chance *= 0.5f;
             // Driven off hurt before, he comes back sooner.
-            chance *= 1 + 0.5f * com.jeladastudios.lostsignal.tower.Towers.at(level, tower).anger;
+            var lookout = com.jeladastudios.lostsignal.tower.Towers.at(level, tower);
+            chance *= 1 + 0.5f * lookout.anger;
+            chance *= com.jeladastudios.lostsignal.finder.Lamps.lit(level, tower) ? LIT : DARK;
+            if (lookout.wateredDay >= 0 && night - lookout.wateredDay <= 1) chance *= WATERED;
             if (com.jeladastudios.lostsignal.dev.TestCommands.ON) chance *= 2.5f;
             chance *= com.jeladastudios.lostsignal.Config.stranger(com.jeladastudios.lostsignal.Config.VISITS);
             // By how much of the small hours has gone by since the last look: a second, or many, a keeper asleep.

@@ -88,6 +88,9 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   sooner and worse. Out of the cab when he comes, he comes for you where you are (quicker when you do not look, and a
   drop between you does not keep him off for long); back behind the door, he is at the door again. Hiding under the
   bed, looking out from under it at the room.
+- **The rules hold**: the guide's and the page folded in it are true. A lookout with its lamp lit is one someone is
+  up in, and he is less sure of it; a dark one is an empty one to him, and he comes to see. Give him water by day and he
+  takes it as an invitation, that night and the next. Leave the cab's door open and there is no knock: he is in.
 - **The radio used against you**: calls from no one, and a player's own voice played back.
 - **What is left** where someone was taken, and their journal: each written its own way, with a page for their last
   night (the weather, where they said they were, the last thing the lookout told them, the whistling if they heard it).

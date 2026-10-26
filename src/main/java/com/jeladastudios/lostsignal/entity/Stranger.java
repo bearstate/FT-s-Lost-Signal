@@ -432,6 +432,18 @@ public class Stranger extends PathfinderMob {
             if (!p.getAbilities().instabuild) held.shrink(1);
             say("S_WATER_THANKS");
             nextLine = 120 + random.nextInt(60);
+            // Taken as an invitation: to the lookout the giver keeps, or the one they are at.
+            if (level() instanceof net.minecraft.server.level.ServerLevel server) {
+                var post = com.jeladastudios.lostsignal.desk.Desk.posted(p);
+                var tower = post != null ? com.jeladastudios.lostsignal.tower.Towers.known(server, post.tower) : null;
+                var foot = com.jeladastudios.lostsignal.mission.Missions.towerAt(server, p);
+                if (tower == null && foot != null) tower = com.jeladastudios.lostsignal.tower.Towers.at(server, foot);
+                if (tower != null) {
+                    tower.wateredDay = server.getDayTime() / 24000;
+                    com.jeladastudios.lostsignal.tower.Towers.of(server).setDirty();
+                    if (com.jeladastudios.lostsignal.dev.TestCommands.ON) LostSignal.LOGGER.info("STRANGER given water: invited to {}", tower.number);
+                }
+            }
             return InteractionResult.CONSUME;
         }
         // Spoken to, he talks: or, already talking, goes on to the next thing at once.
