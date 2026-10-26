@@ -84,16 +84,25 @@ public final class Story extends SavedData {
         }
         for (ServerPlayer p : level.players()) {
             if (p.isSpectator()) continue;
+            // Each set out where the ground will have it: off lava, fire and water, a few dozen blocks over if need be.
             if (!s.hollowBuilt && near(p, s.hollow) && Ruin.loaded(level, s.hollow)) {
-                s.hollowBuilt = true;
-                s.setDirty();
-                Ruin.build(level, s.hollow);
+                BlockPos spot = Ruin.near(level, s.hollow, 8);
+                if (spot != null) {
+                    s.hollow = spot;
+                    s.hollowBuilt = true;
+                    s.setDirty();
+                    Ruin.build(level, s.hollow);
+                }
             }
             if (s.planting != null && near(p, s.planting) && Ruin.loaded(level, s.planting)) {
                 if (!s.plantingBuilt) {
-                    s.plantingBuilt = true;
-                    s.setDirty();
-                    Planting.build(level, s);
+                    BlockPos spot = Ruin.near(level, s.planting, 22);
+                    if (spot != null) {
+                        s.planting = spot;
+                        s.plantingBuilt = true;
+                        s.setDirty();
+                        Planting.build(level, s);
+                    }
                 } else if (s.planted < s.given.size()) {
                     Planting.plant(level, s);
                 }

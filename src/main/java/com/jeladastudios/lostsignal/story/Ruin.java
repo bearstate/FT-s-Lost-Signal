@@ -47,6 +47,42 @@ final class Ruin {
         return true;
     }
 
+    /**
+     * Whether the ground round a place will do for one of the story's places: no lava or fire within a radius (a lava
+     * lake beside the planting and its spruces go up), and not a tenth of it under water.
+     */
+    static boolean fit(ServerLevel level, BlockPos at, int r) {
+        int wet = 0, n = 0;
+        for (int dx = -r; dx <= r; dx += 2) {
+            for (int dz = -r; dz <= r; dz += 2) {
+                if (dx * dx + dz * dz > r * r) continue;
+                n++;
+                int x = at.getX() + dx, z = at.getZ() + dz, top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+                for (int y = top; y >= top - 3; y--) {
+                    BlockState s = level.getBlockState(new BlockPos(x, y, z));
+                    if (s.getFluidState().is(net.minecraft.tags.FluidTags.LAVA) || s.getBlock() instanceof net.minecraft.world.level.block.BaseFireBlock) return false;
+                }
+                if (!level.getFluidState(new BlockPos(x, top, z)).isEmpty()) wet++;
+            }
+        }
+        return wet * 10 < n;
+    }
+
+    /**
+     * Where one of the story's places goes, near where it was meant to: there, or the nearest spot a few dozen blocks
+     * off that will do and whose ground is loaded; null where none is yet.
+     */
+    static BlockPos near(ServerLevel level, BlockPos at, int r) {
+        for (int ring = 0; ring <= 3; ring++) {
+            for (int i = 0; i < (ring == 0 ? 1 : 8); i++) {
+                double a = Math.PI / 4 * i;
+                BlockPos p = at.offset((int) Math.round(Math.cos(a) * ring * 24), 0, (int) Math.round(Math.sin(a) * ring * 24));
+                if (loaded(level, p) && fit(level, p, r)) return p;
+            }
+        }
+        return null;
+    }
+
     static void build(ServerLevel level, BlockPos at) {
         RandomSource random = RandomSource.create(at.asLong());
         int x = at.getX(), z = at.getZ();
