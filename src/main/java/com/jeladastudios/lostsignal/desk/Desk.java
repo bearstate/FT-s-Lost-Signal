@@ -163,6 +163,8 @@ public final class Desk extends SavedData {
             Tower t = Towers.known(level, post.tower);
             if (t == null) continue;
             boolean at = Math.hypot(p.getX() - t.x, p.getZ() - t.z) < AT_TOWER;
+            // The night desk, writing to a keeper up at their lookout.
+            if (Math.hypot(p.getX() - t.x, p.getZ() - t.z) < 32) Marion.night(level, p, post, desk);
             for (Duty d : Duty.values()) {
                 if (!applies(d)) continue;
                 // A radio check is there to be answered only once the District has made it today.
@@ -234,6 +236,11 @@ public final class Desk extends SavedData {
     public void mail(ServerLevel level, Post post, String from, Mail.Line subject, List<Mail.Line> body) {
         post.mail(from, subject, body, level.getDayTime() / 24000, (int) (level.getDayTime() % 24000));
         setDirty();
+        told(level, post);
+    }
+
+    /** A keeper told of a new message on their terminal, if they are at their lookout. */
+    void told(ServerLevel level, Post post) {
         ServerPlayer p = level.getServer().getPlayerList().getPlayer(post.id);
         if (p == null || post.tower == 0) return;
         Tower t = Towers.known(level, post.tower);
@@ -359,6 +366,7 @@ public final class Desk extends SavedData {
             if (now == Season.Phase.CLOSED) {
                 pay(level, post);
                 evaluate(level, post);
+                Marion.close(level, this, post);
             }
             if (now == Season.Phase.OPENING) post.season.clear();
             String key = "desk.fts_lostsignal.mail.season." + now.name().toLowerCase(java.util.Locale.ROOT);
@@ -424,6 +432,11 @@ public final class Desk extends SavedData {
                 Letters.send(level, desk);
             }
             case "service" -> post.stats.put("duties", value);
+            case "marion" -> {
+                // Her next beat now; with a value, the nights since each beat put back that far first.
+                if (value > 0) post.marion.replaceAll((k, d) -> d - value);
+                return "marion " + Marion.force(level, post, desk);
+            }
             case "power" -> {
                 // The nearest station's battery filled, as a running generator would keep it.
                 BlockPos st = com.jeladastudios.lostsignal.rescue.Stations.near(level, p.blockPosition(), 12);

@@ -38,6 +38,9 @@ is not who he says, and the stranger, by day and through the door at night. Subt
   the instruments by eye and typed in by hand, the District holding each figure against what the instruments truly
   read and sending it back where too many are off; the smoke report, its bearing and distance typed off the fire
   finder; orders; and the keeper's record. Worked from the keyboard alone, too.
+- **Marion on the night desk**: after dark the District's night desk writes to your terminal, a night at a time:
+  who she is, what you did that day, the knock at your door, the friend she lost in 1996, and an old lookout called
+  Hollow Peak. Some of it can be written back to, one of two ways (A or B on the terminal), and she answers.
 - **Posted for the season**: at a lookout the District posts you there, says so on the radio and on the terminal, and
   sends the terminal, the lookout guide and a page someone left folded in it up with the next crate. In a world that
   had lookouts before, nothing is set into a lookout someone has been living in. Each lookout answers the District's

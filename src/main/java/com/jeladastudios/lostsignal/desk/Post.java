@@ -51,6 +51,10 @@ public final class Post {
     public final Map<String, Integer> stats = new TreeMap<>();
     public final Map<String, Integer> season = new TreeMap<>();
 
+    /** What Marion has said to them, each by the day she said it; and the last night she wrote. */
+    public final Map<String, Long> marion = new TreeMap<>();
+    public long marionNight = -1;
+
     public final List<Mail> inbox = new ArrayList<>();
     long nextMail = 1;
 
@@ -77,6 +81,14 @@ public final class Post {
     /** A message put on their terminal; the oldest dropped past what it keeps. */
     public Mail mail(String from, Mail.Line subject, List<Mail.Line> body, long day, int time) {
         Mail m = new Mail(nextMail++, from, subject, body, day, time, false);
+        inbox.add(m);
+        while (inbox.size() > KEEPS) inbox.remove(0);
+        return m;
+    }
+
+    /** A message that can be written back to: its replies, and the thread it belongs to (what answers it). */
+    public Mail mail(String from, Mail.Line subject, List<Mail.Line> body, long day, int time, List<Mail.Line> replies, String thread) {
+        Mail m = new Mail(nextMail++, from, subject, body, day, time, false, replies, -1, thread);
         inbox.add(m);
         while (inbox.size() > KEEPS) inbox.remove(0);
         return m;
@@ -127,6 +139,10 @@ public final class Post {
         for (Mail m : inbox) mails.add(m.save());
         t.put("Inbox", mails);
         t.putLong("NextMail", nextMail);
+        CompoundTag mar = new CompoundTag();
+        for (var e : marion.entrySet()) mar.putLong(e.getKey(), e.getValue());
+        t.put("Marion", mar);
+        t.putLong("MarionNight", marionNight);
         return t;
     }
 
@@ -160,6 +176,9 @@ public final class Post {
         for (String k : ss.getAllKeys()) p.season.put(k, ss.getInt(k));
         for (Tag m : t.getList("Inbox", Tag.TAG_COMPOUND)) p.inbox.add(Mail.load((CompoundTag) m));
         p.nextMail = Math.max(1, t.getLong("NextMail"));
+        CompoundTag mar = t.getCompound("Marion");
+        for (String k : mar.getAllKeys()) p.marion.put(k, mar.getLong(k));
+        p.marionNight = t.contains("MarionNight") ? t.getLong("MarionNight") : -1;
         return p;
     }
 }

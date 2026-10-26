@@ -29,7 +29,7 @@ public final class Terminal {
 
     private Terminal() {}
 
-    public static final int READ = 0, OBSERVE = 1, SMOKE = 2, ORDER = 3, TRANSFER = 4, REFRESH = 5;
+    public static final int READ = 0, OBSERVE = 1, SMOKE = 2, ORDER = 3, TRANSFER = 4, REFRESH = 5, REPLY = 6;
     /** The smoke report's choices, flavour for the District's log. */
     public static final String[] COLOURS = {"white", "grey", "brown", "black"}, SHAPES = {"column", "leaning", "spread"}, SIZES = {"small", "medium", "large"};
 
@@ -69,6 +69,9 @@ public final class Terminal {
             case SMOKE -> smoke(p, post, v);
             case ORDER -> {
                 if (v.length >= 2) Catalog.order(p, v[0], v[1]);
+            }
+            case REPLY -> {
+                if (v.length >= 1) Marion.reply(p, id, v[0]);
             }
             case TRANSFER -> {
                 BlockPos foot = Missions.towerAt(level, p);

@@ -74,8 +74,16 @@ public final class Mail {
     public final long day;
     public final int time;
     public boolean read;
+    /** What can be written back, where anything can (a key each), and which was, -1 before it is; and the thread it is in. */
+    public final List<Line> replies;
+    public int replied = -1;
+    public final String thread;
 
     public Mail(long id, String from, Line subject, List<Line> body, long day, int time, boolean read) {
+        this(id, from, subject, body, day, time, read, List.of(), -1, "");
+    }
+
+    public Mail(long id, String from, Line subject, List<Line> body, long day, int time, boolean read, List<Line> replies, int replied, String thread) {
         this.id = id;
         this.from = from;
         this.subject = subject;
@@ -83,6 +91,9 @@ public final class Mail {
         this.day = day;
         this.time = time;
         this.read = read;
+        this.replies = replies;
+        this.replied = replied;
+        this.thread = thread;
     }
 
     CompoundTag save() {
@@ -96,13 +107,21 @@ public final class Mail {
         t.putLong("Day", day);
         t.putInt("Time", time);
         t.putBoolean("Read", read);
+        ListTag rs = new ListTag();
+        for (Line l : replies) rs.add(l.save());
+        t.put("Replies", rs);
+        t.putInt("Replied", replied);
+        t.putString("Thread", thread);
         return t;
     }
 
     static Mail load(CompoundTag t) {
         List<Line> body = new ArrayList<>();
         for (Tag l : t.getList("Body", Tag.TAG_COMPOUND)) body.add(Line.load((CompoundTag) l));
-        return new Mail(t.getLong("Id"), t.getString("From"), Line.load(t.getCompound("Subject")), body, t.getLong("Day"), t.getInt("Time"), t.getBoolean("Read"));
+        List<Line> replies = new ArrayList<>();
+        for (Tag l : t.getList("Replies", Tag.TAG_COMPOUND)) replies.add(Line.load((CompoundTag) l));
+        return new Mail(t.getLong("Id"), t.getString("From"), Line.load(t.getCompound("Subject")), body, t.getLong("Day"), t.getInt("Time"), t.getBoolean("Read"),
+                replies, t.contains("Replied") ? t.getInt("Replied") : -1, t.getString("Thread"));
     }
 
     public void write(FriendlyByteBuf buf) {
@@ -114,6 +133,9 @@ public final class Mail {
         buf.writeVarLong(day);
         buf.writeVarInt(time);
         buf.writeBoolean(read);
+        buf.writeVarInt(replies.size());
+        for (Line l : replies) l.write(buf);
+        buf.writeVarInt(replied + 1);
     }
 
     public static Mail read(FriendlyByteBuf buf) {
@@ -123,6 +145,12 @@ public final class Mail {
         int n = Math.min(buf.readVarInt(), 32);
         List<Line> body = new ArrayList<>();
         for (int i = 0; i < n; i++) body.add(Line.read(buf));
-        return new Mail(id, from, subject, body, buf.readVarLong(), buf.readVarInt(), buf.readBoolean());
+        long day = buf.readVarLong();
+        int time = buf.readVarInt();
+        boolean read = buf.readBoolean();
+        int r = Math.min(buf.readVarInt(), 4);
+        List<Line> replies = new ArrayList<>();
+        for (int i = 0; i < r; i++) replies.add(Line.read(buf));
+        return new Mail(id, from, subject, body, day, time, read, replies, buf.readVarInt() - 1, "");
     }
 }

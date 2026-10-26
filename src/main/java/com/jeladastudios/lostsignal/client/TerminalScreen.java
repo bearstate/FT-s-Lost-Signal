@@ -235,6 +235,10 @@ public class TerminalScreen extends Screen {
         if (state != null && state.posted() && !typing) {
             switch (TABS[tab]) {
                 case "inbox" -> {
+                    if (key == GLFW.GLFW_KEY_A || key == GLFW.GLFW_KEY_B) {
+                        reply(key - GLFW.GLFW_KEY_A);
+                        return true;
+                    }
                     if (key == GLFW.GLFW_KEY_UP || key == GLFW.GLFW_KEY_DOWN) {
                         mail = Math.max(0, Math.min(state.inbox().size() - 1, mail + (key == GLFW.GLFW_KEY_DOWN ? 1 : -1)));
                         click();
@@ -292,6 +296,14 @@ public class TerminalScreen extends Screen {
         if (super.mouseClicked(mx, my, button)) return true;
         if (state == null || !state.posted()) return false;
         int top = sy + 34, row = (int) Math.floor((my - top) / 10);
+        if (TABS[tab].equals("inbox") && mx >= sx + sw * 2 / 5) {
+            for (int i = replyAt.size() - 1; i >= 0; i--) {
+                if (my >= replyAt.get(i) - 1) {
+                    reply(i);
+                    return true;
+                }
+            }
+        }
         if (TABS[tab].equals("inbox") && mx >= sx + 4 && mx < sx + sw * 2 / 5 && row >= 0 && inboxFirst() + row < state.inbox().size()) {
             mail = inboxFirst() + row;
             click();
@@ -400,6 +412,18 @@ public class TerminalScreen extends Screen {
         text(g, Component.translatable("desk.fts_lostsignal.term.keys." + TABS[tab]), sx + 6, sy + sh - 12, DIM);
     }
 
+    /** Where each reply of the message shown was drawn, top to bottom, for a click on one. */
+    private final List<Integer> replyAt = new ArrayList<>();
+
+    /** A reply chosen to the message shown: sent, and kept here so it is not sent twice. */
+    void reply(int choice) {
+        Mail m = chosenMail();
+        if (m == null || m.replies.isEmpty() || m.replied >= 0 || choice >= m.replies.size()) return;
+        m.replied = choice;
+        send(Terminal.REPLY, m.id, choice);
+        beep(1.3f);
+    }
+
     /** The first message shown in the list: the chosen one kept in view. */
     int inboxFirst() {
         int rows = (sh - 52) / 10;
@@ -437,6 +461,19 @@ public class TerminalScreen extends Screen {
         for (Mail.Line line : m.body) {
             if (y > sy + sh - 26) break;
             y = wrap(g, line.text(), x, y, width, GREEN) + 3;
+        }
+        // What can be written back: A) and B), or what was.
+        replyAt.clear();
+        if (!m.replies.isEmpty()) {
+            y += 4;
+            if (m.replied >= 0 && m.replied < m.replies.size()) {
+                wrap(g, Component.literal("> ").append(m.replies.get(m.replied).text()), x, y, width, DIM);
+            } else {
+                for (int i = 0; i < m.replies.size(); i++) {
+                    replyAt.add(y);
+                    y = wrap(g, Component.literal((char) ('A' + i) + ") ").append(m.replies.get(i).text()), x, y, width, BRIGHT) + 2;
+                }
+            }
         }
     }
 
